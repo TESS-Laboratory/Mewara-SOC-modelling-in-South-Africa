@@ -1,0 +1,9 @@
+requests
+pandas
+earthpy
+landsatxplore
+elevation
+rasterio
+geopandas
+contextily
+openpyxl
