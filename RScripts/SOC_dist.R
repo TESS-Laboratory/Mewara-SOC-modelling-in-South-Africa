@@ -9,10 +9,15 @@ library(tidyr)
 # Plot Carbon distribution
 # Plot Bulk density distribution
 
-soc_data <- read_excel('C:/swati/Mewara-SOC-modelling-in-South-Africa/Data/SOC Data from Heidi 20230124 - cleaned_additional.xlsx')
+soc_data <- read_excel('C:/swati/Mewara-SOC-modelling-in-South-Africa/Data/FieldSamples/SOC Data from Heidi 20230124 - cleaned_additional.xlsx')
 soc_data <- soc_data %>% distinct()
 soc_data$C[soc_data$C == 'NA'] <- NA
 soc_data$BD[soc_data$BD == 'NA'] <- NA
+soc_data <- soc_data %>% filter(soc_data$C <= 100)
+
+soc_data <- soc_data %>%
+            mutate(C_range = cut(C, breaks = c(-Inf, 0.5, 1, 2, 3, 4, Inf), 
+                       labels = c("<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4")))
 
 missing_C_count <- sum(is.na(soc_data$C))
 missing_C_count
@@ -48,7 +53,6 @@ carbon_dist <- ggplot(soc_data, aes(x = C)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
 carbon_dist
-
 
 soc_data$BD <- as.numeric(as.character(soc_data$BD))
 

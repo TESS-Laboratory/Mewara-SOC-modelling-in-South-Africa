@@ -71,9 +71,9 @@ def clip_dem_to_sa(dem_path, south_africa, output_path):
             dst.write(clipped)
 
 def save_terrain_data():
-    output_dir = r"Data\TerrainData\Elevation"
+    output_dir = r"Data\TerrainData2\Elevation"
     os.makedirs(output_dir, exist_ok=True)
-    elevation_folder = r'Data\TerrainData\Elevation'
+    elevation_folder = r'Data\TerrainData2'
     south_africa = data_utils.get_sa_shape()
 
     tile_files = []
@@ -82,7 +82,7 @@ def save_terrain_data():
         if filename.endswith('.tif'):
             tile_path = os.path.join(elevation_folder, filename)
             resampled_tile_output = os.path.join(output_dir, f"resampled_{filename}")
-            resample_raster(tile_path, resampled_tile_output, scale_factor=2)
+            resample_raster(tile_path, resampled_tile_output, scale_factor=1)
             tile_files.append(resampled_tile_output)
 
     # Merge all resampled tiles
@@ -123,3 +123,5 @@ def save_terrain_data():
             output_path = os.path.join(output_dir, f"{name}.tif")
             with rasterio.open(output_path, 'w', **profile) as dst:
                 dst.write(data.astype(rasterio.float32), 1)
+
+save_terrain_data()

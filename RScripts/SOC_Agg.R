@@ -54,6 +54,22 @@ plotMap <- function(data, title, color_Col) {
          y = "Latitude")
 }
 
-# Plot the maps
-plotMap(hex_avg, "Carbon % by Mass Distribution in South Africa for (1987-2018)", "mean_C_range")
-plotMap(hex_avg, "Bulk Density in g/cm3 Distribution in South Africa for (1987-2018)", "mean_BD_range")
+plotSampleDistributionMap <- function(data, title, color_Col) {
+  ggplot() +
+    geom_sf(data = africa, fill = "lightgray", color = "black") +  
+    geom_point(data = data, aes(x = Lon, y = Lat, color = C_range)) +  
+    scale_color_manual(values = color_mapping) +
+    coord_sf() +
+    theme_minimal() +
+    labs(title = "Soil Sampling Distribution in South Africa",
+         x = "Longitude",
+         y = "Latitude",
+         color = "C")
+}
+
+# Plot the maps for long term average C % and average BD
+#plotMap(hex_avg, "Carbon % by Mass Distribution in South Africa for (1987-2018)", "mean_C_range")
+#plotMap(hex_avg, "Bulk Density in g/cm3 Distribution in South Africa for (1987-2018)", "mean_BD_range")
+
+# Plot the C% distribution and BD distribution
+plotSampleDistributionMap(soc_data, "Carbon % by Mass Sample Distribution in South Africa for (1987-2018)", "C")

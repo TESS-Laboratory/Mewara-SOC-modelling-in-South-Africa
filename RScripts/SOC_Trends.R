@@ -19,17 +19,21 @@ library(viridis)
 # Step 2 - Specify keywords ------------------------------------------------
 # (e.g., categories of diet, land management practices, data sources, etc.)
 
-keyword1 <- '("soil organic carbon") OR ("soil carbon")'
-keyword2 <- '("soil organic carbon" OR "soil carbon") AND "South Africa"'
-keyword3 <- '(("soil organic carbon" OR "soil carbon") AND ("Random Forest" OR 
-                                         "Machine Learning" OR 
-                                         "Deep Learning" OR
-                                         "Remote Sensing" OR
-                                         "Digital" OR
-                                         "Neural" OR
-                                         "Regression"))'
-keyword4 <- '("soil organic carbon" OR "soil carbon") AND ("Climate Change" OR 
-                                        "Land Use")'
+keyword1 <- '"soil organic carbon" OR 
+"soil carbon" OR
+"soil organic matter" OR
+"soil carbon stocks" OR
+'
+#keyword2 <- '("soil organic carbon" OR "soil carbon") AND "South Africa"'
+#keyword3 <- '(("soil organic carbon" OR "soil carbon") AND ("Random Forest" OR 
+#                                         "Machine Learning" OR 
+#                                         "Deep Learning" OR
+#                                         "Remote Sensing" OR
+#                                         "Digital" OR
+#                                         "Neural" OR
+#                                         "Regression"))'
+# keyword4 <- '("soil organic carbon" OR "soil carbon") AND ("Climate Change" OR 
+#                                       "Land Use")'
 
 
 # Step 3 - Fetch metrics ------------------------------------------------
