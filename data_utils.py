@@ -32,6 +32,12 @@ class data_utils:
                 dst.write(clipped)
 
     @staticmethod
+    def harmonizeBands(image, bandMap):
+        bandNames = list(bandMap.keys())
+        newBandNames = [bandMap[key] for key in bandNames]
+        return image.select(bandNames, newBandNames)
+
+    @staticmethod
     def list_files_recursive(input_dir, output_dir):
         files = []
         for root, dirs, file_list in os.walk(input_dir):
@@ -54,7 +60,9 @@ class data_utils:
                 'crs': src.crs,
                 'transform': transform,
                 'width': width,
-                'height': height
+                'height': height,
+                'count': src.count,  # Ensures the number of bands is the same
+                'dtype': 'float64'  # Ensure consistency in data types
             })
 
             with rasterio.open(dst_path, 'w', **kwargs) as dst:
@@ -68,7 +76,10 @@ class data_utils:
                         dst_crs=src.crs,
                         resampling=Resampling.bilinear
                     )
-    
+
+                # Copy band names
+                dst.descriptions = src.descriptions
+
     @staticmethod
     def merge_rasters(input_dir, output_filename_with_ext, output_dir):
         tile_files = data_utils.list_files_recursive(input_dir=input_dir, output_dir=output_dir)
@@ -87,5 +98,6 @@ class data_utils:
             # Write the merged mosaic to a new GeoTIFF file
             with rasterio.open(mosaic_path, "w", **profile) as dst:
                 dst.write(mosaic)
-
-data_utils.merge_rasters(r'Data\Landsat_South_Africa\Annual\1987', 'Landsat_1987.tif', r'Data\Landsat_South_Africa\Annual_Processed\1987')
+                dst.descriptions = src.descriptions # copy band names
+ 
+data_utils.merge_rasters(r'Data\LandSat\Annual\2007', 'Landsat_2007.tif', r'Data\LandSat\Annual_Processed\2007')

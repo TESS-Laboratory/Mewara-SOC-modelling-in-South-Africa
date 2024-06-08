@@ -9,5 +9,5 @@ contextily
 openpyxl
 seaborn
 sqlalchemy
-datacube
-deafrica_tools
+osgeo
+tensorflow
