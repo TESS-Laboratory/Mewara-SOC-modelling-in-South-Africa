@@ -14,4 +14,4 @@ class world_clim:
                                       south_africa=south_africa, 
                                       output_path=os.path.join(world_clim_output_path, filename))
                 
-world_clim.clip_world_clim()
+#world_clim.clip_world_clim()

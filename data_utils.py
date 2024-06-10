@@ -6,7 +6,6 @@ from rasterio.mask import mask
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 
 class data_utils:
-    @staticmethod
     def get_sa_shape():
         # Load South Africa shapefile
         south_africa_shapefile = r"Data\SouthAfrica\south_africa_South_Africa_Country_Boundary.shp"
@@ -100,4 +99,4 @@ class data_utils:
                 dst.write(mosaic)
                 dst.descriptions = src.descriptions # copy band names
  
-data_utils.merge_rasters(r'Data\LandSat\Annual\2007', 'Landsat_2007.tif', r'Data\LandSat\Annual_Processed\2007')
+#data_utils.merge_rasters(r'Data\LandSat\Annual\2007', 'Landsat_2007.tif', r'Data\LandSat\Annual_Processed\2007')
