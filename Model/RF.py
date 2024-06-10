@@ -1,6 +1,6 @@
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import root_mean_squared_error, r2_score
 
 class RF:
 
@@ -12,8 +12,8 @@ class RF:
 
         y_pred = rf_model.predict(X_test)
 
-        mse = mean_squared_error(y_test, y_pred)
+        rmse = root_mean_squared_error(y_test, y_pred)
         r2 = r2_score(y_test, y_pred)
 
-        print(f"Mean Squared Error: {mse}")
+        print(f"Root Mean Squared Error: {rmse}")
         print(f"R^2 Score: {r2}")

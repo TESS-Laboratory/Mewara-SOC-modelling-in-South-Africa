@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models, metrics, losses
 
 class CNN():
     
@@ -38,5 +38,6 @@ class CNN():
 
         # Model
         model = models.Model(inputs=[input_landsat, input_dem, input_climate], outputs=combined)
-        model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+        model.compile(optimizer='adam', loss=losses.RootMeanSquaredError(), metrics=[metrics.Accuracy(), 
+                                                                            metrics.RootMeanSquaredError()])
         model.summary()

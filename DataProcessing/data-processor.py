@@ -27,7 +27,6 @@ def extract_patch(dataset, lat, lon, patch_size):
     
     return patch
 
-
 # Open the raster file
 def extract_patch(raster_path, lat_lon_pairs, patch_size):
     patches = []
