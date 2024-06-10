@@ -9,5 +9,5 @@ contextily
 openpyxl
 seaborn
 sqlalchemy
-osgeo
 tensorflow
+scikit-learn

@@ -1,7 +1,7 @@
-from Model.RF import RF
+from DataPreprocessing import soc_grid
 
 def main():
-    rf = RF()
+    soc_grid.preprocess_data()
 
 if __name__ == "__main__":
     main()
