@@ -11,3 +11,5 @@ seaborn
 sqlalchemy
 tensorflow
 scikit-learn
+ee
+Basemap

@@ -1,4 +1,3 @@
-library(readxl)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
@@ -9,7 +8,7 @@ library(tidyr)
 # Plot Carbon distribution
 # Plot Bulk density distribution
 
-soc_data <- read_excel('C:/swati/Mewara-SOC-modelling-in-South-Africa/Data/FieldSamples/SOC Data from Heidi 20230124 - cleaned_additional.xlsx')
+soc_data <- read.csv('C:\\Mewara-SOC-modelling-in-South-Africa\\DataPreprocessing\\soc_gdf.csv')
 soc_data <- soc_data %>% distinct()
 soc_data$C[soc_data$C == 'NA'] <- NA
 soc_data$BD[soc_data$BD == 'NA'] <- NA

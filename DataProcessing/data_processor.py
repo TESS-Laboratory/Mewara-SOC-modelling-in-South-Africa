@@ -5,7 +5,8 @@ import rasterio
 from rasterio.mask import mask
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 
-class data_utils:
+class data_processor:
+    @staticmethod
     def get_sa_shape():
         # Load South Africa shapefile
         south_africa_shapefile = r"Data\SouthAfrica\south_africa_South_Africa_Country_Boundary.shp"
@@ -45,7 +46,7 @@ class data_utils:
                 if filename.endswith('.tif'):
                     tile_path = os.path.join(root, file)
                     resampled_tile_output = os.path.join(f'{output_dir}\\resampled', f"resampled_{filename}")
-                    data_utils.resample_raster(tile_path, resampled_tile_output, scale_factor=4)
+                    data_processor.resample_raster(tile_path, resampled_tile_output, scale_factor=4)
                     files.append(resampled_tile_output)
         return files
     
@@ -81,7 +82,7 @@ class data_utils:
 
     @staticmethod
     def merge_rasters(input_dir, output_filename_with_ext, output_dir):
-        tile_files = data_utils.list_files_recursive(input_dir=input_dir, output_dir=output_dir)
+        tile_files = data_processor.list_files_recursive(input_dir=input_dir, output_dir=output_dir)
         mosaic_path = os.path.join(output_dir, output_filename_with_ext)
         with rasterio.open(tile_files[0]) as src:
             mosaic, out_trans = merge(tile_files)
@@ -99,4 +100,3 @@ class data_utils:
                 dst.write(mosaic)
                 dst.descriptions = src.descriptions # copy band names
  
-#data_utils.merge_rasters(r'Data\LandSat\Annual\2007', 'Landsat_2007.tif', r'Data\LandSat\Annual_Processed\2007')

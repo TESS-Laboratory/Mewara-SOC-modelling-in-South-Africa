@@ -64,7 +64,7 @@ plotSampleDistributionMap <- function(data, title, color_Col) {
     scale_color_manual(values = color_mapping) +
     coord_sf() +
     theme_minimal() +
-    labs(title = "Soil Sampling Distribution in South Africa (1986 - 2018)",
+    labs(title = title,
          x = "Longitude",
          y = "Latitude",
          color = "C (% by Mass)") +
@@ -78,3 +78,7 @@ plotMap(hex_avg, "Long Term Average Bulk Density in South Africa for (1987-2018)
 
 # Plot the C% distribution and BD distribution
 plotSampleDistributionMap(soc_data, "Carbon Sample Distribution in South Africa for (1987-2018)", "C_range")
+
+year = 2022
+plotSampleDistributionMap(soc_data %>% filter(Year == year), paste("Carbon Sample Distribution in South Africa for ", year, sep = ""), "C_range")
+

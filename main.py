@@ -1,4 +1,4 @@
-from DataPreprocessing import soc_grid
+from .DataPreprocessing import soc_grid
 
 def main():
     soc_grid.preprocess_data()
