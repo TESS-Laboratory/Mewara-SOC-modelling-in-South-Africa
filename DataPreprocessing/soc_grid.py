@@ -17,7 +17,7 @@ def degrees_to_decimal(lat_or_lon):
         pass
 
     # Normalize the input to replace curly quotes with straight quotes
-    lat_or_lon = lat_or_lon.replace('’', "'").replace('“', '"').replace('”', '"').replace("''", '"')
+    lat_or_lon = lat_or_lon.strip().replace('’', "'").replace('“', '"').replace('”', '"').replace("''", '"')
     
     # Split the input string and discard empty strings
     parts = re.split('[°\'"]', lat_or_lon)
@@ -71,6 +71,7 @@ def preprocess_data():
                                  labels=["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"])
     soc_data['Date'] = pd.to_datetime(soc_data['Date'])
     soc_data['Year'] = soc_data['Date'].dt.year
+    soc_data['Month'] = soc_data['Date'].dt.month
 
     soc_data = soc_data.dropna(subset=['C']) # Drop rows with empty latitude or longitude
     soc_data = soc_data[soc_data['C'] <= 100] # Drop rows where C % is greater 100
