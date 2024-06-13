@@ -10,6 +10,7 @@ openpyxl
 seaborn
 sqlalchemy
 tensorflow
+tensorflow_addons
 scikit-learn
 ee
 Basemap
