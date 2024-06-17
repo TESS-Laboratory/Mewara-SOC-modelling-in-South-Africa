@@ -45,58 +45,60 @@ class data_processor:
                 filename = os.fsdecode(file)
                 if filename.endswith('.tif'):
                     tile_path = os.path.join(root, file)
-                    resampled_tile_output = os.path.join(f'{output_dir}\\resampled', f"resampled_{filename}")
-                    data_processor.resample_raster(tile_path, resampled_tile_output, scale_factor=4)
+                    resampled_tile_output = os.path.join(f'{output_dir}/resampled', f"resampled_{filename}")
+                    if not os.path.exists(resampled_tile_output):
+                        resample_raster(tile_path, resampled_tile_output, scale_factor=4)
                     files.append(resampled_tile_output)
         return files
-    
+
     @staticmethod
     def resample_raster(src_path, dst_path, scale_factor):
-        with rasterio.open(src_path) as src:
-            transform, width, height = calculate_default_transform(
-                src.crs, src.crs, src.width // scale_factor, src.height // scale_factor, *src.bounds)
-            kwargs = src.meta.copy()
-            kwargs.update({
-                'crs': src.crs,
-                'transform': transform,
-                'width': width,
-                'height': height,
-                'count': src.count,  # Ensures the number of bands is the same
-                'dtype': 'float64'  # Ensure consistency in data types
-            })
+            with rasterio.open(src_path) as src:
+                transform, width, height = calculate_default_transform(
+                    src.crs, src.crs, src.width // scale_factor, src.height // scale_factor, *src.bounds)
+                kwargs = src.meta.copy()
+                kwargs.update({
+                    'crs': src.crs,
+                    'transform': transform,
+                    'width': width,
+                    'height': height,
+                    'count': src.count,  # Ensures the number of bands is the same
+                    'dtype': 'float64'  # Ensure consistency in data types
+                })
 
-            with rasterio.open(dst_path, 'w', **kwargs) as dst:
-                for i in range(1, src.count + 1):
-                    reproject(
-                        source=rasterio.band(src, i),
-                        destination=rasterio.band(dst, i),
-                        src_transform=src.transform,
-                        src_crs=src.crs,
-                        dst_transform=transform,
-                        dst_crs=src.crs,
-                        resampling=Resampling.bilinear
-                    )
+                with rasterio.open(dst_path, 'w', **kwargs) as dst:
+                    for i in range(1, src.count + 1):
+                        reproject(
+                            source=rasterio.band(src, i),
+                            destination=rasterio.band(dst, i),
+                            src_transform=src.transform,
+                            src_crs=src.crs,
+                            dst_transform=transform,
+                            dst_crs=src.crs,
+                            resampling=Resampling.bilinear
+                        )
 
-                # Copy band names
-                dst.descriptions = src.descriptions
+                    # Copy band names
+                    dst.descriptions = src.descriptions
 
     @staticmethod
     def merge_rasters(input_dir, output_filename_with_ext, output_dir):
-        tile_files = data_processor.list_files_recursive(input_dir=input_dir, output_dir=output_dir)
-        mosaic_path = os.path.join(output_dir, output_filename_with_ext)
-        with rasterio.open(tile_files[0]) as src:
-            mosaic, out_trans = merge(tile_files)
-            profile = src.profile.copy()
+            tile_files = list_files_recursive(input_dir=input_dir, output_dir=output_dir)
+            mosaic_path = os.path.join(output_dir, output_filename_with_ext)
+            with rasterio.open(tile_files[0]) as src:
+                mosaic, out_trans = merge(tile_files)
+                profile = src.profile.copy()
 
-            # Update metadata
-            profile.update({
-                "height": mosaic.shape[1],
-                "width": mosaic.shape[2],
-                "transform": out_trans
-            })
+                # Update metadata
+                profile.update({
+                    "height": mosaic.shape[1],
+                    "width": mosaic.shape[2],
+                    "transform": out_trans
+                })
 
-            # Write the merged mosaic to a new GeoTIFF file
-            with rasterio.open(mosaic_path, "w", **profile) as dst:
-                dst.write(mosaic)
-                dst.descriptions = src.descriptions # copy band names
- 
+                # Write the merged mosaic to a new GeoTIFF file
+                with rasterio.open(mosaic_path, "w", **profile) as dst:
+                    dst.write(mosaic)
+                    dst.descriptions = src.descriptions
+    
+data_processor.merge_rasters(r'Data\LandSat\Annual_Processed\2009\resampled', 'Landsat_2009.tif', r'Data\LandSat\Annual_Processed\2009')
