@@ -1,6 +1,7 @@
 
 from keras import layers, models, metrics, losses, optimizers
 from keras_tuner import RandomSearch
+from keras.callbacks import EarlyStopping
 
 class KerasTuner:
     @staticmethod
@@ -61,8 +62,10 @@ class KerasTuner:
                                     max_trials=10,
                                     directory=r'Model\KerasTuner',
                                     project_name='kt2')
-
-        tuner_search.search(input_data, targets, epochs=epochs, validation_split=0.2)
+        
+        early_stopping = EarlyStopping(monitor='val_loss', patience=2, restore_best_weights=True)
+        
+        tuner_search.search(input_data, targets, epochs=epochs, validation_split=0.2, callbacks=[early_stopping])
 
         model = tuner_search.get_best_models(num_models=1)[0]
 

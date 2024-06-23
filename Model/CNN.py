@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from keras import layers, models, metrics, losses, optimizers
 from scikeras.wrappers import KerasRegressor
 from Model.base_model_utils import base_model_utils
+from keras.callbacks import EarlyStopping
 
 class CNN():
     def __init__(self, model_path = None):
@@ -123,10 +124,12 @@ class CNN():
         # build model
         self.model = self._build_model(input_shape_landsat=landsat_data[0].shape, input_shape_climate=climate_data[0].shape)
         
+        early_stopping = EarlyStopping(monitor='val_loss', patience=2, restore_best_weights=True)
+
         # Train the model
         history = self.model.fit(
             [landsat_train, climate_train], targets_train,
-            epochs=epochs, batch_size=32,
+            epochs=epochs, batch_size=32, callbacks = [early_stopping],
             validation_data=([landsat_val, climate_val], targets_val))
         
         # Evaluate the model on the validation set
