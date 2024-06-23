@@ -21,6 +21,46 @@ class CNN():
         self.model = keras.models.load_model(model_path)
         return self.model
     
+    def create_landsat_branch(self, input_shape):
+        input_layer = layers.Input(shape=input_shape)
+        
+        x = layers.Conv2D(filters=184, kernel_size=(5,5), activation='relu', padding='same')(input_layer)
+        x = layers.MaxPooling2D(pool_size=(3,3), padding='same')(x)
+        
+        x = layers.Conv2D(filters=456, kernel_size=(5,5), activation='relu', padding='same')(x)
+        x = layers.MaxPooling2D(pool_size=(5,5), padding='same')(x)
+        
+        x = layers.Conv2D(filters=56, kernel_size=(2,2), activation='relu', padding='same')(x)
+        x = layers.MaxPooling2D(pool_size=(2,2), padding='same')(x)
+        
+        x = layers.Flatten()(x)
+        
+        x = layers.Dense(units=328, activation='relu')(x)
+        x = layers.Dropout(0.5)(x)
+        x = layers.Dense(units=88, activation='relu')(x)
+        
+        return input_layer, x
+    
+    def create_climate_branch(self, input_shape):
+        input_layer = layers.Input(shape=input_shape)
+        
+        x = layers.Conv2D(filters=328, kernel_size=(3,3), activation='relu', padding='same')(input_layer)
+        x = layers.MaxPooling2D(pool_size=(3,3), padding='same')(x)
+        
+        x = layers.Conv2D(filters=344, kernel_size=(3,3), activation='relu', padding='same')(x)
+        x = layers.MaxPooling2D(pool_size=(2,2), padding='same')(x)
+        
+        x = layers.Conv2D(filters=312, kernel_size=(3,3), activation='relu', padding='same')(x)
+        x = layers.MaxPooling2D(pool_size=(2,2), padding='same')(x)
+        
+        x = layers.Flatten()(x)
+        
+        x = layers.Dense(units=104, activation='relu')(x)
+        x = layers.Dropout(0.5)(x)
+        x = layers.Dense(units=168, activation='relu')(x)
+        
+        return input_layer, x
+    
     def create_cnn_branch(self, input_shape):
         input_layer = layers.Input(shape=input_shape)
         x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(input_layer)
@@ -37,10 +77,10 @@ class CNN():
     def _build_model(self, input_shape_landsat, input_shape_climate):
 
         # Landsat CNN branch
-        landsat_input, landsat_branch = self.create_cnn_branch(input_shape=input_shape_landsat)
+        landsat_input, landsat_branch = self.create_landsat_branch(input_shape=input_shape_landsat)
 
         # Climate CNN branch
-        climate_input, climate_branch = self.create_cnn_branch(input_shape=input_shape_climate)
+        climate_input, climate_branch = self.create_climate_branch(input_shape=input_shape_climate)
 
         # Terrain CNN branch
         #terrain_input, terrain_branch = self.create_cnn_branch(input_shape=input_shape_terrain)
@@ -49,8 +89,7 @@ class CNN():
         combined = layers.concatenate([landsat_branch, climate_branch])
 
         # Fully connected layers and regression head
-        x = layers.Dense(128, activation='relu')(combined)
-        output = layers.Dense(1)(x)  # Regression output
+        output = layers.Dense(1)(combined)  # Regression output
         
         # Model
         model = models.Model(inputs=[landsat_input, climate_input], outputs=output)

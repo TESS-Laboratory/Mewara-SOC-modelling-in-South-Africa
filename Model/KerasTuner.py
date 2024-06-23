@@ -59,8 +59,14 @@ class KerasTuner:
         tuner_search = RandomSearch(KerasTuner._build_model,
                                     objective='val_mean_absolute_error',
                                     max_trials=10,
-                                    executions_per_trial=3,
                                     directory=r'Model\KerasTuner',
-                                    project_name='kt')
+                                    project_name='kt2')
 
         tuner_search.search(input_data, targets, epochs=epochs, validation_split=0.2)
+
+        model = tuner_search.get_best_models(num_models=1)[0]
+
+        print("\n Best Model:\n")
+        print(model.summary())
+
+        

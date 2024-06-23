@@ -36,9 +36,9 @@ def train(model, model_output_path):
         input('Press any key to continue')
 
 def keras_tuner():
-    KerasTuner.search(input_data=landsat_data, targets=targets, epochs=6)
+    KerasTuner.search(input_data=landsat_data, targets=targets, epochs=5)
 
-years = [2000, 2007, 2008, 2009, 2017, 2018]
+years = [2008, 2009, 2010, 2018]
 start_month = 1
 end_month = 12
 epochs = 10
@@ -66,12 +66,12 @@ if __name__ == "__main__":
     model_output_rf = f'Model\{rf.__class__.__name__}_Models\{rf.__class__.__name__}{variables}{epochs}'
 
     '''KerasTuner'''
-    keras_tuner()
+    #keras_tuner()
 
     '''CNN'''
-    #train(model=cnn, model_output_path=model_output_cnn)
-    #cnn_test = CNN(model_path=model_output_cnn)
-    #test(cnn_test)
+    train(model=cnn, model_output_path=model_output_cnn)
+    cnn_test = CNN(model_path=model_output_cnn)
+    test(cnn_test)
     
     '''RF'''
     #train(model=rf, model_output_path=model_output_rf)
