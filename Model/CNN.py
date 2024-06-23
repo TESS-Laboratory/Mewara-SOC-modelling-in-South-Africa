@@ -7,7 +7,6 @@ from sklearn.model_selection import GridSearchCV
 import numpy as np
 from sklearn.model_selection import train_test_split
 from keras import layers, models, metrics, losses, optimizers
-from scikeras.wrappers import KerasRegressor
 from Model.base_model_utils import base_model_utils
 from keras.callbacks import EarlyStopping
 

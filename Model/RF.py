@@ -15,21 +15,28 @@ class RF:
 
     def train(self, landsat_data, climate_data, terrain_data, targets, model_output_path, epochs):
         n_samples = landsat_data.shape[0]
-        n_covariates = landsat_data.shape[3] + climate_data.shape[3]
+        n_covariates = landsat_data.shape[3] + climate_data.shape[3] + terrain_data.shape[3]
     
         # Flatten the image data so that each sample's image data is a single row vector.
         landsat_data = landsat_data.reshape(n_samples, -1)
         climate_data = climate_data.reshape(n_samples, -1)
-        # terrain_data = terrain_data.reshape(n_samples, -1)
+        terrain_data = terrain_data.reshape(n_samples, -1)
+
+        landsat_data = np.round(landsat_data, 2)
+        climate_data = np.round(climate_data, 2)
+        terrain_data = np.round(terrain_data, 2)
+        targets = np.round(targets, 2)
+
+        mtry = int(sqrt(n_covariates))
     
-        X = np.concatenate((landsat_data, climate_data), axis=1)
+        X = np.concatenate((landsat_data, climate_data, terrain_data), axis=1)
     
         # Split data into training, validation sets and test sets
         X_train, X_val, y_train, y_val = train_test_split(X, targets, test_size=0.2, random_state=42)
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
        
         # Initialize Random Forest model -- Venter et al. ntree = 500, mtry = sqrt of number of covariates
-        self.model = RandomForestRegressor(n_estimators=500, max_features=sqrt(n_covariates), random_state=42)
+        self.model = RandomForestRegressor(n_estimators=500, max_features=mtry, random_state=42)
         
         # Train the model
         self.model.fit(X_train, y_train)
@@ -45,8 +52,8 @@ class RF:
         rmse_train = np.sqrt(mean_squared_error(y_train, y_pred_train))
         r2_train = r2_score(y_train, y_pred_train)
         
-        print("RF Training Metrics:\n")
-        print(f"Root Mean Squared Error: {rmse_train}")
+        print("\nRF Training Metrics:")
+        print(f"RMSE: {rmse_train}")
         print(f"R^2 Score: {r2_train*100:.2f}")
 
         # Predict on validation set
@@ -56,8 +63,8 @@ class RF:
         rmse_val = np.sqrt(mean_squared_error(y_val, y_pred_val))
         r2_val = r2_score(y_val, y_pred_val)
         
-        print("RF Validation Metrics:\n")
-        print(f"Root Mean Squared Error: {rmse_val}")
+        print("\nRF Validation Metrics:")
+        print(f"RMSE: {rmse_val}")
         print(f"R^2 Score: {r2_val*100:.2f}")
 
         # Predict on test set
@@ -67,23 +74,27 @@ class RF:
         rmse_test = np.sqrt(mean_squared_error(y_test, y_pred_test))
         r2_test = r2_score(y_test, y_pred_test)
         
-        print("RF Test Metrics:\n")
-        print(f"Root Mean Squared Error: {rmse_test}")
+        print("\nRF Test Metrics:")
+        print(f"RMSE: {rmse_test}")
         print(f"R^2 Score: {r2_test*100:.2f}")
 
     def predict(self, landsat_data, climate_data, terrain_data):
         landsat_data = np.array(landsat_data) 
         climate_data = np.array(climate_data)
         terrain_data = np.array(terrain_data)
+        
+        landsat_data = np.round(landsat_data, 2)
+        climate_data = np.round(climate_data, 2)
+        terrain_data = np.round(terrain_data, 2)
 
         n_samples = landsat_data.shape[0]
     
         # Flatten the image data so that each sample's image data is a single row vector.
         landsat_data = landsat_data.reshape(n_samples, -1)
         climate_data = climate_data.reshape(n_samples, -1)
-        #terrain_data = terrain_data.reshape(n_samples, -1)
+        terrain_data = terrain_data.reshape(n_samples, -1)
 
-        X_test = np.concatenate((landsat_data, climate_data), axis=1)
+        X_test = np.concatenate((landsat_data, climate_data, terrain_data), axis=1)
     
         return self.model.predict(X_test)
     
