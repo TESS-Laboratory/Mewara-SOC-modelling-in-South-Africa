@@ -4,6 +4,22 @@ from Model.RF import RF
 from Model.base_model_utils import base_model_utils
 from Model.data_utils import data_utils
 
+def test(model):
+    # C% for (-25.8065,27.84747222) = 2.43
+    # C% for (-30.30497222, 29.54316667) = 4.27
+    lat_lon_pairs = [(-25.8065,27.84747222), (-30.30497222, 29.54316667)]
+
+    for idx in range(len(lat_lon_pairs)):
+        lat_lon = [lat_lon_pairs[idx]]
+        print(f'\n C % for Lat Lon ({lat_lon}):\n')
+        for year in [2008]:
+            for month in range(1, 13):
+                climate_patch = data_utils.get_climate_patch(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
+                landsat_patch = data_utils.get_landsat_patch(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
+                terrain_patch = data_utils.get_terrain_patch(patch_size_meters=patch_size_meters_terrain)
+
+                predictions = model.predict(landsat_patch, climate_patch, terrain_patch)
+                print(f'\t{lat_lon}; Year_Month: {year}_{month} = {predictions[0]:.2f}\n')
 
 def train(model, model_output_path):
     print(f'\n Training {model.__class__.__name__} model:\n')
@@ -18,24 +34,6 @@ def train(model, model_output_path):
     if (history != None):
         base_model_utils.plot_trainin_validation_loss(epochs=epochs, train_loss=history['loss'], val_loss=history['val_loss'])
         input('Press any key to continue')
-
-def predict(model):
-   # C% for (-25.8065,27.84747222) = 2.43
-    # C% for (-30.30497222, 29.54316667) = 4.27
-    lat_lon_pairs = [(-25.8065,27.84747222), (-30.30497222, 29.54316667)]
-    
-def grid_search_CNN():
-    cnn = CNN()
-    landsat_data, climate_data, terrain_data, targets = data_utils.get_training_data(
-        soc_data_path=r'DataProcessing\soc_gdf.csv',
-        start_month=start_month,
-        end_month=end_month,
-        patch_size_meters_landsat=patch_size_meters_landsat,
-        patch_size_meters_climate=patch_size_meters_climate,
-        patch_size_meters_terrain=patch_size_meters_terrain
-        )
-    best_model = cnn.grid_search(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    best_model.save('Model\CNN_Models\bestModel.keras')
 
 def keras_tuner():
     KerasTuner.search(input_data=landsat_data, targets=targets, epochs=6)

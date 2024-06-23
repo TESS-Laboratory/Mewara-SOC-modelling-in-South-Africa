@@ -136,7 +136,7 @@ class data_utils:
    
     def get_terrain_patch(lat_lon_pairs, patch_size_meters):
         dem_path =f'Data\TerrainData\Elevation\DEM.tif'
-        slope_path = f'Data\TerrainData\Elevation\Slope.tif'
+        aspect_path = f'Data\TerrainData\Elevation\Aspect.tif'
         twi_path = f'Data\TerrainData\Elevation\TWI.tif'
 
         output_dem_folder=f'DataProcessing\Patches\Terrain\DEM\{patch_size_meters}'
@@ -151,7 +151,7 @@ class data_utils:
         terrain_patches = []
 
         with rasterio.open(dem_path) as dem_dataset, \
-             rasterio.open(slope_path) as slope_dataset, \
+             rasterio.open(aspect_path) as aspect_dataset, \
              rasterio.open(twi_path) as twi_dataset:
 
             for lat, lon in lat_lon_pairs:
