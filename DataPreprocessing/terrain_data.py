@@ -7,7 +7,7 @@ from rasterio.plot import show
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from rasterio.warp import calculate_default_transform, reproject, Resampling
-from DataProcessing.data_processor import data_processor
+from DataPreprocessing.raster_preprocessor import data_processor
 
 # Function to calculate slope
 def calculate_slope(dem):
@@ -70,9 +70,9 @@ def clip_dem_to_sa(dem_path, south_africa, output_path):
             dst.write(clipped)
 
 def save_terrain_data():
-    output_dir = r"Data\TerrainData2\Elevation"
+    output_dir = r"Data\TerrainData"
     os.makedirs(output_dir, exist_ok=True)
-    elevation_folder = r'Data\TerrainData2'
+    elevation_folder = r'Data\TerrainData\Elevation2'
     south_africa = data_processor.get_sa_shape()
 
     tile_files = []
@@ -80,9 +80,9 @@ def save_terrain_data():
         filename = os.fsdecode(file)
         if filename.endswith('.tif'):
             tile_path = os.path.join(elevation_folder, filename)
-            resampled_tile_output = os.path.join(output_dir, f"resampled_{filename}")
-            resample_raster(tile_path, resampled_tile_output, scale_factor=1)
-            tile_files.append(resampled_tile_output)
+            #resampled_tile_output = os.path.join(output_dir, f"resampled_{filename}")
+            #resample_raster(tile_path, resampled_tile_output, scale_factor=1)
+            tile_files.append(tile_path)
 
     # Merge all resampled tiles
     mosaic_path = os.path.join(output_dir, 'mosaic.tif')
@@ -101,12 +101,13 @@ def save_terrain_data():
         with rasterio.open(mosaic_path, "w", **profile) as dst:
             dst.write(mosaic)
 
-    # Clip the merged DEM to South Africa boundary
-    clipped_dem_path = os.path.join(output_dir, 'clipped_sa_dem.tif')
-    clip_dem_to_sa(mosaic_path, south_africa, clipped_dem_path)
+    dem_path = os.path.join(output_dir, 'dem.tif')
+
+    #Clip the merged DEM to South Africa boundary
+    #clip_dem_to_sa(mosaic_path, south_africa, clipped_dem_path)
 
     # Calculate terrain metrics for the clipped DEM
-    with rasterio.open(clipped_dem_path) as src:
+    with rasterio.open(dem_path) as src:
         dem_data = src.read(1)
         transform = src.transform
         profile = src.profile
@@ -123,4 +124,4 @@ def save_terrain_data():
             with rasterio.open(output_path, 'w', **profile) as dst:
                 dst.write(data.astype(rasterio.float32), 1)
 
-#save_terrain_data()
+save_terrain_data()

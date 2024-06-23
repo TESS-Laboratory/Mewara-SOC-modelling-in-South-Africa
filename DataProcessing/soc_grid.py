@@ -74,7 +74,7 @@ def preprocess_data():
     soc_data['Month'] = soc_data['Date'].dt.month
 
     soc_data = soc_data.dropna(subset=['C']) # Drop rows with empty latitude or longitude
-    soc_data = soc_data[soc_data['C'] <= 100] # Drop rows where C % is greater 100
+    soc_data = soc_data[soc_data['C'] <= 20] # Drop rows where C % is greater 20
     soc_data.drop_duplicates(['Source', 'Date', 'Lat', 'Lon', 'C', 'BD'], inplace=True) # Drop duplicates
 
     geometry = [Point(xy) for xy in zip(soc_data.Lon, soc_data.Lat)]

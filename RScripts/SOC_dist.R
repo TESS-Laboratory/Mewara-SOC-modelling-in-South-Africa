@@ -8,7 +8,7 @@ library(tidyr)
 # Plot Carbon distribution
 # Plot Bulk density distribution
 
-soc_data <- read.csv('C:\\Mewara-SOC-modelling-in-South-Africa\\DataPreprocessing\\soc_gdf.csv')
+soc_data <- read.csv('C:\\Mewara-SOC-modelling-in-South-Africa\\DataProcessing\\soc_gdf.csv')
 soc_data <- soc_data %>% distinct()
 soc_data$C[soc_data$C == 'NA'] <- NA
 soc_data$BD[soc_data$BD == 'NA'] <- NA
@@ -24,15 +24,15 @@ missing_BD_count <- sum(is.na(soc_data$BD))
 missing_BD_count
 
 soc_data_yearly <- soc_data %>% 
-                  mutate(year = format(date, '%Y')) %>%
-                  group_by(year) %>%
+                  group_by(Year) %>%
                   summarise(count = n())
 
-yearly_samples <- ggplot(soc_data_yearly, aes(x=year, y = count)) +
+yearly_samples <- ggplot(soc_data_yearly, aes(x=Year, y = count)) +
                   geom_bar(stat = 'identity', fill = 'skyblue') +
                   labs(title = 'Number of samples per year',
                        x = 'Year',
                        y = 'No. of Samples') +
+                  scale_x_continuous(breaks = soc_data_yearly$Year) +
                   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
 yearly_samples
@@ -70,6 +70,7 @@ bd_dist <- ggplot(soc_data, aes(x = BD)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
 bd_dist
+
 
 
 

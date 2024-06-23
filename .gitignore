@@ -166,3 +166,9 @@ Data/SouthAfrica
 Data/TerrainData
 Data/WorldClim
 Data/WorldClim_SA
+Data/References
+
+DataProcessing/Patches
+Model/KerasTuner
+Model/CNN_Models
+Model/RF_Models

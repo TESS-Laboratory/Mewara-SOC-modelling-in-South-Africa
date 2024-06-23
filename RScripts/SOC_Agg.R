@@ -73,12 +73,13 @@ plotSampleDistributionMap <- function(data, title, color_Col) {
 }
 
 # Plot the maps for long term average C % and average BD
-plotMap(hex_avg, "Long Term Average Carbon in South Africa for (1987-2018)", "mean_C_range")
-plotMap(hex_avg, "Long Term Average Bulk Density in South Africa for (1987-2018)", "mean_BD_range")
+#plotMap(hex_avg, "Long Term Average Carbon in South Africa for (1987-2018)", "mean_C_range")
+#plotMap(hex_avg, "Long Term Average Bulk Density in South Africa for (1987-2018)", "mean_BD_range")
 
 # Plot the C% distribution and BD distribution
-plotSampleDistributionMap(soc_data, "Carbon Sample Distribution in South Africa for (1987-2018)", "C_range")
+#plotSampleDistributionMap(soc_data, "Carbon Sample Distribution in South Africa for (1987-2018)", "C_range")
 
-year = 2022
-plotSampleDistributionMap(soc_data %>% filter(Year == year), paste("Carbon Sample Distribution in South Africa for ", year, sep = ""), "C_range")
-
+for (year in 1986:2022) {
+p <- plotSampleDistributionMap(soc_data %>% filter(Year == year), paste("Carbon Sample Distribution in South Africa for ", year, sep = ""), "C_range")
+print(p)
+}
