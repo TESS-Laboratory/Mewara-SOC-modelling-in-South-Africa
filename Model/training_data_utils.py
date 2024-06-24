@@ -6,7 +6,7 @@ import rasterio
 from rasterio.windows import Window
 from rasterio.transform import from_origin
 
-class data_utils:
+class training_data_utils:
     @staticmethod
     def lat_lon_to_pixel(dataset, lat, lon):
         transform = dataset.transform
@@ -35,7 +35,7 @@ class data_utils:
                 south_africa_bounds['min_lon'] <= lon <= south_africa_bounds['max_lon']):
             raise ValueError("Coordinates are outside the South African boundary")
 
-        pixel_x, pixel_y = data_utils.lat_lon_to_pixel(dataset, lat, lon)
+        pixel_x, pixel_y = training_data_utils.lat_lon_to_pixel(dataset, lat, lon)
         half_patch = patch_size_pixels // 2
 
         window_col_off = max(pixel_x - half_patch, 0)
@@ -77,7 +77,7 @@ class data_utils:
                 abs(res[1])
              )
             
-            data_utils.save_patch_as_raster(patch=patch, 
+            training_data_utils.save_patch_as_raster(patch=patch, 
                                             patch_size=patch_size if data_augment else patch_size_pixels, 
                                             is_augmented=data_augment,
                                             transform=transform,
@@ -143,7 +143,7 @@ class data_utils:
         output_slope_folder=f'DataProcessing\Patches\Terrain\Slope\{patch_size_meters}'
         output_twi_folder=f'DataProcessing\Patches\Terrain\TWI\{patch_size_meters}'
 
-        patch_size_pixels = data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=120)
+        patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=120)
         
         if not (os.path.exists(dem_path) and os.path.exists(slope_path) and os.path.exists(twi_path)):
             return None
@@ -156,15 +156,15 @@ class data_utils:
 
             for lat, lon in lat_lon_pairs:
                 output_filename=f'({lat}_{lon}).tif'
-                dem_patch = data_utils.extract_patch(dataset=dem_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels,
+                dem_patch = training_data_utils.extract_patch(dataset=dem_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels,
                                                     save_patch=True, 
                                                     output_patch_folder=output_dem_folder, 
                                                     output_patch_filename=output_filename)
-                slope_patch = data_utils.extract_patch(dataset=slope_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
-                twi_patch = data_utils.extract_patch(dataset=twi_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
+                slope_patch = training_data_utils.extract_patch(dataset=slope_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
+                twi_patch = training_data_utils.extract_patch(dataset=twi_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
                 
                 stacked_patch = np.stack([dem_patch[0], slope_patch[0], twi_patch[0]], axis=-1)
-                stacked_patch = data_utils.replace_nan_inf_data(stacked_patch)
+                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 terrain_patches.append(stacked_patch)
         return terrain_patches
     
@@ -184,7 +184,7 @@ class data_utils:
         2 * 4629.625 ~ 10 Km
         '''
         meters_per_pixel = (2.5/60) * 111111 # 2.5 degrees from the equator ~ 111111 * 2.5 meters = 4,629.625 meters
-        patch_size_pixels = data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=meters_per_pixel)
+        patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=meters_per_pixel)
 
         output_prec_patch_folder=f'DataProcessing\Patches\Climate\Precipitation\{patch_size_meters}\{year}\{month}'
        
@@ -200,18 +200,18 @@ class data_utils:
             
             for lat, lon in lat_lon_pairs:
                 output_filename=f'({lat}_{lon}).tif'
-                prec_patch = data_utils.extract_patch(dataset=prec_dataset, 
+                prec_patch = training_data_utils.extract_patch(dataset=prec_dataset, 
                                                     lat=lat, 
                                                     lon=lon, 
                                                     patch_size_pixels=patch_size_pixels,  
                                                     save_patch=True, 
                                                     output_patch_folder=output_prec_patch_folder, 
                                                     output_patch_filename=output_filename)
-                tmin_patch = data_utils.extract_patch(tmin_dataset, lat, lon, patch_size_pixels)
-                tmax_patch = data_utils.extract_patch(tmax_dataset, lat, lon, patch_size_pixels)
+                tmin_patch = training_data_utils.extract_patch(tmin_dataset, lat, lon, patch_size_pixels)
+                tmax_patch = training_data_utils.extract_patch(tmax_dataset, lat, lon, patch_size_pixels)
                 
                 stacked_patch = np.stack([prec_patch[0]/no_of_days, tmin_patch[0], tmax_patch[0]], axis=-1)
-                stacked_patch = data_utils.replace_nan_inf_data(stacked_patch)     
+                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)     
                 climate_patches.append(stacked_patch)  
         return climate_patches
     
@@ -220,7 +220,7 @@ class data_utils:
         output_folder=f'DataProcessing\Patches\Landsat\{patch_size_meters}\{year}'
 
         # Landsat was downsampled by 4, therefore each pixel is 30 m * 4 = 120 meters
-        patch_size_pixels = data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=120)
+        patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=120)
 
         if not os.path.exists(raster_path):
             return None
@@ -230,7 +230,7 @@ class data_utils:
         with rasterio.open(raster_path) as dataset:
             for lat, lon in lat_lon_pairs:
                 output_filename=f'({lat}_{lon}).tif'
-                patch = data_utils.extract_patch(dataset=dataset, 
+                patch = training_data_utils.extract_patch(dataset=dataset, 
                                                 lat=lat, 
                                                 lon=lon, 
                                                 patch_size_pixels=patch_size_pixels,  
@@ -246,7 +246,7 @@ class data_utils:
                 savi_band = patch[6]
                 rvi_band = patch[7]
                 stacked_patch = np.stack([ndvi_band, evi_band, rvi_band, savi_band], axis=-1)
-                stacked_patch = data_utils.replace_nan_inf_data(stacked_patch)
+                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 landsat_patches.append(stacked_patch)
         return landsat_patches
     
@@ -283,15 +283,15 @@ class data_utils:
 
                 lat_lon_pairs_monthly = list(zip(soc_data_monthly['Lat'], soc_data_monthly['Lon']))
 
-                landsat_patches = data_utils.get_landsat_patch(year=year, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_landsat)
+                landsat_patches = training_data_utils.get_landsat_patch(year=year, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_landsat)
                 if landsat_patches is None:
                     continue
 
-                climate_patches = data_utils.get_climate_patch(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
+                climate_patches = training_data_utils.get_climate_patch(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
                 if climate_patches is None:
                     continue
 
-                terrain_patches = data_utils.get_terrain_patch(lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_terrain)
+                terrain_patches = training_data_utils.get_terrain_patch(lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_terrain)
                 if terrain_patches is None:
                     continue
 

@@ -5,32 +5,7 @@ import rasterio
 from rasterio.mask import mask
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 
-class data_processor:
-    @staticmethod
-    def get_sa_shape():
-        # Load South Africa shapefile
-        south_africa_shapefile = r"Data\SouthAfrica\south_africa_South_Africa_Country_Boundary.shp"
-        return gpd.read_file(south_africa_shapefile)
-        
-    @staticmethod
-    def clip_to_sa(rasterfile_path, south_africa, output_path):
-        # Open the DEM file
-        with rasterio.open(rasterfile_path) as src:
-            # Clip the DEM to the South Africa boundary
-            clipped, transform = mask(src, south_africa.geometry, crop=True)
-
-            # Update metadata
-            out_meta = src.meta
-            out_meta.update({
-                "height": clipped.shape[1],
-                "width": clipped.shape[2],
-                "transform": transform
-            })
-
-            # Write the clipped DEM to a new GeoTIFF file
-            with rasterio.open(output_path, "w", **out_meta) as dst:
-                dst.write(clipped)
-
+class raster_preprocessor:
     @staticmethod
     def harmonizeBands(image, bandMap):
         bandNames = list(bandMap.keys())
@@ -83,7 +58,7 @@ class data_processor:
 
     @staticmethod
     def merge_rasters(input_dir, output_filename_with_ext, output_dir):
-            tile_files = data_processor.list_files_recursive(input_dir=input_dir, output_dir=output_dir)
+            tile_files = raster_preprocessor.list_files_recursive(input_dir=input_dir, output_dir=output_dir)
             mosaic_path = os.path.join(output_dir, output_filename_with_ext)
             with rasterio.open(tile_files[0]) as src:
                 mosaic, out_trans = merge(tile_files)
@@ -123,5 +98,5 @@ class data_processor:
 
 #data_processor.merge_rasters(r'Data\LandSat\Annual_Processed\2009\resampled', 'Landsat_2009.tif', r'Data\LandSat\Annual_Processed\2009')
 new_band_names = ['Red', 'Green', 'Blue', 'NIR', 'NDVI', 'EVI', 'SAVI', 'RVI']
-data_processor.rename_bands(r'Data\LandSat\Annual_Processed\2017\Landsat_2017.tif', r'Data\LandSat\Annual_Processed\2017\Landsat_2017_new.tif', new_band_names=new_band_names)
+raster_preprocessor.rename_bands(r'Data\LandSat\Annual_Processed\2017\Landsat_2017.tif', r'Data\LandSat\Annual_Processed\2017\Landsat_2017_new.tif', new_band_names=new_band_names)
 #data_processor.resample_raster(src_path=r'C:\Users\Swati Mewara\Downloads\Annual_Composite4_2010-0000023552-0000011776.tif', dst_path=r'C:\Mewara-SOC-modelling-in-South-Africa\Data\LandSat\Annual_Processed\2010\resampled.tif', scale_factor=4)

@@ -79,6 +79,6 @@ def preprocess_data():
 
     geometry = [Point(xy) for xy in zip(soc_data.Lon, soc_data.Lat)]
     soc_gdf = gpd.GeoDataFrame(soc_data, crs="EPSG:4326", geometry=geometry)
-    soc_gdf.to_csv(r"DataPreprocessing\soc_gdf.csv", index=False)
+    soc_gdf.to_csv(r"DataProcessing\soc_gdf.csv", index=False)
 
 #preprocess_data()

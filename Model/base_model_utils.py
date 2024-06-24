@@ -1,5 +1,5 @@
 from sklearn.model_selection import train_test_split
-#from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator
+from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator
 
 import matplotlib.pyplot as plt
 

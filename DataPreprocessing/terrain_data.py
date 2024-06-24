@@ -7,7 +7,7 @@ from rasterio.plot import show
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from rasterio.warp import calculate_default_transform, reproject, Resampling
-from DataPreprocessing.raster_preprocessor import data_processor
+from DataPreprocessing.raster_preprocessor import raster_preprocessor
 
 # Function to calculate slope
 def calculate_slope(dem):
@@ -73,7 +73,6 @@ def save_terrain_data():
     output_dir = r"Data\TerrainData"
     os.makedirs(output_dir, exist_ok=True)
     elevation_folder = r'Data\TerrainData\Elevation2'
-    south_africa = data_processor.get_sa_shape()
 
     tile_files = []
     for file in os.listdir(elevation_folder):

@@ -2,7 +2,7 @@ from Model.CNN import CNN
 from Model.KerasTuner import KerasTuner
 from Model.RF import RF
 from Model.base_model_utils import base_model_utils
-from Model.data_utils import data_utils
+from Model.training_data_utils import training_data_utils
 from Maps.maps_utils import map_utils
 
 #years = [2008, 2009, 2010, 2018]
@@ -16,7 +16,7 @@ patch_size_meters_climate = 30720 # roughly 7*7 pixels
 patch_size_meters_terrain = 30720
 
 def get_training_dataset():
-    landsat_data, climate_data, terrain_data, targets = data_utils.get_training_data(
+    landsat_data, climate_data, terrain_data, targets = training_data_utils.get_training_data(
         soc_data_path=r'DataProcessing\soc_gdf.csv',
         years=years,
         start_month=start_month,
@@ -42,9 +42,9 @@ def test(model):
         print(f'\n C % for Lat Lon ({lat_lon}):\n')
         for year in [2008, 2018]:
             for month in range(1, 2):
-                climate_patch = data_utils.get_climate_patch(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
-                landsat_patch = data_utils.get_landsat_patch(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
-                terrain_patch = data_utils.get_terrain_patch(lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_terrain)
+                climate_patch = training_data_utils.get_climate_patch(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
+                landsat_patch = training_data_utils.get_landsat_patch(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
+                terrain_patch = training_data_utils.get_terrain_patch(lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_terrain)
 
                 predictions = model.predict(landsat_patch, climate_patch, terrain_patch)
                 print(f'\t{lat_lon}; Year_Month: {year}_{month} = {predictions[0]:.2f}\n')
