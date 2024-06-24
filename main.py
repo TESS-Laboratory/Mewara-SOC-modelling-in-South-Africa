@@ -3,6 +3,7 @@ from Model.KerasTuner import KerasTuner
 from Model.RF import RF
 from Model.base_model_utils import base_model_utils
 from Model.data_utils import data_utils
+from Maps.maps_utils import map_utils
 
 #years = [2008, 2009, 2010, 2018]
 years = [2008, 2018]
@@ -93,3 +94,5 @@ if __name__ == "__main__":
     #cnn_model = CNN(model_path=model_output_cnn)
     #cnn_model.interpret_shap(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data)
 
+    '''Maps'''
+    rf_map_2018 = map_utils.create_map(year=2018,)
