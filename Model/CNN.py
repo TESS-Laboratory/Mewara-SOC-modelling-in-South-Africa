@@ -74,7 +74,7 @@ class CNN():
         x = layers.Dropout(0.5)(x)
         return input_layer, x
 
-    def _build_model(self, input_shape_landsat, input_shape_climate):
+    def _build_model(self, input_shape_landsat, input_shape_climate, input_shape_terrain):
 
         # Landsat CNN branch
         landsat_input, landsat_branch = self.create_landsat_branch(input_shape=input_shape_landsat)
@@ -83,16 +83,16 @@ class CNN():
         climate_input, climate_branch = self.create_climate_branch(input_shape=input_shape_climate)
 
         # Terrain CNN branch
-        #terrain_input, terrain_branch = self.create_cnn_branch(input_shape=input_shape_terrain)
+        terrain_input, terrain_branch = self.create_cnn_branch(input_shape=input_shape_terrain)
 
         # Combine branches
-        combined = layers.concatenate([landsat_branch, climate_branch])
+        combined = layers.concatenate([landsat_branch, climate_branch, terrain_branch])
 
         # Fully connected layers and regression head
         output = layers.Dense(1)(combined)  # Regression output
         
         # Model
-        model = models.Model(inputs=[landsat_input, climate_input], outputs=output)
+        model = models.Model(inputs=[landsat_input, climate_input, terrain_input], outputs=output)
         model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss=losses.MeanSquaredError(), metrics=[metrics.R2Score(),
                                                                                                                metrics.MeanAbsoluteError(), 
                                                                                                                metrics.RootMeanSquaredError()])

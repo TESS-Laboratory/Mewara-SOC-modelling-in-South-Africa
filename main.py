@@ -4,6 +4,16 @@ from Model.RF import RF
 from Model.base_model_utils import base_model_utils
 from Model.data_utils import data_utils
 
+#years = [2008, 2009, 2010, 2018]
+years = [2008, 2018]
+start_month = 1
+end_month = 12
+epochs = 10
+
+patch_size_meters_landsat = 30720 # roughly 256*256 pixels
+patch_size_meters_climate = 30720 # roughly 7*7 pixels
+patch_size_meters_terrain = 30720
+
 def get_training_dataset():
     landsat_data, climate_data, terrain_data, targets = data_utils.get_training_data(
         soc_data_path=r'DataProcessing\soc_gdf.csv',
@@ -33,7 +43,7 @@ def test(model):
             for month in range(1, 2):
                 climate_patch = data_utils.get_climate_patch(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
                 landsat_patch = data_utils.get_landsat_patch(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
-                terrain_patch = data_utils.get_terrain_patch(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
+                terrain_patch = data_utils.get_terrain_patch(lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_terrain)
 
                 predictions = model.predict(landsat_patch, climate_patch, terrain_patch)
                 print(f'\t{lat_lon}; Year_Month: {year}_{month} = {predictions[0]:.2f}\n')
@@ -57,16 +67,7 @@ def train(model, model_output_path):
 def keras_tuner():
     landsat_data, climate_data, terrain_data, targets = get_training_dataset()
     
-    KerasTuner.search(input_data=landsat_data, targets=targets, epochs=5)
-
-years = [2008, 2009, 2010, 2018]
-start_month = 1
-end_month = 12
-epochs = 10
-
-patch_size_meters_landsat = 30720 # roughly 256*256 pixels
-patch_size_meters_climate = 30720 # roughly 7*7 pixels
-patch_size_meters_terrain = 30720
+    KerasTuner.search(input_data=terrain_data, targets=targets, epochs=10)
 
 if __name__ == "__main__":
     rf = RF()
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     model_output_rf = f'Model\{rf.__class__.__name__}_Models\{rf.__class__.__name__}{variables}{epochs}'
 
     '''KerasTuner'''
-    #keras_tuner()
+    keras_tuner()
 
     '''CNN'''
     #train(model=cnn, model_output_path=model_output_cnn)
@@ -85,9 +86,10 @@ if __name__ == "__main__":
     #test(cnn_test)
     
     '''RF'''
-    train(model=rf, model_output_path=model_output_rf)
-    rf_test = RF(model_path=model_output_rf)
-    test(rf_test)
+    #train(model=rf, model_output_path=model_output_rf)
+    #rf_test = RF(model_path=model_output_rf)
+    #test(rf_test)
 
     #cnn_model = CNN(model_path=model_output_cnn)
     #cnn_model.interpret_shap(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data)
+

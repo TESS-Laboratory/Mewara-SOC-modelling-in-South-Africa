@@ -40,7 +40,7 @@ class KerasTuner:
 
     @staticmethod
     def _build_model(hp):
-        input_shape = (256,256,4) 
+        input_shape = (256,256,3) 
         input_layer, branch = KerasTuner.create_cnn_branch(input_shape=input_shape, hp=hp)
 
         combined = layers.Dense(units=hp.Int('dense_final_units', min_value=8, max_value=512, step=16), activation='relu')(branch)
