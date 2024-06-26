@@ -7,7 +7,6 @@ from rasterio.plot import show
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from rasterio.warp import calculate_default_transform, reproject, Resampling
-from DataPreprocessing.raster_preprocessor import raster_preprocessor
 
 # Function to calculate slope
 def calculate_slope(dem):
@@ -70,7 +69,7 @@ def clip_dem_to_sa(dem_path, south_africa, output_path):
             dst.write(clipped)
 
 def save_terrain_data():
-    output_dir = r"Data\TerrainData"
+    output_dir = r"Data\TerrainData\COP"
     os.makedirs(output_dir, exist_ok=True)
     elevation_folder = r'Data\TerrainData\Elevation2'
 
@@ -79,8 +78,9 @@ def save_terrain_data():
         filename = os.fsdecode(file)
         if filename.endswith('.tif'):
             tile_path = os.path.join(elevation_folder, filename)
-            #resampled_tile_output = os.path.join(output_dir, f"resampled_{filename}")
-            #resample_raster(tile_path, resampled_tile_output, scale_factor=1)
+            resampled_tile_output = os.path.join(f'{output_dir}\resampled', f"resampled_{filename}")
+            if not os.path.exists(resampled_tile_output):
+                resample_raster(tile_path, resampled_tile_output, scale_factor=4)
             tile_files.append(tile_path)
 
     # Merge all resampled tiles

@@ -1,4 +1,5 @@
 from math import sqrt
+import os
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
@@ -10,6 +11,7 @@ class RF:
     def __init__(self, model_path=None):
         if model_path is not None:
             self.model = self.load_model(model_path=model_path)
+            self.model_name = os.path.basename(model_path)
         else:
             self.model = None
 
@@ -78,25 +80,25 @@ class RF:
         print(f"RMSE: {rmse_test}")
         print(f"R^2 Score: {r2_test*100:.2f}")
 
-    def predict(self, landsat_data, climate_data, terrain_data):
-        landsat_data = np.array(landsat_data) 
-        climate_data = np.array(climate_data)
-        terrain_data = np.array(terrain_data)
+    def predict(self, landsat_patch, climate_patch, terrain_patch):
+        landsat_patch = np.array([landsat_patch]) 
+        climate_patch = np.array([climate_patch])
+        terrain_patch = np.array([terrain_patch])
         
-        landsat_data = np.round(landsat_data, 2)
-        climate_data = np.round(climate_data, 2)
-        terrain_data = np.round(terrain_data, 2)
+        landsat_patch = np.round(landsat_patch, 2)
+        climate_patch = np.round(climate_patch, 2)
+        terrain_patch = np.round(terrain_patch, 2)
 
-        n_samples = landsat_data.shape[0]
+        n_samples = landsat_patch.shape[0]
     
         # Flatten the image data so that each sample's image data is a single row vector.
-        landsat_data = landsat_data.reshape(n_samples, -1)
-        climate_data = climate_data.reshape(n_samples, -1)
-        terrain_data = terrain_data.reshape(n_samples, -1)
+        landsat_patch = landsat_patch.reshape(n_samples, -1)
+        climate_patch = climate_patch.reshape(n_samples, -1)
+        terrain_patch = terrain_patch.reshape(n_samples, -1)
 
-        X_test = np.concatenate((landsat_data, climate_data, terrain_data), axis=1)
+        X_test = np.concatenate((landsat_patch, climate_patch, terrain_patch), axis=1)
     
-        return self.model.predict(X_test)
+        return self.model.predict(X_test)[0]
     
     def print_feature_importances(self, X_train):
         feature_importances = self.model.feature_importances_
@@ -126,3 +128,9 @@ class RF:
         model = joblib.load(model_path)
         print(f"Model loaded from {model_path}")
         return model
+    
+    def get_model(self):
+        return self.model
+    
+    def get_model_name(self):
+        return self.model_name

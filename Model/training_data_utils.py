@@ -33,8 +33,8 @@ class training_data_utils:
         # Check if the coordinates are within South Africa's boundary
         if not (south_africa_bounds['min_lat'] <= lat <= south_africa_bounds['max_lat'] and
                 south_africa_bounds['min_lon'] <= lon <= south_africa_bounds['max_lon']):
-            raise ValueError("Coordinates are outside the South African boundary")
-
+            return None
+        
         pixel_x, pixel_y = training_data_utils.lat_lon_to_pixel(dataset, lat, lon)
         half_patch = patch_size_pixels // 2
 
@@ -48,7 +48,7 @@ class training_data_utils:
         # Read the data within the window
         patch = dataset.read(window=window)
 
-        data_augment = True
+        data_augment = False
         save_patch = False
 
         if (data_augment) :
@@ -61,10 +61,7 @@ class training_data_utils:
                             (0, patch_size - patch.shape[2]))
                 patch = np.pad(patch, pad_width, mode='constant', constant_values=np.nan)
 
-                # Replace np.nan values in the padded patch with the mean
-                for band in range(patch.shape[0]):
-                    valid_data_mean = np.nanmean(patch[band])
-                    patch[band] = np.where(np.isnan(patch[band]), valid_data_mean, patch[band])
+        patch = training_data_utils.replace_nan_inf_data(data=patch)
 
         if (save_patch):
             res = (dataset.transform.a, dataset.transform.e)
@@ -111,30 +108,32 @@ class training_data_utils:
                 dst.write(patch[band], band + 1)
     
     def replace_nan_inf_data(data):
-        # Calculate max finite values ignoring Inf
+        # Replace Inf with the maximum finite value in each slice
         max_value = np.nanmax(np.where(np.isfinite(data), data, -np.inf), axis=(0, 1))
-       
-        # Replace Inf with max finite values
         mask_inf = np.isinf(data)
         for i in range(data.shape[-1]):
             data[mask_inf[..., i], i] = max_value[i]
 
         # Calculate mean values ignoring NaN
-        data_mean = np.nanmean(data, axis=(0, 1))
-       
+        mean_value = np.empty(data.shape[-1])
+        for i in range(data.shape[-1]):
+            slice_data = data[..., i]
+            if np.all(np.isnan(slice_data)):
+                mean_value[i] = np.nan  # Default value when all elements are NaN
+            else:
+                mean_value[i] = np.nanmean(slice_data)
+        
         # Replace NaN with mean values
         mask_nan = np.isnan(data)
         for i in range(data.shape[-1]):
-            data[mask_nan[..., i], i] = data_mean[i]
+            data[mask_nan[..., i], i] = mean_value[i]
 
+        # Identify rows that are completely invalid (all NaN or Inf)
         invalid_rows = np.all(np.logical_or(np.isnan(data), np.isinf(data)), axis=(1, 2))
 
-        if np.any(invalid_rows):
-            print('Found invalid rows. Removing them...')
-       
         return data[~invalid_rows]
    
-    def get_terrain_patch(lat_lon_pairs, patch_size_meters):
+    def get_terrain_patches(lat_lon_pairs, patch_size_meters):
         dem_path =f'Data\TerrainData\Elevation\DEM.tif'
         slope_path = f'Data\TerrainData\Elevation\Slope.tif'
         twi_path = f'Data\TerrainData\Elevation\TWI.tif'
@@ -160,15 +159,23 @@ class training_data_utils:
                                                     save_patch=True, 
                                                     output_patch_folder=output_dem_folder, 
                                                     output_patch_filename=output_filename)
+                if dem_patch is None or not dem_patch.any():
+                    terrain_patches.append(None)
+                    continue
                 slope_patch = training_data_utils.extract_patch(dataset=slope_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
+                if slope_patch is None or not slope_patch.any():
+                    terrain_patches.append(None)
+                    continue
                 twi_patch = training_data_utils.extract_patch(dataset=twi_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
-                
+                if twi_patch is None or not twi_patch.any():
+                    terrain_patches.append(None)
+                    continue
                 stacked_patch = np.stack([dem_patch[0], slope_patch[0], twi_patch[0]], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 terrain_patches.append(stacked_patch)
         return terrain_patches
     
-    def get_climate_patch(year, month, lat_lon_pairs, patch_size_meters):
+    def get_climate_patches(year, month, lat_lon_pairs, patch_size_meters):
         prec_raster_path =f'Data\WorldClim_SA\wc2.1_2.5m_prec_{year}-{month:02d}.tif'
         tmin_raster_path = f'Data\WorldClim_SA\wc2.1_2.5m_tmin_{year}-{month:02d}.tif'
         tmax_raster_path = f'Data\WorldClim_SA\wc2.1_2.5m_tmax_{year}-{month:02d}.tif'
@@ -207,15 +214,23 @@ class training_data_utils:
                                                     save_patch=True, 
                                                     output_patch_folder=output_prec_patch_folder, 
                                                     output_patch_filename=output_filename)
+                if prec_patch is None or not prec_patch.any():
+                    climate_patches.append(None)
+                    continue
                 tmin_patch = training_data_utils.extract_patch(tmin_dataset, lat, lon, patch_size_pixels)
+                if tmin_patch is None or not tmin_patch.any():
+                    climate_patches.append(None)
+                    continue
                 tmax_patch = training_data_utils.extract_patch(tmax_dataset, lat, lon, patch_size_pixels)
-                
+                if tmax_patch is None or not tmax_patch.any():
+                    climate_patches.append(None)
+                    continue
                 stacked_patch = np.stack([prec_patch[0]/no_of_days, tmin_patch[0], tmax_patch[0]], axis=-1)
-                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)     
+                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 climate_patches.append(stacked_patch)  
         return climate_patches
     
-    def get_landsat_patch(year, lat_lon_pairs, patch_size_meters):
+    def get_landsat_patches(year, lat_lon_pairs, patch_size_meters):
         raster_path=f'Data\LandSat\Annual_Processed\{year}\Landsat_{year}.tif'
         output_folder=f'DataProcessing\Patches\Landsat\{patch_size_meters}\{year}'
 
@@ -237,7 +252,7 @@ class training_data_utils:
                                                 save_patch=True, 
                                                 output_patch_folder=output_folder, 
                                                 output_patch_filename=output_filename)
-                if patch is None:
+                if patch is None or not patch.any():
                     landsat_patches.append(None)
                     continue
                 nir_band = patch[3]
@@ -283,15 +298,15 @@ class training_data_utils:
 
                 lat_lon_pairs_monthly = list(zip(soc_data_monthly['Lat'], soc_data_monthly['Lon']))
 
-                landsat_patches = training_data_utils.get_landsat_patch(year=year, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_landsat)
+                landsat_patches = training_data_utils.get_landsat_patches(year=year, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_landsat)
                 if landsat_patches is None:
                     continue
 
-                climate_patches = training_data_utils.get_climate_patch(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
+                climate_patches = training_data_utils.get_climate_patches(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
                 if climate_patches is None:
                     continue
 
-                terrain_patches = training_data_utils.get_terrain_patch(lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_terrain)
+                terrain_patches = training_data_utils.get_terrain_patches(lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_terrain)
                 if terrain_patches is None:
                     continue
 

@@ -1,5 +1,5 @@
 import os
-from DataPreprocessing.data_utils import data_utils
+from data_utils import data_utils
 
 class world_clim:
     def clip_world_clim():

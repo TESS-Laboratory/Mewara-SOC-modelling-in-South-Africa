@@ -42,9 +42,9 @@ def test(model):
         print(f'\n C % for Lat Lon ({lat_lon}):\n')
         for year in [2008, 2018]:
             for month in range(1, 2):
-                climate_patch = training_data_utils.get_climate_patch(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
-                landsat_patch = training_data_utils.get_landsat_patch(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
-                terrain_patch = training_data_utils.get_terrain_patch(lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_terrain)
+                climate_patch = training_data_utils.get_climate_patches(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
+                landsat_patch = training_data_utils.get_landsat_patches(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
+                terrain_patch = training_data_utils.get_terrain_patches(lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_terrain)
 
                 predictions = model.predict(landsat_patch, climate_patch, terrain_patch)
                 print(f'\t{lat_lon}; Year_Month: {year}_{month} = {predictions[0]:.2f}\n')
@@ -70,6 +70,24 @@ def keras_tuner():
     
     KerasTuner.search(input_data=terrain_data, targets=targets, epochs=10)
 
+def get_model(model_kind, model_path):
+    if model_kind == 'RF':
+        return RF(model_path=model_path)
+    elif model_kind == 'CNN':
+        return CNN(model_path=model_path)
+    
+def plot_maps(model_kind, model_path):
+    model = get_model(model_kind=model_kind, model_path=model_path)
+    for year in range(2008, 2021):
+        map_utils.create_map(year=year, 
+                        start_month=1, 
+                        end_month=12,
+                        model=model,
+                        patch_size_meters_landsat=patch_size_meters_landsat,
+                        patch_size_meters_climate=patch_size_meters_climate,
+                        patch_size_meters_terrain=patch_size_meters_terrain
+                        )
+
 if __name__ == "__main__":
     rf = RF()
     cnn = CNN()
@@ -79,7 +97,7 @@ if __name__ == "__main__":
     model_output_rf = f'Model\{rf.__class__.__name__}_Models\{rf.__class__.__name__}{variables}{epochs}'
 
     '''KerasTuner'''
-    keras_tuner()
+    #keras_tuner()
 
     '''CNN'''
     #train(model=cnn, model_output_path=model_output_cnn)
@@ -95,4 +113,6 @@ if __name__ == "__main__":
     #cnn_model.interpret_shap(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data)
 
     '''Maps'''
-    rf_map_2018 = map_utils.create_map(year=2018,)
+    plot_maps(model_kind='RF', model_path=model_output_rf)
+  
+    

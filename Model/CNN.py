@@ -21,6 +21,9 @@ class CNN():
         self.model = keras.models.load_model(model_path)
         return self.model
     
+    def get_model(self):
+        return self.model
+    
     def create_landsat_branch(self, input_shape):
         input_layer = layers.Input(shape=input_shape)
         
@@ -141,18 +144,18 @@ class CNN():
 
         return history.history
 
-    def predict(self, landsat_data, climate_data, terrain_data):
+    def predict(self, landsat_patch, climate_patch, terrain_patch):
         # Normalize data
-        landsat_data = np.array(landsat_data) 
-        climate_data = np.array(climate_data) 
-        terrain_data = np.array(terrain_data) 
+        landsat_patch = np.array([landsat_patch]) 
+        climate_patch = np.array([climate_patch]) 
+        terrain_patch = np.array([terrain_patch]) 
 
-        landsat_data = np.round(landsat_data, 2)
-        climate_data = np.round(climate_data, 2)
-        terrain_data = np.round(terrain_data, 2)
+        landsat_patch = np.round(landsat_patch, 2)
+        climate_patch = np.round(climate_patch, 2)
+        terrain_patch = np.round(terrain_patch, 2)
         targets = np.round(targets, 2)
 
-        return self.model.predict([landsat_data, climate_data])[0]
+        return self.model.predict([landsat_patch, climate_patch])[0]
 
     def interpret_shap(self, landsat_data, climate_data, terrain_data, num_samples=100):
         # Select 100 samples from each input data
