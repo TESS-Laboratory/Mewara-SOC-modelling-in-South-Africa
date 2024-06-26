@@ -12,5 +12,4 @@ class map_utils:
         test_metrics.predict(year=year, soc_grid_path=soc_hex_grid_path, lat_lon_pairs=lat_lon_pairs, patch_size_meters_landsat=patch_size_meters_landsat,
                              patch_size_meters_climate=patch_size_meters_climate, patch_size_meters_terrain=patch_size_meters_terrain,
                              save=True)
-        for idx in range(len(lat_lon_pairs)):
-            each_lat, each_lon = lat_lon_pairs[idx]
+        

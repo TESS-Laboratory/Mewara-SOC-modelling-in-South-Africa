@@ -1,15 +1,7 @@
 import os
 #os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import keras
-from matplotlib import pyplot as plt
 import pandas as pd
-import shap
-from sklearn.model_selection import GridSearchCV
-import numpy as np
-from sklearn.model_selection import train_test_split
-from keras import layers, models, metrics, losses, optimizers
-from scikeras.wrappers import KerasRegressor
-from Model.base_model_utils import base_model_utils
 from Model.data_utils import data_utils
 
 class TestMetrics:
@@ -40,8 +32,8 @@ class TestMetrics:
                 results.append([year, month, lat, lon, prediction, target_c])
 
         if save:
-            output_path = f'Maps\{self.model_name}\{year}'
+            output_path = f'Maps/{self.model_name}/{year}'
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            data_utils.save_csv(arr = results, column_names= result_columns, output_path=f'{output_path}\predictions.csv')
+            data_utils.save_csv(arr = results, column_names= result_columns, output_path=f'{output_path}/predictions.csv')
 
         return results

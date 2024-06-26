@@ -46,7 +46,7 @@ hex_grid = create_hex_grid(south_africa_bbox, hex_size)
 
 # Read soil sample data
 # Ensure your soil sample CSV has columns: Year, Month, Lat, Lon, Carbon
-soil_samples = gpd.read_file(r'DataProcessing\soc_gdf.csv', GEOM_POSSIBLE_NAMES="geometry", KEEP_GEOM_COLUMNS="NO")
+soil_samples = gpd.read_file(r'DataProcessing/soc_gdf.csv', GEOM_POSSIBLE_NAMES="geometry", KEEP_GEOM_COLUMNS="NO")
 
 # Convert soil samples to GeoDataFrame
 soil_samples['geometry'] = [Point(xy) for xy in zip(soil_samples['Lon'], soil_samples['Lat'])]

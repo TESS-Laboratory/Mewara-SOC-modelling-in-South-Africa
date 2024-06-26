@@ -7,7 +7,7 @@ import re
 south_africa = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres')).query('name == "South Africa"')
 
 def get_soc_data():
-    return pd.read_csv(r'DataPreprocessing\soc_gdf.csv')
+    return pd.read_csv(r'DataPreprocessing/soc_gdf.csv')
 
 def degrees_to_decimal(lat_or_lon):
     # Skip conversion if the input is already a decimal number
@@ -30,7 +30,7 @@ def degrees_to_decimal(lat_or_lon):
     elif len(parts) == 4:
         deg, minutes, seconds, direction = parts
     else:
-        raise ValueError("Input format must be 'degrees°minutes'seconds\"direction'")
+        raise ValueError("Input format must be 'degrees°minutes'seconds direction")
 
     # Calculate the decimal value
     decimal = float(deg) + float(minutes)/60 + float(seconds)/(60*60)
@@ -42,7 +42,7 @@ def degrees_to_decimal(lat_or_lon):
     return decimal
 
 def get_conservation_SA_data():
-    soc_2022_df = pd.read_excel(r'Data\FieldSamples\Mitsubishi_SOC_Baseline_December_2022.xlsx')
+    soc_2022_df = pd.read_excel(r'Data/FieldSamples/Mitsubishi_SOC_Baseline_December_2022.xlsx')
 
     # Apply degrees_to_decimal only if the value is not empty
     soc_2022_df['Lat'] = soc_2022_df['LAT'].apply(lambda x: degrees_to_decimal(x) if pd.notnull(x) and x != '' else None)
@@ -64,21 +64,38 @@ def get_conservation_SA_data():
     return soc_2022
 
 def preprocess_data():
-    soc_data = pd.read_excel(r'Data\FieldSamples\SOC Data from Heidi 20230124 - cleaned_additional.xlsx')
-    soc_data = pd.concat([soc_data, get_conservation_SA_data()], ignore_index = True)
+    # Read SOC data from Excel file
+    soc_data = pd.read_excel(r'Data/FieldSamples/SOC Data from Heidi 20230124 - cleaned_additional.xlsx')
+
+    # Concatenate with conservation data for South Africa if available
+    soc_data = pd.concat([soc_data, get_conservation_SA_data()], ignore_index=True)
+
+    # Bin C values into categories
     soc_data['C_range'] = pd.cut(soc_data['C'], 
-                                 bins=[-float('inf'), 0.5, 1, 2, 3, 4, float('inf')], 
+                                 bins=[-float("inf"), 0.5, 1, 2, 3, 4, float("inf")], 
                                  labels=["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"])
+
+    # Convert 'Date' column to datetime format and extract year and month
     soc_data['Date'] = pd.to_datetime(soc_data['Date'])
     soc_data['Year'] = soc_data['Date'].dt.year
     soc_data['Month'] = soc_data['Date'].dt.month
 
-    soc_data = soc_data.dropna(subset=['C']) # Drop rows with empty latitude or longitude
-    soc_data = soc_data[soc_data['C'] <= 20] # Drop rows where C % is greater 20
-    soc_data.drop_duplicates(['Source', 'Date', 'Lat', 'Lon', 'C', 'BD'], inplace=True) # Drop duplicates
+    # Drop rows with missing latitude or longitude
+    soc_data = soc_data.dropna(subset=['Lat', 'Lon'])
 
-    geometry = [Point(xy) for xy in zip(soc_data.Lon, soc_data.Lat)]
+    # Drop rows where C % is greater than 20
+    soc_data = soc_data[soc_data['C'] <= 20]
+
+    # Drop duplicates based on specified columns
+    soc_data.drop_duplicates(['Source', 'Date', 'Lat', 'Lon', 'C', 'BD'], inplace=True)
+
+    # Create Point geometries from Lon and Lat columns
+    geometry = [Point(xy) for xy in zip(soc_data['Lon'], soc_data['Lat'])]
+
+    # Create a GeoDataFrame
     soc_gdf = gpd.GeoDataFrame(soc_data, crs="EPSG:4326", geometry=geometry)
-    soc_gdf.to_csv(r"DataPreprocessing\soc_gdf.csv", index=False)
+
+    # Save GeoDataFrame to CSV
+    soc_gdf.to_csv(r"DataProcessing/soc_gdf.csv", index=False)
 
 #preprocess_data()

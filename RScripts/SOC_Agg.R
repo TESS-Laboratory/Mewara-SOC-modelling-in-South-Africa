@@ -81,5 +81,5 @@ plotSampleDistributionMap <- function(data, title, color_Col) {
 
 for (year in 1986:2022) {
 p <- plotSampleDistributionMap(soc_data %>% filter(Year == year), paste("Carbon Sample Distribution in South Africa for ", year, sep = ""), "C_range")
-print(p)
+p
 }
