@@ -1,5 +1,4 @@
 from sklearn.model_selection import train_test_split
-from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator
 
 import matplotlib.pyplot as plt
 
@@ -16,8 +15,8 @@ class base_model_utils:
         return landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, dem_train, dem_val, dem_test, \
         targets_train, targets_val, targets_test
     
-    def plot_trainin_validation_loss(epochs, train_loss, val_loss):
-        epochs = range(1, epochs + 1)
+    def plot_trainin_validation_loss(train_loss, val_loss):
+        epochs = range(1, len(train_loss) + 1)
         plt.figure(figsize=(10, 6))
         plt.plot(epochs, train_loss, 'b', label='Training Loss')
         plt.plot(epochs, val_loss, 'r', label='Validation Loss')
@@ -26,20 +25,3 @@ class base_model_utils:
         plt.ylabel('Loss')
         plt.legend()
         plt.show()
-
-    def data_augmentation(X_train):
-        datagen = ImageDataGenerator(
-            rotation_range=40,
-            width_shift_range=0.2,
-            height_shift_range=0.2,
-            shear_range=0.2,
-            zoom_range=0.2,
-            horizontal_flip=True,
-            fill_mode='nearest'
-            )
-
-        # Fit the data generator on your training data
-        datagen.fit(X_train)
-
-        return datagen
-

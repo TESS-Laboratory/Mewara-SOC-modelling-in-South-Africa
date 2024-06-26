@@ -69,7 +69,7 @@ def clip_dem_to_sa(dem_path, south_africa, output_path):
             dst.write(clipped)
 
 def save_terrain_data():
-    output_dir = r"Data\TerrainData\COP"
+    output_dir = r"Data/TerrainData"
     os.makedirs(output_dir, exist_ok=True)
     elevation_folder = r'Data\TerrainData\Elevation2'
 

@@ -15,6 +15,5 @@ scikit-learn
 ee
 Basemap
 shap
-keras
 keras_tuner
 rtree

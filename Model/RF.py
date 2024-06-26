@@ -127,7 +127,6 @@ class RF:
     def load_model(self, model_path):
         model = joblib.load(model_path)
         print(f"Model loaded from {model_path}")
-        return model
     
     def get_model(self):
         return self.model

@@ -86,7 +86,7 @@ class training_data_utils:
         
     def save_patch_as_raster(patch, patch_size, is_augmented, transform, dataset, output_folder, output_filename):
         if is_augmented:
-            output_folder = f'{output_folder}\Augmented'
+            output_folder = f'{output_folder}/Augmented'
 
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
@@ -134,23 +134,23 @@ class training_data_utils:
         return data[~invalid_rows]
    
     def get_terrain_patches(lat_lon_pairs, patch_size_meters):
-        dem_path =f'Data\TerrainData\Elevation\DEM.tif'
-        slope_path = f'Data\TerrainData\Elevation\Slope.tif'
-        twi_path = f'Data\TerrainData\Elevation\TWI.tif'
+        dem_path =f'Data/TerrainData/Elevation/DEM.tif'
+        aspect_path = f'Data/TerrainData/Elevation/Aspect.tif'
+        twi_path = f'Data/TerrainData/Elevation/TWI.tif'
 
-        output_dem_folder=f'DataProcessing\Patches\Terrain\DEM\{patch_size_meters}'
-        output_slope_folder=f'DataProcessing\Patches\Terrain\Slope\{patch_size_meters}'
-        output_twi_folder=f'DataProcessing\Patches\Terrain\TWI\{patch_size_meters}'
+        output_dem_folder=f'DataProcessing/Patches/Terrain/DEM/{patch_size_meters}'
+        output_aspect_folder=f'DataProcessing/Patches/Terrain/Aspect/{patch_size_meters}'
+        output_twi_folder=f'DataProcessing/Patches/Terrain/TWI/{patch_size_meters}'
 
         patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=120)
         
-        if not (os.path.exists(dem_path) and os.path.exists(slope_path) and os.path.exists(twi_path)):
+        if not (os.path.exists(dem_path) and os.path.exists(aspect_path) and os.path.exists(twi_path)):
             return None
         
         terrain_patches = []
 
         with rasterio.open(dem_path) as dem_dataset, \
-             rasterio.open(slope_path) as slope_dataset, \
+             rasterio.open(aspect_path) as aspect_dataset, \
              rasterio.open(twi_path) as twi_dataset:
 
             for lat, lon in lat_lon_pairs:
@@ -159,26 +159,18 @@ class training_data_utils:
                                                     save_patch=True, 
                                                     output_patch_folder=output_dem_folder, 
                                                     output_patch_filename=output_filename)
-                if dem_patch is None or not dem_patch.any():
-                    terrain_patches.append(None)
-                    continue
-                slope_patch = training_data_utils.extract_patch(dataset=slope_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
-                if slope_patch is None or not slope_patch.any():
-                    terrain_patches.append(None)
-                    continue
+                aspect_patch = training_data_utils.extract_patch(dataset=aspect_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
                 twi_patch = training_data_utils.extract_patch(dataset=twi_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
-                if twi_patch is None or not twi_patch.any():
-                    terrain_patches.append(None)
-                    continue
-                stacked_patch = np.stack([dem_patch[0], slope_patch[0], twi_patch[0]], axis=-1)
-                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
+                
+                stacked_patch = np.stack([aspect_patch[0], twi_patch[0]], axis=-1)
+                stacked_patch = data_utils.replace_nan_inf_data(stacked_patch)
                 terrain_patches.append(stacked_patch)
         return terrain_patches
     
     def get_climate_patches(year, month, lat_lon_pairs, patch_size_meters):
-        prec_raster_path =f'Data\WorldClim_SA\wc2.1_2.5m_prec_{year}-{month:02d}.tif'
-        tmin_raster_path = f'Data\WorldClim_SA\wc2.1_2.5m_tmin_{year}-{month:02d}.tif'
-        tmax_raster_path = f'Data\WorldClim_SA\wc2.1_2.5m_tmax_{year}-{month:02d}.tif'
+        prec_raster_path =f'Data/WorldClim_SA/wc2.1_2.5m_prec_{year}-{month:02d}.tif'
+        tmin_raster_path = f'Data/WorldClim_SA/wc2.1_2.5m_tmin_{year}-{month:02d}.tif'
+        tmax_raster_path = f'Data/WorldClim_SA/wc2.1_2.5m_tmax_{year}-{month:02d}.tif'
        
         '''
         pixel_resolution = 2.5 arc minutes
@@ -193,7 +185,7 @@ class training_data_utils:
         meters_per_pixel = (2.5/60) * 111111 # 2.5 degrees from the equator ~ 111111 * 2.5 meters = 4,629.625 meters
         patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=meters_per_pixel)
 
-        output_prec_patch_folder=f'DataProcessing\Patches\Climate\Precipitation\{patch_size_meters}\{year}\{month}'
+        output_prec_patch_folder=f'DataProcessing/Patches/Climate/Precipitation/{patch_size_meters}/{year}/{month}'
        
         if not (os.path.exists(prec_raster_path) and os.path.exists(tmin_raster_path) and os.path.exists(tmax_raster_path)):
             return None
@@ -231,8 +223,8 @@ class training_data_utils:
         return climate_patches
     
     def get_landsat_patches(year, lat_lon_pairs, patch_size_meters):
-        raster_path=f'Data\LandSat\Annual_Processed\{year}\Landsat_{year}.tif'
-        output_folder=f'DataProcessing\Patches\Landsat\{patch_size_meters}\{year}'
+        raster_path=f'Data/LandSat/Annual_Processed/{year}/Landsat_{year}.tif'
+        output_folder=f'DataProcessing/Patches/Landsat/{patch_size_meters}/{year}'
 
         # Landsat was downsampled by 4, therefore each pixel is 30 m * 4 = 120 meters
         patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=120)
@@ -255,12 +247,15 @@ class training_data_utils:
                 if patch is None or not patch.any():
                     landsat_patches.append(None)
                     continue
+                red_band = patch[0]
+                green_band = patch[1]
+                blue_band = patch[2]
                 nir_band = patch[3]
                 ndvi_band = patch[4]
                 evi_band = patch[5]
                 savi_band = patch[6]
                 rvi_band = patch[7]
-                stacked_patch = np.stack([ndvi_band, evi_band, rvi_band, savi_band], axis=-1)
+                stacked_patch = np.stack([ndvi_band, evi_band, savi_band, rvi_band], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 landsat_patches.append(stacked_patch)
         return landsat_patches
@@ -336,9 +331,9 @@ class training_data_utils:
                     data_utils.append_patch(year=year, month=month, lat=lat, lon=lon, c_percent=c_percent, covariates=covariates_terrain, patch=terrain_patch)  
                     '''
             '''
-            data_utils.save_csv(arr=covariates_landsat, column_names=covariate_columns_landsat, output_path = f'DataProcessing\Covariates\{year}\Landsat.csv')
-            data_utils.save_csv(arr=covariates_climate, column_names=covariate_columns_climate, output_path = f'DataProcessing\Covariates\{year}\Climate.csv')
-            data_utils.save_csv(arr=covariates_terrain, column_names=covariate_columns_terrain, output_path = f'DataProcessing\Covariates\{year}\Terrain.csv')
+            data_utils.save_csv(arr=covariates_landsat, column_names=covariate_columns_landsat, output_path = f'DataProcessingCovariates/{year}/Landsat.csv')
+            data_utils.save_csv(arr=covariates_climate, column_names=covariate_columns_climate, output_path = f'DataProcessing/Covariates/{year}/Climate.csv')
+            data_utils.save_csv(arr=covariates_terrain, column_names=covariate_columns_terrain, output_path = f'DataProcessing/Covariates/{year}/Terrain.csv')
             '''
         return np.array(landsat_data), np.array(climate_data), np.array(terrain_data), np.array(targets)
 
