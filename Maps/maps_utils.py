@@ -6,20 +6,20 @@ class map_utils:
     @staticmethod
     def create_map(year, start_month, end_month, model, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain):
         tm = test_metrics(model=model)
-        output_dir = f'Maps\{model.get_model_name()}'
-        predictions_output_path = f'{output_dir}\predictions_{year}.csv'
-        predicted_plot_output_path = f'{output_dir}\Predicted\predicted_{year}.png'
+        output_dir = f'Maps/{model.get_model_name()}'
+        predictions_output_path = f'{output_dir}/predictions_{year}.csv'
+        predicted_plot_output_path = f'{output_dir}/Predicted/predicted_{year}.png'
 
-        square_grid = pd.read_csv(r'DataProcessing\square_grid.csv')
-        square_grid = square_grid.dropna(subset=['Square_Center_Lat', 'Square_Center_Lon'])
-        lat_lon_pairs = list(set(zip(square_grid['Square_Center_Lat'], square_grid['Square_Center_Lon'])))
+        square_grid = pd.read_csv(r'DataProcessing\hex_grid.csv')
+        square_grid = square_grid.dropna(subset=['Hex_Center_Lat', 'Hex_Center_Lon'])
+        lat_lon_pairs = list(set(zip(square_grid['Hex_Center_Lat'], square_grid['Hex_Center_Lon'])))
 
         print(f'\nFetching predictions for year {year}\n')
         predictions = tm.predict(year=year,
                    start_month=start_month,
                    end_month=end_month,
                    lat_lon_pairs=lat_lon_pairs, 
-                   soc_path=r'DataProcessing\soc_square_grid.csv',
+                   soc_path=r'DataProcessing/soc_hex_grid.csv',
                    patch_size_meters_landsat=patch_size_meters_landsat,
                    patch_size_meters_climate=patch_size_meters_climate, patch_size_meters_terrain=patch_size_meters_terrain,
                    save=True,
@@ -31,13 +31,13 @@ class map_utils:
 
     @staticmethod
     def plot_actual_map(year):
-        soil_data = pd.read_csv(r'DataProcessing\soc_gdf.csv')
+        soil_data = pd.read_csv(r'DataProcessing/soc_gdf.csv')
         soil_data_year = soil_data[soil_data['Year'] == year]
         data_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
                                            title=f'Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=True,
                                            savePlot=True,
-                                           output_plot_path=f'Maps\ActualMaps\Actual_{year}.png')
+                                           output_plot_path=f'Maps/ActualMaps/Actual_{year}.png')
         #input('press key to continue')
         
     @staticmethod

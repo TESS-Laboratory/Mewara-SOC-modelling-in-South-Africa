@@ -80,23 +80,23 @@ class RF:
         print(f"RMSE: {rmse_test}")
         print(f"R^2 Score: {r2_test*100:.2f}")
 
-    def predict(self, landsat_patch, climate_patch, terrain_patch):
-        landsat_patch = np.array([landsat_patch]) 
-        climate_patch = np.array([climate_patch])
-        terrain_patch = np.array([terrain_patch])
+    def predict(self, landsat_patch_arr, climate_patch_arr, terrain_patch_arr):
+        landsat_patch_arr = np.array([landsat_patch_arr]) 
+        climate_patch_arr = np.array([climate_patch_arr])
+        terrain_patch_arr = np.array([terrain_patch_arr])
         
-        landsat_patch = np.round(landsat_patch, 2)
-        climate_patch = np.round(climate_patch, 2)
-        terrain_patch = np.round(terrain_patch, 2)
+        landsat_patch_arr = np.round(landsat_patch_arr, 2)
+        climate_patch_arr = np.round(climate_patch_arr, 2)
+        terrain_patch_arr = np.round(terrain_patch_arr, 2)
 
-        n_samples = landsat_patch.shape[0]
+        n_samples = landsat_patch_arr.shape[0]
     
         # Flatten the image data so that each sample's image data is a single row vector.
-        landsat_patch = landsat_patch.reshape(n_samples, -1)
-        climate_patch = climate_patch.reshape(n_samples, -1)
-        terrain_patch = terrain_patch.reshape(n_samples, -1)
+        landsat_patch_arr = landsat_patch_arr.reshape(n_samples, -1)
+        climate_patch_arr = climate_patch_arr.reshape(n_samples, -1)
+        terrain_patch_arr = terrain_patch_arr.reshape(n_samples, -1)
 
-        X_test = np.concatenate((landsat_patch, climate_patch, terrain_patch), axis=1)
+        X_test = np.concatenate((landsat_patch_arr, climate_patch_arr, terrain_patch_arr), axis=1)
     
         return self.model.predict(X_test)[0]
     

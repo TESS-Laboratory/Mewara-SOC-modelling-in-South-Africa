@@ -29,7 +29,10 @@ class test_metrics:
                 terrain_patch = terrain_patches[idx]
 
                 target_c = None
-                soc = soc_data[(soc_data['Year'] == year) & (soc_data['Month'] == month) & (soc_data['Square_Center_Lat'] == lat) & (soc_data['Square_Center_Lon'] == lon)]
+                soc = soc_data[(soc_data['Year'] == year) & 
+                               (soc_data['Month'] == month) & 
+                               (soc_data['Hex_Center_Lat'] == lat) & 
+                               (soc_data['Hex_Center_Lon'] == lon)]
                 if not soc.empty:
                     target_c = soc['C']
 
