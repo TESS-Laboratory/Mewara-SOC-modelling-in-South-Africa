@@ -46,10 +46,10 @@ class raster_processor:
                     tile_path = os.path.join(root, file)
                     resampled_folder = f'{output_dir}/resampled'
                     if not os.path.exists(resampled_folder):
-                    os.makedirs(resampled_folder)
+                        os.makedirs(resampled_folder)
                     resampled_tile_output = os.path.join(resampled_folder, f"resampled_{filename}")
                     if not os.path.exists(resampled_tile_output):
-                        data_processor.resample_raster(tile_path, resampled_tile_output, scale_factor=4)
+                        raster_processor.resample_raster(tile_path, resampled_tile_output, scale_factor=4)
                     files.append(resampled_tile_output)
         return files
 
@@ -83,7 +83,7 @@ class raster_processor:
                     dst.descriptions = src.descriptions
 
     def merge_rasters(input_dir, output_filename_with_ext, output_dir):
-            tile_files = data_processor.list_files_recursive(input_dir=input_dir, output_dir=output_dir)
+            tile_files = raster_processor.list_files_recursive(input_dir=input_dir, output_dir=output_dir)
             mosaic_path = os.path.join(output_dir, output_filename_with_ext)
             with rasterio.open(tile_files[0]) as src:
                 print('\start merging tile_files\n')
@@ -123,5 +123,5 @@ class raster_processor:
                 # Set new band names
                 dst.descriptions = new_band_names
 
-data_processor.merge_rasters(r'Data/LandSat/Annual_Processed/2007/2007/resampled', 'Landsat_2007.tif', r'Data/LandSat/Annual_Processed/2007')
+raster_processor.merge_rasters(r'Data/LandSat/Annual_Processed/2007/2007/resampled', 'Landsat_2007.tif', r'Data/LandSat/Annual_Processed/2007')
 #new_band_names = ['Red', 'Green', 'Blue', 'NIR', 'NDVI', 'EVI', 'SAVI', 'RVI']

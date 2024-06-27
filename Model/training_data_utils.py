@@ -155,15 +155,17 @@ class training_data_utils:
 
             for lat, lon in lat_lon_pairs:
                 output_filename=f'({lat}_{lon}).tif'
-                dem_patch = training_data_utils.extract_patch(dataset=dem_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels,
-                                                    save_patch=True, 
-                                                    output_patch_folder=output_dem_folder, 
-                                                    output_patch_filename=output_filename)
                 aspect_patch = training_data_utils.extract_patch(dataset=aspect_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
+                if aspect_patch is None or not aspect_patch.any():
+                    terrain_patches.append(None)
+                    continue
                 twi_patch = training_data_utils.extract_patch(dataset=twi_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
-                
+                if twi_patch is None or not twi_patch.any():
+                    terrain_patches.append(None)
+                    continue
+
                 stacked_patch = np.stack([aspect_patch[0], twi_patch[0]], axis=-1)
-                stacked_patch = data_utils.replace_nan_inf_data(stacked_patch)
+                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 terrain_patches.append(stacked_patch)
         return terrain_patches
     
