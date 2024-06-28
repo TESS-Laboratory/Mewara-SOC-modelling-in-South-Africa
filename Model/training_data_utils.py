@@ -48,7 +48,7 @@ class training_data_utils:
         # Read the data within the window
         patch = dataset.read(window=window)
 
-        data_augment = False
+        data_augment = True
         save_patch = False
 
         if (data_augment) :
@@ -133,7 +133,27 @@ class training_data_utils:
 
         return data[~invalid_rows]
    
-    def get_terrain_patches(lat_lon_pairs, patch_size_meters):
+    def get_bd_patches_dict(lat_lon_pairs):
+        raster_path=f'Data/BulkDensity/bulk_density.tif'
+      
+        if not os.path.exists(raster_path):
+            return None
+        
+        bd_patches_dict = {}
+        
+        with rasterio.open(raster_path) as dataset:
+            for lat, lon in lat_lon_pairs:
+                patch = training_data_utils.extract_patch(dataset=dataset, 
+                                                lat=lat, 
+                                                lon=lon, 
+                                                patch_size_pixels=1)
+                if patch is None or not patch.any():
+                    bd_patches_dict[(lat, lon)] = None
+                    continue
+                bd_patches_dict[(lat, lon)] = patch[0]
+        return bd_patches_dict
+    
+    def get_terrain_patches_dict(lat_lon_pairs, patch_size_meters):
         dem_path =f'Data/TerrainData/Elevation/DEM.tif'
         aspect_path = f'Data/TerrainData/Elevation/Aspect.tif'
         twi_path = f'Data/TerrainData/Elevation/TWI.tif'
@@ -147,7 +167,7 @@ class training_data_utils:
         if not (os.path.exists(dem_path) and os.path.exists(aspect_path) and os.path.exists(twi_path)):
             return None
         
-        terrain_patches = []
+        terrain_patches_dict = {}
 
         with rasterio.open(dem_path) as dem_dataset, \
              rasterio.open(aspect_path) as aspect_dataset, \
@@ -155,19 +175,20 @@ class training_data_utils:
 
             for lat, lon in lat_lon_pairs:
                 output_filename=f'({lat}_{lon}).tif'
-                dem_patch = training_data_utils.extract_patch(dataset=dem_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels,
-                                                    save_patch=True, 
-                                                    output_patch_folder=output_dem_folder, 
-                                                    output_patch_filename=output_filename)
                 aspect_patch = training_data_utils.extract_patch(dataset=aspect_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
+                if aspect_patch is None or not aspect_patch.any():
+                    terrain_patches_dict[(lat, lon)]= None
+                    continue
                 twi_patch = training_data_utils.extract_patch(dataset=twi_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
-                
+                if aspect_patch is None or not aspect_patch.any():
+                    terrain_patches_dict[(lat, lon)]= None
+                    continue
                 stacked_patch = np.stack([aspect_patch[0], twi_patch[0]], axis=-1)
-                stacked_patch = data_utils.replace_nan_inf_data(stacked_patch)
-                terrain_patches.append(stacked_patch)
-        return terrain_patches
+                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
+                terrain_patches_dict[(lat, lon)] = stacked_patch
+        return terrain_patches_dict
     
-    def get_climate_patches(year, month, lat_lon_pairs, patch_size_meters):
+    def get_climate_patches_dict(year, month, lat_lon_pairs, patch_size_meters):
         prec_raster_path =f'Data/WorldClim_SA/wc2.1_2.5m_prec_{year}-{month:02d}.tif'
         tmin_raster_path = f'Data/WorldClim_SA/wc2.1_2.5m_tmin_{year}-{month:02d}.tif'
         tmax_raster_path = f'Data/WorldClim_SA/wc2.1_2.5m_tmax_{year}-{month:02d}.tif'
@@ -191,7 +212,7 @@ class training_data_utils:
             return None
         
         _, no_of_days = calendar.monthrange(year=year, month=month)
-        climate_patches = []
+        climate_patches_dict = {}
 
         with rasterio.open(prec_raster_path) as prec_dataset, \
              rasterio.open(tmin_raster_path) as tmin_dataset, \
@@ -207,22 +228,22 @@ class training_data_utils:
                                                     output_patch_folder=output_prec_patch_folder, 
                                                     output_patch_filename=output_filename)
                 if prec_patch is None or not prec_patch.any():
-                    climate_patches.append(None)
+                    climate_patches_dict[(year, month, lat, lon)]= None
                     continue
                 tmin_patch = training_data_utils.extract_patch(tmin_dataset, lat, lon, patch_size_pixels)
                 if tmin_patch is None or not tmin_patch.any():
-                    climate_patches.append(None)
+                    climate_patches_dict[(year, month, lat, lon)]= None
                     continue
                 tmax_patch = training_data_utils.extract_patch(tmax_dataset, lat, lon, patch_size_pixels)
                 if tmax_patch is None or not tmax_patch.any():
-                    climate_patches.append(None)
+                    climate_patches_dict[(year, month, lat, lon)]= None
                     continue
                 stacked_patch = np.stack([prec_patch[0]/no_of_days, tmin_patch[0], tmax_patch[0]], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
-                climate_patches.append(stacked_patch)  
-        return climate_patches
+                climate_patches_dict[(year, month, lat, lon)] = stacked_patch
+        return climate_patches_dict
     
-    def get_landsat_patches(year, lat_lon_pairs, patch_size_meters):
+    def get_landsat_patches_dict(year, lat_lon_pairs, patch_size_meters):
         raster_path=f'Data/LandSat/Annual_Processed/{year}/Landsat_{year}.tif'
         output_folder=f'DataProcessing/Patches/Landsat/{patch_size_meters}/{year}'
 
@@ -232,7 +253,7 @@ class training_data_utils:
         if not os.path.exists(raster_path):
             return None
         
-        landsat_patches = []
+        landsat_patches_dict = {}
         
         with rasterio.open(raster_path) as dataset:
             for lat, lon in lat_lon_pairs:
@@ -245,7 +266,7 @@ class training_data_utils:
                                                 output_patch_folder=output_folder, 
                                                 output_patch_filename=output_filename)
                 if patch is None or not patch.any():
-                    landsat_patches.append(None)
+                    landsat_patches_dict[(year, lat, lon)] = None
                     continue
                 red_band = patch[0]
                 green_band = patch[1]
@@ -257,8 +278,8 @@ class training_data_utils:
                 rvi_band = patch[7]
                 stacked_patch = np.stack([ndvi_band, evi_band, savi_band, rvi_band], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
-                landsat_patches.append(stacked_patch)
-        return landsat_patches
+                landsat_patches_dict[(year, lat, lon)] = stacked_patch
+        return landsat_patches_dict
     
     def append_patch(year, month, lat, lon, c_percent, covariates, patch):
         num_channels = patch.shape[-1]
@@ -284,41 +305,48 @@ class training_data_utils:
         terrain_data = []
         targets = []
 
+        lat_lon_pairs = list(set(zip(soc_data['Lat'], soc_data['Lon'])))
+  
+        terrain_patches_dict = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
+        if terrain_patches_dict is None:
+            return None
+
         for year in years:
+            print(f'\nFetching training data for the {year}\n')
+            soc_data_yearly = soc_data[(soc_data['Year'] == year)]
+            lat_lon_pairs_yearly = list(set(zip(soc_data_yearly['Lat'], soc_data_yearly['Lon'])))
+            
+            landsat_patches_dict = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs_yearly, patch_size_meters=patch_size_meters_landsat)
+            if landsat_patches_dict is None:
+                continue
+
             for month in range(start_month, end_month + 1):
                 soc_data_monthly = soc_data[(soc_data['Year'] == year) & (soc_data['Month'] == month)]
                 
                 if soc_data_monthly.empty == True:
                     continue
 
-                lat_lon_pairs_monthly = list(zip(soc_data_monthly['Lat'], soc_data_monthly['Lon']))
+                lat_lon_pairs_monthly = list(set(zip(soc_data_monthly['Lat'], soc_data_monthly['Lon'])))
 
-                landsat_patches = training_data_utils.get_landsat_patches(year=year, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_landsat)
-                if landsat_patches is None:
-                    continue
-
-                climate_patches = training_data_utils.get_climate_patches(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
-                if climate_patches is None:
-                    continue
-
-                terrain_patches = training_data_utils.get_terrain_patches(lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_terrain)
-                if terrain_patches is None:
+                climate_patches_dict = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
+                if climate_patches_dict is None:
                     continue
 
                 for idx in range(len(lat_lon_pairs_monthly)):
-                    lat, lon = lat_lon_pairs_monthly[idx]
+                    lat = soc_data_monthly.iloc[idx]['Lat']
+                    lon = soc_data_monthly.iloc[idx]['Lon']
                     c_percent = soc_data_monthly.iloc[idx]['C']
+
+                    terrain_patch = terrain_patches_dict.get((lat, lon))
+                    if terrain_patch is None:
+                        continue
                     
-                    landsat_patch = landsat_patches[idx]
+                    landsat_patch = landsat_patches_dict.get((year, lat, lon))
                     if landsat_patch is None:
                         continue
 
-                    climate_patch = climate_patches[idx]
+                    climate_patch = climate_patches_dict.get((year, month, lat, lon))
                     if climate_patch is None:
-                        continue
-
-                    terrain_patch = terrain_patches[idx]
-                    if terrain_patch is None:
                         continue
 
                     landsat_data.append(landsat_patch)

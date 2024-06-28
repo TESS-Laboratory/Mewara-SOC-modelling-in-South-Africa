@@ -12,15 +12,15 @@ class test_metrics:
         predictions = []
         soc_data = pd.read_csv(soc_path)
 
-        landsat_patches = training_data_utils.get_landsat_patches(year=year, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_landsat)
+        landsat_patches = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_landsat)
         if landsat_patches is None:
             print(f'\nSkipping year {year} as missing landsat raster\n')
             return
         
-        terrain_patches = training_data_utils.get_terrain_patches(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
+        terrain_patches = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
         
         for month in range(start_month, end_month + 1):
-            climate_patches = training_data_utils.get_climate_patches(year=year, month=month, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_climate) 
+            climate_patches = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_climate) 
 
             for idx in range(len(lat_lon_pairs)):
                 lat, lon = lat_lon_pairs[idx]

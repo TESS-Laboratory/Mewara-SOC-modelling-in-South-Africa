@@ -1,3 +1,4 @@
+import os
 from matplotlib import pyplot as plt
 import shap
 import numpy as np
@@ -10,6 +11,7 @@ class CNN():
     def __init__(self,  use_landsat, use_climate, use_terrain, model_path = None):
         if model_path is not None:
             self.model = self.load_model(model_path=model_path)
+            self.model_name = os.path.basename(model_path)
         else:
             self.model = None
 
@@ -17,6 +19,9 @@ class CNN():
         self.use_climate = use_climate
         self.use_terrain = use_terrain
 
+    def get_model_name(self):
+        return self.model_name
+    
     def load_model(self, model_path):
         self.model = models.load_model(model_path)
         return self.model

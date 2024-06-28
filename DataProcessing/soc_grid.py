@@ -2,12 +2,25 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
 import re
+from Model.training_data_utils import training_data_utils
 
 #south_africa = data_utils.get_sa_shape()
 south_africa = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres')).query('name == "South Africa"')
 
 def get_soc_data():
     return pd.read_csv(r'DataPreprocessing/soc_gdf.csv')
+
+def merge_bulk_density_isda(soc_data):
+    soc_empty_bulk_density = soc_data[soc_data['BD'] == '']
+    lat_lon_pairs_with_empty_bulk_densities = list(set(zip(soc_empty_bulk_density['Lat'], soc_empty_bulk_density['Lon'])))
+    patches = training_data_utils.get_bd_patches_dict(lat_lon_pairs=lat_lon_pairs_with_empty_bulk_densities)
+    for idx in range(len(lat_lon_pairs_with_empty_bulk_densities)): 
+        lat = lat_lon_pairs_with_empty_bulk_densities.iloc[idx]['Lat']
+        lon = lat_lon_pairs_with_empty_bulk_densities.iloc[idx]['Lon'] 
+        soc_lat_lon = soc_data[soc_data['Lat'] == lat & soc_data['Lon'] == lon]
+        soc_lat_lon['BD_iSDA'] = patches.get((lat, lon))
+
+    return soc_data
 
 def degrees_to_decimal(lat_or_lon):
     # Skip conversion if the input is already a decimal number
@@ -83,6 +96,8 @@ def preprocess_data():
     soc_data = soc_data.dropna(subset=['Lat', 'Lon']) # Drop rows with empty latitude or longitude
     soc_data = soc_data[soc_data['C'] <= 20] # Drop rows where C % is greater 20
     soc_data.drop_duplicates(['Source', 'Date', 'Lat', 'Lon', 'C', 'BD'], inplace=True) # Drop duplicates
+
+    soc_data = merge_bulk_density_isda(soc_data=soc_data)
 
     geometry = [Point(xy) for xy in zip(soc_data.Lon, soc_data.Lat)]
     soc_gdf = gpd.GeoDataFrame(soc_data, crs="EPSG:4326", geometry=geometry)

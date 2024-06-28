@@ -1,6 +1,6 @@
 import pandas as pd
 from Maps.test_metrics import test_metrics
-from DataProcessing.data_utils import data_utils
+import DataProcessing.data_utils
 
 class map_utils:
     @staticmethod
@@ -10,9 +10,9 @@ class map_utils:
         predictions_output_path = f'{output_dir}/predictions_{year}.csv'
         predicted_plot_output_path = f'{output_dir}/Predicted/predicted_{year}.png'
 
-        square_grid = pd.read_csv(r'DataProcessing\hex_grid.csv')
-        square_grid = square_grid.dropna(subset=['Hex_Center_Lat', 'Hex_Center_Lon'])
-        lat_lon_pairs = list(set(zip(square_grid['Hex_Center_Lat'], square_grid['Hex_Center_Lon'])))
+        hex_grid = pd.read_csv(r'DataProcessing/soc_hex_grid.csv')
+        hex_grid = hex_grid.dropna(subset=['Hex_Center_Lat', 'Hex_Center_Lon'])
+        lat_lon_pairs = list(set(zip(hex_grid['Hex_Center_Lat'], hex_grid['Hex_Center_Lon'])))
 
         print(f'\nFetching predictions for year {year}\n')
         predictions = tm.predict(year=year,
@@ -33,7 +33,7 @@ class map_utils:
     def plot_actual_map(year):
         soil_data = pd.read_csv(r'DataProcessing/soc_gdf.csv')
         soil_data_year = soil_data[soil_data['Year'] == year]
-        data_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
+        DataProcessing.data_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
                                            title=f'Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=True,
                                            savePlot=True,
@@ -47,7 +47,7 @@ class map_utils:
             return None
         
         predictions_year = predictions[predictions['Year'] == year]
-        data_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
+        DataProcessing.data_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
                                            title=f'Predicted Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=True,
                                            savePlot=True,

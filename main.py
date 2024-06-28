@@ -10,15 +10,15 @@ from Maps.maps_utils import map_utils
 # Set environment variables for XLA flags
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
-years = [2008, 2009, 2010, 2018]
-#years = [2018]
+years = [2000, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
+#years = [2007, 2008]
 start_month = 1
 end_month = 12
 epochs = 30
 
-use_landsat_training = True
-use_climate_training = True
-use_terrain_training = True
+use_landsat = True
+use_climate = True
+use_terrain = True
 
 patch_size_meters_landsat = 30720 # roughly 256*256 pixels
 patch_size_meters_climate = 30720 # roughly 7*7 pixels
@@ -51,9 +51,9 @@ def test(model):
         print(f'\n C % for Lat Lon ({lat_lon}):\n')
         for year in [2008, 2018]:
             for month in range(1, 2):
-                climate_patch = training_data_utils.get_climate_patches(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
-                landsat_patch = training_data_utils.get_landsat_patches(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
-                terrain_patch = training_data_utils.get_terrain_patches(lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_terrain)
+                climate_patch = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
+                landsat_patch = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
+                terrain_patch = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_terrain)
 
                 predictions = model.predict(landsat_patch, climate_patch, terrain_patch)
                 print(f'\t{lat_lon}; Year_Month: {year}_{month} = {predictions[0]:.2f}\n')
@@ -86,11 +86,11 @@ def get_model(model_kind, model_path):
     if model_kind == 'RF':
         return RF(model_path=model_path)
     elif model_kind == 'CNN':
-        return CNN(model_path=model_path)
+        return CNN(model_path=model_path, use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
     
 def plot_maps(model_kind, model_path):
     model = get_model(model_kind=model_kind, model_path=model_path)
-    for year in range(2009, 2021):
+    for year in years:
         map_utils.create_map(year=year, 
                         start_month=1, 
                         end_month=12,
@@ -102,9 +102,9 @@ def plot_maps(model_kind, model_path):
 
 if __name__ == "__main__":
     rf = RF()
-    cnn = CNN(use_landsat=use_landsat_training, use_climate=use_climate_training, use_terrain=use_terrain_training)
+    cnn = CNN(use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
 
-    variables = f'_L{use_landsat_training}_C{use_climate_training}_T{use_terrain_training}_'
+    variables = f'_L{use_landsat}_C{use_climate}_T{use_terrain}_'
     model_output_cnn = f'Model/{cnn.__class__.__name__}_Models/{cnn.__class__.__name__}{variables}{epochs}.keras'
     model_output_rf = f'Model/{rf.__class__.__name__}_Models/{rf.__class__.__name__}{variables}{epochs}'
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     '''CNN'''
     train(model=cnn, model_output_path=model_output_cnn)
-    cnn_test = CNN(model_path=model_output_cnn, use_landsat=use_landsat_training, use_climate=use_climate_training, use_terrain=use_terrain_training)
+    cnn_test = CNN(model_path=model_output_cnn, use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
     test(cnn_test)
 
     '''RF'''
@@ -125,6 +125,6 @@ if __name__ == "__main__":
     #cnn_model.interpret_shap(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data)
 
     '''Maps'''
-    plot_maps(model_kind='RF', model_path=model_output_rf)
+    plot_maps(model_kind='CNN', model_path=model_output_cnn)
   
     

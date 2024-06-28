@@ -1,5 +1,6 @@
 requests
 pandas
+numpy
 earthpy
 landsatxplore
 elevation
