@@ -78,9 +78,8 @@ def train(model, model_output_path):
 
 def keras_tuner():
     landsat_data, climate_data, terrain_data, targets = get_training_dataset()
-    n_samples = 10
     print('\n Tuning CNN Model: \n')
-    KerasTuner.search(input_landsat_data=landsat_data[:n_samples], input_climate_data=climate_data[:n_samples], input_terrain_data=terrain_data[:n_samples], targets=targets[:n_samples], epochs=10)
+    KerasTuner.search(input_landsat_data=landsat_data, input_climate_data=climate_data, input_terrain_data=terrain_data, targets=targets, epochs=6)
 
 def get_model(model_kind, model_path):
     if model_kind == 'RF':
@@ -109,12 +108,12 @@ if __name__ == "__main__":
     model_output_rf = f'Model/{rf.__class__.__name__}_Models/{rf.__class__.__name__}{variables}{epochs}'
 
     '''KerasTuner'''
-    #keras_tuner()
+    keras_tuner()
 
     '''CNN'''
-    train(model=cnn, model_output_path=model_output_cnn)
-    cnn_test = CNN(model_path=model_output_cnn, use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
-    test(cnn_test)
+    #train(model=cnn, model_output_path=model_output_cnn)
+    #cnn_test = CNN(model_path=model_output_cnn, use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
+    #test(cnn_test)
 
     '''RF'''
     #train(model=rf, model_output_path=model_output_rf)
@@ -125,6 +124,6 @@ if __name__ == "__main__":
     #cnn_model.interpret_shap(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data)
 
     '''Maps'''
-    plot_maps(model_kind='CNN', model_path=model_output_cnn)
+    #plot_maps(model_kind='CNN', model_path=model_output_cnn)
   
     

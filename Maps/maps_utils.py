@@ -1,6 +1,6 @@
 import pandas as pd
 from Maps.test_metrics import test_metrics
-import DataProcessing.data_utils
+import DataProcessing.grid_utils
 
 class map_utils:
     @staticmethod
@@ -33,7 +33,7 @@ class map_utils:
     def plot_actual_map(year):
         soil_data = pd.read_csv(r'DataProcessing/soc_gdf.csv')
         soil_data_year = soil_data[soil_data['Year'] == year]
-        DataProcessing.data_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
+        DataProcessing.grid_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
                                            title=f'Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=False,
                                            savePlot=True,
@@ -47,7 +47,7 @@ class map_utils:
             return None
         
         predictions_year = predictions[predictions['Year'] == year]
-        DataProcessing.data_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
+        DataProcessing.grid_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
                                            title=f'Predicted Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=False,
                                            savePlot=True,
