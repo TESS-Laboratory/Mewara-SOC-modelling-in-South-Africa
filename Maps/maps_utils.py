@@ -35,7 +35,7 @@ class map_utils:
         soil_data_year = soil_data[soil_data['Year'] == year]
         DataProcessing.data_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
                                            title=f'Average C (% by Mass) for South Africa in year {year}',
-                                           use_square_grid=True,
+                                           use_square_grid=False,
                                            savePlot=True,
                                            output_plot_path=f'Maps/ActualMaps/Actual_{year}.png')
         #input('press key to continue')
@@ -49,7 +49,7 @@ class map_utils:
         predictions_year = predictions[predictions['Year'] == year]
         DataProcessing.data_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
                                            title=f'Predicted Average C (% by Mass) for South Africa in year {year}',
-                                           use_square_grid=True,
+                                           use_square_grid=False,
                                            savePlot=True,
                                            output_plot_path=predictions_plot_path)
         #input('press key to continue')

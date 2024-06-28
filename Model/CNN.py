@@ -96,19 +96,6 @@ class CNN():
         x = layers.Dropout(0.5)(x)
         return input_layer, x
 
-    def create_cnn_branch(self, input_shape):
-        input_layer = layers.Input(shape=input_shape)
-        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(input_layer)
-        x = layers.MaxPooling2D((2, 2), padding='same')(x)
-        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
-        x = layers.MaxPooling2D((2, 2), padding='same')(x)
-        x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-        x = layers.MaxPooling2D((2, 2), padding='same')(x)
-        x = layers.Flatten()(x)
-        x = layers.Dense(256, activation='relu')(x)
-        x = layers.Dropout(0.5)(x)
-        return input_layer, x
-
     def _build_model(self, input_shape_landsat, input_shape_climate, input_shape_terrain):
         inputs = []
         branches = []
@@ -139,8 +126,8 @@ class CNN():
         # Model
         model = models.Model(inputs=inputs, outputs=output)
         model.compile(optimizer=optimizers.Adam(learning_rate=1e-3), loss=losses.MeanSquaredError(), metrics=[metrics.R2Score(),
-                                                                                                               metrics.MeanAbsoluteError(), 
-                                                                                                               metrics.RootMeanSquaredError()])
+                                                                                                              metrics.MeanAbsoluteError(), 
+                                                                                                              metrics.RootMeanSquaredError()])
 
         model.summary()
         return model
@@ -213,24 +200,24 @@ class CNN():
             test_inputs.append(terrain_test)
         return train_inputs,val_inputs,test_inputs
 
-    def predict(self, landsat_data, climate_data, terrain_data):
+    def predict(self, landsat_patch, climate_patch, terrain_patch):
         # Normalize data
         landsat_patch = np.array([landsat_patch]) 
         climate_patch = np.array([climate_patch]) 
         terrain_patch = np.array([terrain_patch]) 
 
-        landsat_data = np.round(landsat_data, 2)
-        climate_data = np.round(climate_data, 2)
-        terrain_data = np.round(terrain_data, 2)
+        landsat_patch = np.round(landsat_patch, 2)
+        climate_patch = np.round(climate_patch, 2)
+        terrain_patch = np.round(terrain_patch, 2)
 
         inputs = []
         if self.use_landsat:
-            inputs.append(landsat_data)
+            inputs.append(landsat_patch)
         
         if self.use_climate:
-            inputs.append(climate_data)
+            inputs.append(climate_patch)
 
         if self.use_terrain:
-            inputs.append(terrain_data)
+            inputs.append(terrain_patch)
 
         return self.model.predict(inputs)[0]

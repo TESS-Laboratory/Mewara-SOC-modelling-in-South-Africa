@@ -19,6 +19,7 @@ class test_metrics:
         
         terrain_patches = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
         
+        print(f'\n\tFetching climate patches for the {year}\n')
         for month in range(start_month, end_month + 1):
             climate_patches = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_climate) 
 

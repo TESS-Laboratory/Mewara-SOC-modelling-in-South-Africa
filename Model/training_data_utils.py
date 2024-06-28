@@ -180,7 +180,7 @@ class training_data_utils:
                     terrain_patches_dict[(lat, lon)]= None
                     continue
                 twi_patch = training_data_utils.extract_patch(dataset=twi_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
-                if aspect_patch is None or not aspect_patch.any():
+                if twi_patch is None or not twi_patch.any():
                     terrain_patches_dict[(lat, lon)]= None
                     continue
                 stacked_patch = np.stack([aspect_patch[0], twi_patch[0]], axis=-1)

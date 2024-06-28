@@ -90,7 +90,7 @@ def get_model(model_kind, model_path):
     
 def plot_maps(model_kind, model_path):
     model = get_model(model_kind=model_kind, model_path=model_path)
-    for year in years:
+    for year in [2008, 2018]:
         map_utils.create_map(year=year, 
                         start_month=1, 
                         end_month=12,
