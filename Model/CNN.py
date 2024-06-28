@@ -144,7 +144,7 @@ class CNN():
         terrain_data = np.round(terrain_data, 2)
         targets = np.round(targets, 2)
 
-        batch_size = 8
+        batch_size = 32
 
         # Split data into training and test sets
         landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, \

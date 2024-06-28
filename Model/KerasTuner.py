@@ -87,7 +87,7 @@ class KerasTuner:
     def search(input_landsat_data, input_climate_data, input_terrain_data, targets, epochs):
         tuner_search = RandomSearch(KerasTuner._build_model,
                                     objective='val_mean_absolute_error',
-                                    max_trials=20,
+                                    max_trials=30,
                                     directory=r'Model/KerasTuner',
                                     project_name=f'kt_{random.randint(0, 100)}')
         
