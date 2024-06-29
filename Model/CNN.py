@@ -96,6 +96,19 @@ class CNN():
         x = layers.Dropout(0.5)(x)
         return input_layer, x
 
+    def create_cnn_branch(self, input_shape):
+        input_layer = layers.Input(shape=input_shape)
+        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(input_layer)
+        x = layers.MaxPooling2D((2, 2), padding='same')(x)
+        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+        x = layers.MaxPooling2D((2, 2), padding='same')(x)
+        x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+        x = layers.MaxPooling2D((2, 2), padding='same')(x)
+        x = layers.Flatten()(x)
+        x = layers.Dense(256, activation='relu')(x)
+        x = layers.Dropout(0.5)(x)
+        return input_layer, x
+
     def _build_model(self, input_shape_landsat, input_shape_climate, input_shape_terrain):
         inputs = []
         branches = []
@@ -114,7 +127,7 @@ class CNN():
 
         if self.use_terrain:
             # Terrain CNN branch
-            terrain_input, terrain_branch = self.create_landsat_terrain_branch(input_shape=input_shape_terrain)
+            terrain_input, terrain_branch = self.create_cnn_branch(input_shape=input_shape_terrain)
             inputs.append(terrain_input)
             branches.append(terrain_branch)
 
@@ -144,7 +157,7 @@ class CNN():
         terrain_data = np.round(terrain_data, 2)
         targets = np.round(targets, 2)
 
-        batch_size = 32
+        batch_size = 64
 
         # Split data into training and test sets
         landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, \

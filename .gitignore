@@ -174,3 +174,5 @@ Model/KerasTuner
 Model/CNN_Models
 Model/Best_CNN_Models
 Model/RF_Models
+Model/Train
+Model/Test

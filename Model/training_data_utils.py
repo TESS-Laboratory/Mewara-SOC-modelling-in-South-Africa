@@ -1,8 +1,10 @@
 import calendar
 import os
+import h5py
 import numpy as np
 import pandas as pd
 import rasterio
+import zarr
 from rasterio.windows import Window
 from rasterio.transform import from_origin
 
@@ -108,28 +110,19 @@ class training_data_utils:
                 dst.write(patch[band], band + 1)
     
     def replace_nan_inf_data(data):
-        # Replace Inf with the maximum finite value in each slice
-        max_value = np.nanmax(np.where(np.isfinite(data), data, -np.inf), axis=(0, 1))
-        mask_inf = np.isinf(data)
-        for i in range(data.shape[-1]):
-            data[mask_inf[..., i], i] = max_value[i]
-
-        # Calculate mean values ignoring NaN
-        mean_value = np.empty(data.shape[-1])
-        for i in range(data.shape[-1]):
-            slice_data = data[..., i]
-            if np.all(np.isnan(slice_data)):
-                mean_value[i] = np.nan  # Default value when all elements are NaN
-            else:
-                mean_value[i] = np.nanmean(slice_data)
+       # Mask out NaNs, Infs, and -Infs
+        mask_invalid = np.logical_or(np.isnan(data), np.isinf(data))
+        data_valid = np.ma.masked_array(data, mask=mask_invalid)
         
-        # Replace NaN with mean values
-        mask_nan = np.isnan(data)
+        # Calculate mean values ignoring NaN, Inf, or -Inf
+        mean_value = np.nanmean(data_valid, axis=(0, 1))
+        
+        # Replace NaN, Inf, and -Inf with mean values
         for i in range(data.shape[-1]):
-            data[mask_nan[..., i], i] = mean_value[i]
+            data[mask_invalid[..., i], i] = mean_value[i]
 
-        # Identify rows that are completely invalid (all NaN or Inf)
-        invalid_rows = np.all(np.logical_or(np.isnan(data), np.isinf(data)), axis=(1, 2))
+        # Identify rows that are completely invalid (all NaN or Inf or -Inf)
+        invalid_rows = np.all(np.logical_or(np.isnan(data), np.isinf(data), np.isneginf(data)), axis=(1, 2))
 
         return data[~invalid_rows]
    
@@ -280,25 +273,29 @@ class training_data_utils:
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 landsat_patches_dict[(year, lat, lon)] = stacked_patch
         return landsat_patches_dict
-    
-    def append_patch(year, month, lat, lon, c_percent, covariates, patch):
-        num_channels = patch.shape[-1]
-       
-        for i in range(patch.shape[0]):
-            for j in range(patch.shape[1]):
-                covariate = [year, month, lat, lon, c_percent]
-                for k in range(num_channels):
-                    covariate.append(patch[i, j, k])
-                covariates.append(covariate)
-                
+     
     def get_training_data(soc_data_path, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain):
+        return training_data_utils._get_training_test_data(prefix='Train',
+                                                    soc_data_path=soc_data_path,
+                                                    years=years,
+                                                    start_month=start_month,
+                                                    end_month=end_month,
+                                                    patch_size_meters_landsat=patch_size_meters_landsat,
+                                                    patch_size_meters_climate=patch_size_meters_climate,
+                                                    patch_size_meters_terrain=patch_size_meters_terrain)
+        
+    def get_test_data(soc_data_path, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain):
+        return training_data_utils._get_training_test_data(prefix='Test',
+                                                    soc_data_path=soc_data_path,
+                                                    years=years,
+                                                    start_month=start_month,
+                                                    end_month=end_month,
+                                                    patch_size_meters_landsat=patch_size_meters_landsat,
+                                                    patch_size_meters_climate=patch_size_meters_climate,
+                                                    patch_size_meters_terrain=patch_size_meters_terrain)
+ 
+    def _get_training_test_data(prefix, soc_data_path, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain):
         soc_data = pd.read_csv(soc_data_path)
-        covariate_columns_landsat = ['YEAR', 'MONTH', 'LAT', 'LON', 'C', 'NIR', 'NDVI', 'EVI', 'RVI']  
-        covariate_columns_climate = ['YEAR', 'MONTH', 'LAT', 'LON', 'C', 'PREC', 'TMIN', 'TMAX']
-        covariate_columns_terrain = ['YEAR', 'MONTH', 'LAT', 'LON', 'C', 'DEM', 'SLOPE', 'TWI'] 
-        covariates_landsat = []
-        covariates_climate = []
-        covariates_terrain = []
 
         landsat_data = []
         climate_data = []
@@ -307,16 +304,30 @@ class training_data_utils:
 
         lat_lon_pairs = list(set(zip(soc_data['Lat'], soc_data['Lon'])))
   
-        terrain_patches_dict = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
+        print(f'\n Fetching {prefix} data:\n')
+
+        terrain_patches_path = f"Model\{prefix}\Terrain\{prefix}_terrain.h5"
+        if os.path.exists(terrain_patches_path):
+            terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
+        else:
+            terrain_patches_dict = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
+            training_data_utils.save_patches(output_path=terrain_patches_path, patches_dict=terrain_patches_dict)
+
         if terrain_patches_dict is None:
             return None
-
+        
         for year in years:
-            print(f'\nFetching training data for the {year}\n')
+            print(f'\nProcessing {prefix} {year}\n')
             soc_data_yearly = soc_data[(soc_data['Year'] == year)]
             lat_lon_pairs_yearly = list(set(zip(soc_data_yearly['Lat'], soc_data_yearly['Lon'])))
             
-            landsat_patches_dict = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs_yearly, patch_size_meters=patch_size_meters_landsat)
+            landsat_patches_path = f"Model\{prefix}\Landsat\{prefix}_landsat_{year}.h5"
+            if os.path.exists(landsat_patches_path):
+                landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
+            else:
+                landsat_patches_dict = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs_yearly, patch_size_meters=patch_size_meters_landsat)
+                training_data_utils.save_patches(output_path=landsat_patches_path, patches_dict=landsat_patches_dict)
+
             if landsat_patches_dict is None:
                 continue
 
@@ -328,10 +339,16 @@ class training_data_utils:
 
                 lat_lon_pairs_monthly = list(set(zip(soc_data_monthly['Lat'], soc_data_monthly['Lon'])))
 
-                climate_patches_dict = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
+                climate_patches_path = f"Model\{prefix}\Climate\{prefix}_climate_{year}_{month}.h5"
+                if os.path.exists(climate_patches_path):
+                    climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
+                else:
+                    climate_patches_dict = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
+                    training_data_utils.save_patches(output_path=climate_patches_path, patches_dict=climate_patches_dict)
+
                 if climate_patches_dict is None:
                     continue
-
+                
                 for idx in range(len(lat_lon_pairs_monthly)):
                     lat = soc_data_monthly.iloc[idx]['Lat']
                     lon = soc_data_monthly.iloc[idx]['Lon']
@@ -353,20 +370,55 @@ class training_data_utils:
                     climate_data.append(climate_patch)
                     terrain_data.append(terrain_patch)
                     targets.append(c_percent)
-                    '''
-                    data_utils.append_patch(year=year, month=month, lat=lat, lon=lon, c_percent=c_percent, covariates=covariates_landsat, patch=landsat_patch)
-                    data_utils.append_patch(year=year, month=month, lat=lat, lon=lon, c_percent=c_percent, covariates=covariates_climate, patch=climate_patch)
-                    data_utils.append_patch(year=year, month=month, lat=lat, lon=lon, c_percent=c_percent, covariates=covariates_terrain, patch=terrain_patch)  
-                    '''
-            '''
-            data_utils.save_csv(arr=covariates_landsat, column_names=covariate_columns_landsat, output_path = f'DataProcessingCovariates/{year}/Landsat.csv')
-            data_utils.save_csv(arr=covariates_climate, column_names=covariate_columns_climate, output_path = f'DataProcessing/Covariates/{year}/Climate.csv')
-            data_utils.save_csv(arr=covariates_terrain, column_names=covariate_columns_terrain, output_path = f'DataProcessing/Covariates/{year}/Terrain.csv')
-            '''
+                    
         return np.array(landsat_data), np.array(climate_data), np.array(terrain_data), np.array(targets)
+
+    def save_patches(output_path, patches_dict):
+        with h5py.File(output_path, 'w') as h5f:
+            for key, value in patches_dict.items():
+                if len(key) == 2:
+                    group = h5f.create_group(f"{key[0]}/{key[1]}")
+                elif len(key) == 3:
+                    group = h5f.create_group(f"{key[0]}/{key[1]}/{key[2]}")
+                elif len(key) == 4:
+                    group = h5f.create_group(f"{key[0]}/{key[1]}/{key[2]}/{key[3]}")
+                if value is None:
+                    continue
+                group.create_dataset('data', data=value, compression='gzip')
+
+        print(f'Dictionary saved to {output_path}')
+
+    def load_patches(input_path):
+        patches_dict = {}
+
+        def recursive_load(group, keys):
+            for key in group.keys():
+                new_keys = keys + [key]
+                if isinstance(group[key], h5py.Group):
+                    recursive_load(group[key], new_keys)
+                else:
+                    if len(keys) == 2:
+                        #Lat, Lon
+                        key_tuple = (float(new_keys[0]), float(new_keys[1]))
+                    elif len(keys) == 3:
+                        # Year, Lat, Lon
+                        key_tuple = (int(new_keys[0]), float(new_keys[1]), float(new_keys[2]))
+                    elif len(keys) == 4:
+                        # Year, Month, Lat, Lon
+                        key_tuple = (int(new_keys[0]), int(new_keys[1]), float(new_keys[2]), float(new_keys[3]))
+                    else:
+                        continue
+                        #raise ValueError(f"Unexpected key length: {len(keys)}")
+                    
+                    patches_dict[key_tuple] = group[key][:]
+
+        with h5py.File(input_path, 'r') as h5f:
+            recursive_load(h5f, [])
+
+        return patches_dict
 
     def save_csv(arr, column_names, output_path):    
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        covariates_df = pd.DataFrame(arr, columns=column_names)
-        covariates_df.to_csv(output_path, index=False)
-        print(f'\nCovariates saved to {output_path}\n')
+        df = pd.DataFrame(arr, columns=column_names)
+        df.to_csv(output_path, index=False)
+        print(f'\Csv saved to {output_path}\n')

@@ -11,7 +11,7 @@ from Maps.maps_utils import map_utils
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
 years = [2000, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
-#years = [2007, 2008]
+#years = [2018]
 start_month = 1
 end_month = 12
 epochs = 30
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     model_output_rf = f'Model/{rf.__class__.__name__}_Models/{rf.__class__.__name__}{variables}{epochs}'
 
     '''KerasTuner'''
-    keras_tuner()
+    #keras_tuner()
 
     '''CNN'''
     #train(model=cnn, model_output_path=model_output_cnn)
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     #test(cnn_test)
 
     '''RF'''
-    #train(model=rf, model_output_path=model_output_rf)
+    train(model=rf, model_output_path=model_output_rf)
     #rf_test = RF(model_path=model_output_rf)
     #test(rf_test)
 
