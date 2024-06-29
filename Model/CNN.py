@@ -100,9 +100,9 @@ class CNN():
         input_layer = layers.Input(shape=input_shape)
         x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(input_layer)
         x = layers.MaxPooling2D((2, 2), padding='same')(x)
-        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
-        x = layers.MaxPooling2D((2, 2), padding='same')(x)
         x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+        x = layers.MaxPooling2D((2, 2), padding='same')(x)
+        x = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
         x = layers.MaxPooling2D((2, 2), padding='same')(x)
         x = layers.Flatten()(x)
         x = layers.Dense(256, activation='relu')(x)
@@ -157,7 +157,7 @@ class CNN():
         terrain_data = np.round(terrain_data, 2)
         targets = np.round(targets, 2)
 
-        batch_size = 64
+        batch_size = 32
 
         # Split data into training and test sets
         landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, \

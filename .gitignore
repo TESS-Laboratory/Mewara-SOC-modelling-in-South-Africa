@@ -168,11 +168,11 @@ Data/TerrainData
 Data/WorldClim
 Data/WorldClim_SA
 Data/References
+Data/Train
+Data/Test
 
 DataProcessing/Patches
 Model/KerasTuner
 Model/CNN_Models
 Model/Best_CNN_Models
 Model/RF_Models
-Model/Train
-Model/Test

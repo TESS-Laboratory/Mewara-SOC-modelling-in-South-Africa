@@ -4,7 +4,6 @@ import h5py
 import numpy as np
 import pandas as pd
 import rasterio
-import zarr
 from rasterio.windows import Window
 from rasterio.transform import from_origin
 
@@ -306,7 +305,7 @@ class training_data_utils:
   
         print(f'\n Fetching {prefix} data:\n')
 
-        terrain_patches_path = f"Model\{prefix}\Terrain\{prefix}_terrain.h5"
+        terrain_patches_path = f"Data\{prefix}\Terrain\{prefix}_terrain.h5"
         if os.path.exists(terrain_patches_path):
             terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
         else:
@@ -321,7 +320,7 @@ class training_data_utils:
             soc_data_yearly = soc_data[(soc_data['Year'] == year)]
             lat_lon_pairs_yearly = list(set(zip(soc_data_yearly['Lat'], soc_data_yearly['Lon'])))
             
-            landsat_patches_path = f"Model\{prefix}\Landsat\{prefix}_landsat_{year}.h5"
+            landsat_patches_path = f"Data\{prefix}\Landsat\{prefix}_landsat_{year}.h5"
             if os.path.exists(landsat_patches_path):
                 landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
             else:
@@ -339,7 +338,7 @@ class training_data_utils:
 
                 lat_lon_pairs_monthly = list(set(zip(soc_data_monthly['Lat'], soc_data_monthly['Lon'])))
 
-                climate_patches_path = f"Model\{prefix}\Climate\{prefix}_climate_{year}_{month}.h5"
+                climate_patches_path = f"Data\{prefix}\Climate\{prefix}_climate_{year}_{month}.h5"
                 if os.path.exists(climate_patches_path):
                     climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
                 else:
@@ -407,8 +406,7 @@ class training_data_utils:
                         # Year, Month, Lat, Lon
                         key_tuple = (int(new_keys[0]), int(new_keys[1]), float(new_keys[2]), float(new_keys[3]))
                     else:
-                        continue
-                        #raise ValueError(f"Unexpected key length: {len(keys)}")
+                        raise ValueError(f"Unexpected key length: {len(keys)}")
                     
                     patches_dict[key_tuple] = group[key][:]
 
