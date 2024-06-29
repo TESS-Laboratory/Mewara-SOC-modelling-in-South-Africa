@@ -41,7 +41,7 @@ class RF:
         self.model = RandomForestRegressor(n_estimators=500, max_features=mtry, random_state=42)
         
         # Train the model
-        self.model.fit(X_train, y_train)
+        self.model = self.model.fit(X_train, y_train)
 
         # Save the model
         self.save_model(model_output_path)
@@ -80,10 +80,10 @@ class RF:
         print(f"RMSE: {rmse_test}")
         print(f"R^2 Score: {r2_test*100:.2f}")
 
-    def predict(self, landsat_patch_arr, climate_patch_arr, terrain_patch_arr):
-        landsat_patch_arr = np.array([landsat_patch_arr]) 
-        climate_patch_arr = np.array([climate_patch_arr])
-        terrain_patch_arr = np.array([terrain_patch_arr])
+    def predict(self, landsat_patch, climate_patch, terrain_patch):
+        landsat_patch_arr = np.array([landsat_patch]) 
+        climate_patch_arr = np.array([climate_patch])
+        terrain_patch_arr = np.array([terrain_patch])
         
         landsat_patch_arr = np.round(landsat_patch_arr, 2)
         climate_patch_arr = np.round(climate_patch_arr, 2)
@@ -121,12 +121,13 @@ class RF:
         plt.show()
 
     def save_model(self, model_output_path):
-        joblib.dump(self.model, model_output_path)
+        joblib.dump(self.model, filename = os.path.basename(model_output_path))
         print(f"Model saved to {model_output_path}")
 
     def load_model(self, model_path):
         model = joblib.load(model_path)
         print(f"Model loaded from {model_path}")
+        return model
     
     def get_model(self):
         return self.model

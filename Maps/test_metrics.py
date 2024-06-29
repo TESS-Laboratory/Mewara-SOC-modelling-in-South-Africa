@@ -7,44 +7,63 @@ class test_metrics:
     def __init__(self, model):
         self.model = model
     
-    def predict(self, year, start_month, end_month, lat_lon_pairs, soc_path, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, save=False, output_path=''):
+    def predict(self, year, start_month, end_month, soc_path, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, save, output_path, error_output_path):
         predictions_columns = ['Year', 'Month', 'Lat', 'Lon', 'C', 'Target_C']  
         predictions = []
         soc_data = pd.read_csv(soc_path)
-
-        landsat_patches = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_landsat)
-        if landsat_patches is None:
-            print(f'\nSkipping year {year} as missing landsat raster\n')
-            return
-        
-        terrain_patches = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
-        
-        print(f'\n\tFetching climate patches for the {year}\n')
+        lat_field = 'Hex_Center_Lat_x'
+        lon_field = 'Hex_Center_Lon_x'
+       
+        terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=soc_path,
+                                                          prefix='Test',
+                                                          years=[year], 
+                                                          start_month=start_month,
+                                                          end_month=end_month,
+                                                          patch_size_meters_landsat=patch_size_meters_landsat,
+                                                          patch_size_meters_climate=patch_size_meters_climate,
+                                                          patch_size_meters_terrain=patch_size_meters_terrain,
+                                                          lat_field=lat_field,
+                                                          lon_field=lon_field)
+  
         for month in range(start_month, end_month + 1):
-            climate_patches = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_climate) 
+            soc_data_monthly = soc_data[(soc_data['Year'] == year) & (soc_data['Month'] == month)]
+                
+            if soc_data_monthly.empty == True:
+                continue
+
+            lat_lon_pairs = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
 
             for idx in range(len(lat_lon_pairs)):
                 lat, lon = lat_lon_pairs[idx]
-                landsat_patch = landsat_patches[idx]
-                climate_patch = climate_patches[idx]
-                terrain_patch = terrain_patches[idx]
-
                 target_c = None
-                soc = soc_data[(soc_data['Year'] == year) & 
-                               (soc_data['Month'] == month) & 
-                               (soc_data['Hex_Center_Lat'] == lat) & 
-                               (soc_data['Hex_Center_Lon'] == lon)]
+                soc = soc_data_monthly[(soc_data_monthly[lat_field] == lat) & 
+                                       (soc_data_monthly[lon_field] == lon)]
                 if not soc.empty:
-                    target_c = soc['C']
+                    target_c = soc['Avg_C']
 
+                terrain_patch = terrain_patches_dict.get((lat, lon))
+                    
+                landsat_patch = landsat_patches_dict.get((year, lat, lon))
+            
+                climate_patch = climate_patches_dict.get((year, month, lat, lon))
+               
+                if target_c is not None and landsat_patch is None:
+                    test_metrics.log_error(error_output_path=error_output_path,
+                                           error_text=f"\nlandsat patch for year {year} month {month} lat {lat} and lon {lon} is missing")
+                
+                if target_c is not None and climate_patch is None:
+                    test_metrics.log_error(error_output_path=error_output_path,
+                                           error_text=f"\climate patch for year {year} month {month} lat {lat} and lon {lon} is missing")
+                
+                if target_c is not None and terrain_patch is None:
+                    test_metrics.log_error(error_output_path=error_output_path,
+                                           error_text=f"\terrain patch for year {year} month {month} lat {lat} and lon {lon} is missing")
+                
                 if landsat_patch is None or climate_patch is None or terrain_patch is None:
                     prediction = None
                 else:
                     prediction = self.model.predict(landsat_patch=landsat_patch, climate_patch=climate_patch, terrain_patch=terrain_patch)
                 
-                if target_c is None and prediction is None:
-                    continue
-
                 predictions.append([year, month, lat, lon, prediction, target_c])
 
         predictions_df = pd.DataFrame(predictions, columns=predictions_columns)
@@ -53,3 +72,9 @@ class test_metrics:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             training_data_utils.save_csv(arr = predictions, column_names= predictions_columns, output_path=f'{output_path}')
         return predictions_df
+    
+    def log_error(error_output_path, error_text):
+        if not os.path.exists(error_output_path):
+            os.makedirs(os.path.dirname(error_output_path), exist_ok=True)
+        with open(error_output_path, "a") as err:
+            err.write(error_text)

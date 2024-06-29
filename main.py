@@ -10,8 +10,8 @@ from Maps.maps_utils import map_utils
 # Set environment variables for XLA flags
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
-years = [2000, 2002, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
-#years = [2007, 2008]
+years = [1999, 2000, 2002, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
+#years = [2018]
 start_month = 1
 end_month = 12
 epochs = 30
@@ -89,7 +89,7 @@ def get_model(model_kind, model_path):
     
 def plot_maps(model_kind, model_path):
     model = get_model(model_kind=model_kind, model_path=model_path)
-    for year in [2008, 2018]:
+    for year in years:
         map_utils.create_map(year=year, 
                         start_month=1, 
                         end_month=12,
@@ -104,16 +104,16 @@ if __name__ == "__main__":
     cnn = CNN(use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
 
     variables = f'_L{use_landsat}_C{use_climate}_T{use_terrain}_'
-    model_output_cnn = f'Model/{cnn.__class__.__name__}_Models/{cnn.__class__.__name__}{variables}{epochs}.keras'
-    model_output_rf = f'Model/{rf.__class__.__name__}_Models/{rf.__class__.__name__}{variables}{epochs}'
+    model_output_cnn = f'Model/CNN_Models/CNN{variables}{epochs}.keras'
+    model_output_rf = f'Model/RF_Models/RF{variables}{epochs}'
 
     '''KerasTuner'''
     #keras_tuner()
 
     '''CNN'''
-    train(model=cnn, model_output_path=model_output_cnn)
-    cnn_test = CNN(model_path=model_output_cnn, use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
-    test(cnn_test)
+    #train(model=cnn, model_output_path=model_output_cnn)
+    #cnn_test = CNN(model_path=model_output_cnn, use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
+    #test(cnn_test)
 
     '''RF'''
     #train(model=rf, model_output_path=model_output_rf)
@@ -124,6 +124,6 @@ if __name__ == "__main__":
     #cnn_model.interpret_shap(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data)
 
     '''Maps'''
-    #plot_maps(model_kind='CNN', model_path=model_output_cnn)
+    plot_maps(model_kind='RF', model_path=model_output_rf)
   
     
