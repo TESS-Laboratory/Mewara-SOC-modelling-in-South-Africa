@@ -10,7 +10,7 @@ from Maps.maps_utils import map_utils
 # Set environment variables for XLA flags
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
-years = [2000, 2002, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
+years = [1998, 1999, 2000, 2002, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
 #years = [2007, 2008]
 start_month = 1
 end_month = 12
