@@ -1,5 +1,7 @@
 import os
+from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
 from Model.CNN import CNN
 from Model.KerasTuner import KerasTuner
 from Model.RF import RF
@@ -11,7 +13,7 @@ from Maps.maps_utils import map_utils
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
 years = [1998, 1999, 2000, 2002, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
-#years = [2007, 2008]
+#years = [1998, 2007, 2008, 2018]
 start_month = 1
 end_month = 12
 epochs = 30
@@ -24,9 +26,11 @@ patch_size_meters_landsat = 30720 # roughly 256*256 pixels
 patch_size_meters_climate = 30720 # roughly 7*7 pixels
 patch_size_meters_terrain = 30720
 
+training_soc_path = r'DataProcessing/soc_gdf.csv'
+
 def get_training_dataset():
     landsat_data, climate_data, terrain_data, targets = training_data_utils.get_training_data(
-        soc_data_path=r'DataProcessing/soc_gdf.csv',
+        soc_data_path=training_soc_path,
         years=years,
         start_month=start_month,
         end_month=end_month,
@@ -34,29 +38,62 @@ def get_training_dataset():
         patch_size_meters_climate=patch_size_meters_climate,
         patch_size_meters_terrain=patch_size_meters_terrain
         )
-    return np.round(landsat_data, 2), np.round(climate_data, 2), np.round(terrain_data, 2), np.round(targets, 2)
+    return np.round(landsat_data, 1), np.round(climate_data, 1), np.round(terrain_data, 1), np.round(targets, 1)
 
-def test(model):
-    lat_lon_pairs = [(-25.8065,27.84747222), #Jan 2008 - 2.43
-                     (-30.30497222, 29.54316667),#Jan 2008 - 4.27
-                     (-30.26368888888889,28.95269722222222), #Jan 2022 - 2.36
-                     (-30.264241666666667,28.95255), #Jan 2022 3.0
-                     (-30.26485,28.952791666666666), #Jan 2022 2.89
-                     (-30.265527777777777,28.952927777777777), #Jan 2022 1.89
-                     (-30.261816666666668,28.951472222222222) #Jan 2022 5.07
-                     ]
+def save_training_patches_as_images():
+    years = [2008]
+    soc_data = pd.read_csv(training_soc_path)
+    lat_field = 'Lat'
+    lon_field = 'Lon'
+    terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=r'DataProcessing\soc_gdf.csv',
+                                                          folder_name='Train',
+                                                          years=years, 
+                                                          start_month=1,
+                                                          end_month=12,
+                                                          patch_size_meters_landsat=patch_size_meters_landsat,
+                                                          patch_size_meters_climate=patch_size_meters_climate,
+                                                          patch_size_meters_terrain=patch_size_meters_terrain,
+                                                          lat_field='Lat',
+                                                          lon_field='Lon')
+    
+    for year in years:
+        for month in range(start_month, end_month + 1):
+            soc_data_monthly = soc_data[(soc_data['Year'] == year) & (soc_data['Month'] == month)]
+                
+            if soc_data_monthly.empty == True:
+                continue
 
-    for idx in range(len(lat_lon_pairs)):
-        lat_lon = [lat_lon_pairs[idx]]
-        print(f'\n C % for Lat Lon ({lat_lon}):\n')
-        for year in [2008, 2018]:
-            for month in range(1, 2):
-                climate_patch = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_climate)
-                landsat_patch = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_landsat)
-                terrain_patch = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon, patch_size_meters=patch_size_meters_terrain)
+            lat_lon_pairs = list(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field]))
 
-                predictions = model.predict(landsat_patch, climate_patch, terrain_patch)
-                print(f'\t{lat_lon}; Year_Month: {year}_{month} = {predictions[0]:.2f}\n')
+            for lat, lon in lat_lon_pairs:
+                c_percent = soc_data_monthly[(soc_data_monthly[lat_field]==lat) & (soc_data_monthly[lon_field]==lon)]['C'].values[0]
+
+                output_path_terrain_patch = f'Data/Patches/{year}/{month}_{lat}_{lon}_{c_percent}_terrain'
+                terrain_patch = terrain_patches_dict.get((lat, lon))
+                save_patch(terrain_patch, output_path_terrain_patch, 2)
+
+                output_path_landsat_patch = f'Data/Patches/{year}/{month}_{lat}_{lon}_{c_percent}_landsat'
+                landsat_patch = landsat_patches_dict.get((year, lat, lon))
+                save_patch(landsat_patch, output_path_landsat_patch, 4)
+            
+                output_path_climate_patch = f'Data/Patches/{year}/{month}_{lat}_{lon}_{c_percent}_climate'
+                climate_patch = climate_patches_dict.get((year, month, lat, lon))
+                save_patch(climate_patch, output_path_climate_patch, 3)
+               
+def save_patch(patch, output_path, channels):
+    for j in range(channels):
+        img = patch[:, :, j]
+
+        img_path = f'{output_path}_{j+1}.png'
+        if not os.path.exists(img_path):
+            os.makedirs(os.path.dirname(img_path), exist_ok=True)
+
+        plt.figure(figsize=(5, 5))
+        plt.imshow(img)
+        plt.axis('off')
+        plt.title(f'{os.path.basename(img_path)}')
+        plt.savefig(img_path)
+        plt.close()             
 
 def train(model, model_output_path):
     print(f'\n Fetching training dataset for years {years}:\n')
@@ -108,22 +145,17 @@ if __name__ == "__main__":
     model_output_rf = f'Model/RF_Models/RF{variables}{epochs}'
 
     '''KerasTuner'''
-    #keras_tuner()
+    keras_tuner()
 
     '''CNN'''
     #train(model=cnn, model_output_path=model_output_cnn)
-    #cnn_test = CNN(model_path=model_output_cnn, use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
-    #test(cnn_test)
 
     '''RF'''
     #train(model=rf, model_output_path=model_output_rf)
-    #rf_test = RF(model_path=model_output_rf)
-    #test(rf_test)
 
     #cnn_model = CNN(model_path=model_output_cnn)
-    #cnn_model.interpret_shap(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data)
-
+   
     '''Maps'''
-    plot_maps(model_kind='RF', model_path=model_output_rf)
+    #plot_maps(model_kind='RF', model_path=model_output_rf)
   
-    
+    #save_training_patches_as_images()

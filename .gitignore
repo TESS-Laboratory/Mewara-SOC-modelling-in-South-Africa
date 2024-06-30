@@ -170,6 +170,7 @@ Data/WorldClim_SA
 Data/References
 Data/Train
 Data/Test
+Data/Patches
 
 DataProcessing/Patches
 Model/KerasTuner

@@ -64,50 +64,8 @@ class training_data_utils:
 
         patch = training_data_utils.replace_nan_inf_data(data=patch)
 
-        if (save_patch):
-            res = (dataset.transform.a, dataset.transform.e)
-            lon_min, lat_max = dataset.xy(window_row_off, window_col_off)
-
-            transform = from_origin(
-                lon_min,
-                lat_max,
-                res[0], 
-                abs(res[1])
-             )
-            
-            training_data_utils.save_patch_as_raster(patch=patch, 
-                                            patch_size=patch_size if data_augment else patch_size_pixels, 
-                                            is_augmented=data_augment,
-                                            transform=transform,
-                                            dataset=dataset,
-                                            output_folder=output_patch_folder,
-                                            output_filename=output_patch_filename)
-
         return patch
         
-    def save_patch_as_raster(patch, patch_size, is_augmented, transform, dataset, output_folder, output_filename):
-        if is_augmented:
-            output_folder = f'{output_folder}/Augmented'
-
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        
-        output_path = os.path.join(output_folder, output_filename)
-        
-        with rasterio.open(
-            output_path,
-            'w',
-            driver='GTiff',
-            height=patch_size,
-            width=patch_size,
-            count=patch.shape[0],  # Number of bands
-            dtype=patch.dtype,
-            crs=dataset.crs,
-            transform=transform,
-        ) as dst:
-            for band in range(patch.shape[0]):
-                dst.write(patch[band], band + 1)
-    
     def replace_nan_inf_data(data):
        # Mask out NaNs, Infs, and -Infs
         mask_invalid = np.logical_or(np.isnan(data), np.isinf(data))
@@ -283,17 +241,17 @@ class training_data_utils:
                                                     patch_size_meters_climate=patch_size_meters_climate,
                                                     patch_size_meters_terrain=patch_size_meters_terrain)
         
-    def get_patches(soc_data_path, prefix, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field):
+    def get_patches(soc_data_path, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field):
         soc_data = pd.read_csv(soc_data_path)
 
         lat_lon_pairs = list(set(zip(soc_data[lat_field], soc_data[lon_field])))
   
-        print(f'\n Fetching {prefix} data:\n')
+        print(f'\n Fetching {folder_name} data:\n')
         all_terrain_patches_dict = {}
         all_landsat_patches_dict = {}
         all_climate_patches_dict = {}
 
-        terrain_patches_path = f"Data/{prefix}/Terrain/{prefix}_terrain.h5"
+        terrain_patches_path = f"Data/{folder_name}/Terrain/{folder_name}_terrain.h5"
         if os.path.exists(terrain_patches_path):
             terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
         else:
@@ -306,11 +264,11 @@ class training_data_utils:
         all_terrain_patches_dict.update(terrain_patches_dict)
         
         for year in years:
-            print(f'\nProcessing {prefix} {year}\n')
+            print(f'\nProcessing {folder_name} {year}\n')
             soc_data_yearly = soc_data[(soc_data['Year'] == year)]
             lat_lon_pairs_yearly = list(set(zip(soc_data_yearly[lat_field], soc_data_yearly[lon_field])))
             
-            landsat_patches_path = f"Data/{prefix}/Landsat/{year}/{prefix}_landsat_{year}.h5"
+            landsat_patches_path = f"Data/{folder_name}/Landsat/{year}/{folder_name}_landsat_{year}.h5"
             if os.path.exists(landsat_patches_path):
                 landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
             else:
@@ -330,7 +288,7 @@ class training_data_utils:
 
                 lat_lon_pairs_monthly = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
 
-                climate_patches_path = f"Data/{prefix}/Climate/{year}/{prefix}_climate_{year}_{month}.h5"
+                climate_patches_path = f"Data/{folder_name}/Climate/{year}/{folder_name}_climate_{year}_{month}.h5"
                 if os.path.exists(climate_patches_path):
                     climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
                 else:
@@ -353,7 +311,7 @@ class training_data_utils:
         print(f'\n Fetching {prefix} data:\n')
 
         terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=soc_data_path,
-                                                                                                            prefix=prefix,
+                                                                                                            folder_name=prefix,
                                                                                                             years=years,
                                                                                                             start_month=start_month,
                                                                                                             end_month=end_month,
@@ -373,28 +331,19 @@ class training_data_utils:
 
                 lat_lon_pairs_monthly = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
 
-                for idx in range(len(lat_lon_pairs_monthly)):
+                for lat, lon in lat_lon_pairs_monthly:
                     terrain_patch = terrain_patches_dict.get((lat, lon))
-                    if terrain_patch is None:
-                        continue
-                    
                     landsat_patch = landsat_patches_dict.get((year, lat, lon))
-                    if landsat_patch is None:
-                        continue
-
                     climate_patch = climate_patches_dict.get((year, month, lat, lon))
-                    if climate_patch is None:
-                        continue
 
-                    lat = soc_data_monthly.iloc[idx][lat_field]
-                    lon = soc_data_monthly.iloc[idx][lon_field]
-                    c_percent = soc_data_monthly.iloc[idx]['C']
+                    if terrain_patch is not None and landsat_patch is not None and climate_patch is not None:
+                        c_percent = soc_data_monthly[(soc_data_monthly[lat_field] == lat) & (soc_data_monthly[lon_field] == lon)]['C'].values[0]
 
-                    landsat_data.append(landsat_patch)
-                    climate_data.append(climate_patch)
-                    terrain_data.append(terrain_patch)
-                    targets.append(c_percent)
-                    
+                        landsat_data.append(landsat_patch)
+                        climate_data.append(climate_patch)
+                        terrain_data.append(terrain_patch)
+                        targets.append(c_percent)
+                            
         return np.array(landsat_data), np.array(climate_data), np.array(terrain_data), np.array(targets)
 
     def save_patches(output_path, patches_dict):

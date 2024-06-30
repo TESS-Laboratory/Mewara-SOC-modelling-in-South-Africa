@@ -15,7 +15,7 @@ class test_metrics:
         lon_field = 'Hex_Center_Lon_x'
        
         terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=soc_path,
-                                                          prefix='Test',
+                                                          folder_name='Test',
                                                           years=[year], 
                                                           start_month=start_month,
                                                           end_month=end_month,
@@ -33,13 +33,12 @@ class test_metrics:
 
             lat_lon_pairs = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
 
-            for idx in range(len(lat_lon_pairs)):
-                lat, lon = lat_lon_pairs[idx]
-                target_c = None
+            for lat, lon in lat_lon_pairs:
+                c_percent = None
                 soc = soc_data_monthly[(soc_data_monthly[lat_field] == lat) & 
                                        (soc_data_monthly[lon_field] == lon)]
                 if not soc.empty:
-                    target_c = soc['Avg_C']
+                    c_percent = soc['Avg_C'].values[0]
 
                 terrain_patch = terrain_patches_dict.get((lat, lon))
                     
@@ -47,15 +46,15 @@ class test_metrics:
             
                 climate_patch = climate_patches_dict.get((year, month, lat, lon))
                
-                if target_c is not None and landsat_patch is None:
+                if c_percent is not None and landsat_patch is None:
                     test_metrics.log_error(error_output_path=error_output_path,
                                            error_text=f"\nlandsat patch for year {year} month {month} lat {lat} and lon {lon} is missing")
                 
-                if target_c is not None and climate_patch is None:
+                if c_percent is not None and climate_patch is None:
                     test_metrics.log_error(error_output_path=error_output_path,
                                            error_text=f"\climate patch for year {year} month {month} lat {lat} and lon {lon} is missing")
                 
-                if target_c is not None and terrain_patch is None:
+                if c_percent is not None and terrain_patch is None:
                     test_metrics.log_error(error_output_path=error_output_path,
                                            error_text=f"\terrain patch for year {year} month {month} lat {lat} and lon {lon} is missing")
                 
@@ -64,7 +63,7 @@ class test_metrics:
                 else:
                     prediction = self.model.predict(landsat_patch=landsat_patch, climate_patch=climate_patch, terrain_patch=terrain_patch)
                 
-                predictions.append([year, month, lat, lon, prediction, target_c])
+                predictions.append([year, month, lat, lon, prediction, c_percent])
 
         predictions_df = pd.DataFrame(predictions, columns=predictions_columns)
 

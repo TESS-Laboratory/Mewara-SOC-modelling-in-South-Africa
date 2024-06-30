@@ -12,11 +12,9 @@ def get_soc_data():
 
 def merge_bulk_density_isda(soc_data):
     soc_empty_bulk_density = soc_data[soc_data['BD'] == '']
-    lat_lon_pairs_with_empty_bulk_densities = list(set(zip(soc_empty_bulk_density['Lat'], soc_empty_bulk_density['Lon'])))
-    patches = training_data_utils.get_bd_patches_dict(lat_lon_pairs=lat_lon_pairs_with_empty_bulk_densities)
-    for idx in range(len(lat_lon_pairs_with_empty_bulk_densities)): 
-        lat = lat_lon_pairs_with_empty_bulk_densities.iloc[idx]['Lat']
-        lon = lat_lon_pairs_with_empty_bulk_densities.iloc[idx]['Lon'] 
+    lat_lon_pairs = list(set(zip(soc_empty_bulk_density['Lat'], soc_empty_bulk_density['Lon'])))
+    patches = training_data_utils.get_bd_patches_dict(lat_lon_pairs=lat_lon_pairs)
+    for lat, lon in lat_lon_pairs:
         soc_lat_lon = soc_data[soc_data['Lat'] == lat & soc_data['Lon'] == lon]
         soc_lat_lon['BD_iSDA'] = patches.get((lat, lon))
 
