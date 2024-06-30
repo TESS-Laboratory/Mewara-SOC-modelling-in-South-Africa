@@ -283,29 +283,17 @@ class training_data_utils:
                                                     patch_size_meters_climate=patch_size_meters_climate,
                                                     patch_size_meters_terrain=patch_size_meters_terrain)
         
-    def get_test_data(soc_data_path, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain):
-        return training_data_utils._get_training_test_data(prefix='Test',
-                                                    soc_data_path=soc_data_path,
-                                                    years=years,
-                                                    start_month=start_month,
-                                                    end_month=end_month,
-                                                    patch_size_meters_landsat=patch_size_meters_landsat,
-                                                    patch_size_meters_climate=patch_size_meters_climate,
-                                                    patch_size_meters_terrain=patch_size_meters_terrain)
- 
-    def _get_training_test_data(prefix, soc_data_path, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain):
+    def get_patches(soc_data_path, prefix, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field):
         soc_data = pd.read_csv(soc_data_path)
 
-        landsat_data = []
-        climate_data = []
-        terrain_data = []
-        targets = []
-
-        lat_lon_pairs = list(set(zip(soc_data['Lat'], soc_data['Lon'])))
+        lat_lon_pairs = list(set(zip(soc_data[lat_field], soc_data[lon_field])))
   
         print(f'\n Fetching {prefix} data:\n')
+        all_terrain_patches_dict = {}
+        all_landsat_patches_dict = {}
+        all_climate_patches_dict = {}
 
-        terrain_patches_path = f"Data\{prefix}\Terrain\{prefix}_terrain.h5"
+        terrain_patches_path = f"Data/{prefix}/Terrain/{prefix}_terrain.h5"
         if os.path.exists(terrain_patches_path):
             terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
         else:
@@ -315,12 +303,14 @@ class training_data_utils:
         if terrain_patches_dict is None:
             return None
         
+        all_terrain_patches_dict.update(terrain_patches_dict)
+        
         for year in years:
             print(f'\nProcessing {prefix} {year}\n')
             soc_data_yearly = soc_data[(soc_data['Year'] == year)]
-            lat_lon_pairs_yearly = list(set(zip(soc_data_yearly['Lat'], soc_data_yearly['Lon'])))
+            lat_lon_pairs_yearly = list(set(zip(soc_data_yearly[lat_field], soc_data_yearly[lon_field])))
             
-            landsat_patches_path = f"Data\{prefix}\Landsat\{prefix}_landsat_{year}.h5"
+            landsat_patches_path = f"Data/{prefix}/Landsat/{year}/{prefix}_landsat_{year}.h5"
             if os.path.exists(landsat_patches_path):
                 landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
             else:
@@ -330,15 +320,17 @@ class training_data_utils:
             if landsat_patches_dict is None:
                 continue
 
+            all_landsat_patches_dict.update(landsat_patches_dict)
+
             for month in range(start_month, end_month + 1):
                 soc_data_monthly = soc_data[(soc_data['Year'] == year) & (soc_data['Month'] == month)]
                 
                 if soc_data_monthly.empty == True:
                     continue
 
-                lat_lon_pairs_monthly = list(set(zip(soc_data_monthly['Lat'], soc_data_monthly['Lon'])))
+                lat_lon_pairs_monthly = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
 
-                climate_patches_path = f"Data\{prefix}\Climate\{prefix}_climate_{year}_{month}.h5"
+                climate_patches_path = f"Data/{prefix}/Climate/{year}/{prefix}_climate_{year}_{month}.h5"
                 if os.path.exists(climate_patches_path):
                     climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
                 else:
@@ -347,12 +339,41 @@ class training_data_utils:
 
                 if climate_patches_dict is None:
                     continue
+                all_climate_patches_dict.update(climate_patches_dict)
+        return all_terrain_patches_dict, all_landsat_patches_dict, all_climate_patches_dict
                 
-                for idx in range(len(lat_lon_pairs_monthly)):
-                    lat = soc_data_monthly.iloc[idx]['Lat']
-                    lon = soc_data_monthly.iloc[idx]['Lon']
-                    c_percent = soc_data_monthly.iloc[idx]['C']
+    def _get_training_test_data(prefix, soc_data_path, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field = 'Lat', lon_field = 'Lon'):
+        soc_data = pd.read_csv(soc_data_path)
 
+        landsat_data = []
+        climate_data = []
+        terrain_data = []
+        targets = []
+
+        print(f'\n Fetching {prefix} data:\n')
+
+        terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=soc_data_path,
+                                                                                                            prefix=prefix,
+                                                                                                            years=years,
+                                                                                                            start_month=start_month,
+                                                                                                            end_month=end_month,
+                                                                                                            patch_size_meters_terrain=patch_size_meters_terrain,
+                                                                                                            patch_size_meters_landsat=patch_size_meters_landsat,
+                                                                                                            patch_size_meters_climate=patch_size_meters_climate,
+                                                                                                            lat_field=lat_field,
+                                                                                                            lon_field=lon_field)
+        for year in years:
+            print(f'\nProcessing {prefix} {year}\n')
+            
+            for month in range(start_month, end_month + 1):
+                soc_data_monthly = soc_data[(soc_data['Year'] == year) & (soc_data['Month'] == month)]
+                
+                if soc_data_monthly.empty == True:
+                    continue
+
+                lat_lon_pairs_monthly = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
+
+                for idx in range(len(lat_lon_pairs_monthly)):
                     terrain_patch = terrain_patches_dict.get((lat, lon))
                     if terrain_patch is None:
                         continue
@@ -365,6 +386,10 @@ class training_data_utils:
                     if climate_patch is None:
                         continue
 
+                    lat = soc_data_monthly.iloc[idx][lat_field]
+                    lon = soc_data_monthly.iloc[idx][lon_field]
+                    c_percent = soc_data_monthly.iloc[idx]['C']
+
                     landsat_data.append(landsat_patch)
                     climate_data.append(climate_patch)
                     terrain_data.append(terrain_patch)
@@ -373,6 +398,8 @@ class training_data_utils:
         return np.array(landsat_data), np.array(climate_data), np.array(terrain_data), np.array(targets)
 
     def save_patches(output_path, patches_dict):
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
         with h5py.File(output_path, 'w') as h5f:
             for key, value in patches_dict.items():
                 if len(key) == 2:

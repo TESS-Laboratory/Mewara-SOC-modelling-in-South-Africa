@@ -1,3 +1,4 @@
+import os
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -108,7 +109,7 @@ class grid_utils:
         return hex_grid
 
     @staticmethod
-    def get_hex_grid_avg_carbon_color(hex_grid, carbon_mapping, soil_data):
+    def get_hex_grid_avg_carbon_color(hex_grid, carbon_mapping, soil_data, join_type = 'left'):
         # Drop rows with missing Latitude and Longitude
         soil_data = soil_data.dropna(subset=['Lat', 'Lon'])
 
@@ -121,8 +122,13 @@ class grid_utils:
 
         # Aggregate average carbon content by Hex_ID
         hex_agg = joined.groupby('Hex_ID').agg({'C': 'mean'}).reset_index().rename(columns={'C': 'Avg_C'})
-        joined = joined.merge(hex_agg, on='Hex_ID', how='left')
-      
+        joined = pd.merge(joined, hex_agg, on='Hex_ID', how='left')
+        joined = pd.merge(joined, hex_grid, on='Hex_ID', how='left')
+        joined = joined.dropna(subset=['Avg_C'])
+        
+        if join_type == 'right':
+            joined = pd.merge(hex_grid, joined, on='Hex_ID', how='left')
+
         # Categorize aggregated carbon content
         bins = [-np.inf, 0.5, 1, 2, 3, 4, np.inf]
         labels = ["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"]
@@ -133,11 +139,6 @@ class grid_utils:
 
         # Convert categorical column to string for saving
         joined['C_range'] = joined['C_range'].astype(str)
-
-        # Drop rows with missing Avg_C
-        joined = joined.dropna(subset=['Avg_C'])
-
-        joined = pd.merge(joined, hex_grid, on='Hex_ID', how='left')
 
         return joined
 
@@ -263,6 +264,5 @@ class grid_utils:
         ax.tick_params(axis='both', which='major', labelsize=16)
 
         if savePlot:
+            os.makedirs(os.path.dirname(output_plot_path), exist_ok=True)
             plt.savefig(output_plot_path)
-
-        plt.show()

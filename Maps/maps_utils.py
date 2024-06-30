@@ -7,23 +7,20 @@ class map_utils:
     def create_map(year, start_month, end_month, model, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain):
         tm = test_metrics(model=model)
         output_dir = f'Maps/{model.get_model_name()}'
-        predictions_output_path = f'{output_dir}/predictions_{year}.csv'
-        predicted_plot_output_path = f'{output_dir}/Predicted/predicted_{year}.png'
-
-        hex_grid = pd.read_csv(r'DataProcessing/soc_hex_grid.csv')
-        hex_grid = hex_grid.dropna(subset=['Hex_Center_Lat', 'Hex_Center_Lon'])
-        lat_lon_pairs = list(set(zip(hex_grid['Hex_Center_Lat'], hex_grid['Hex_Center_Lon'])))
+        error_output_path = f'{output_dir}/Errors/error_{year}.txt'
+        predictions_output_path = f'{output_dir}/Predictions/predictions_{year}.csv'
+        predicted_plot_output_path = f'{output_dir}/PredictedMaps/predicted_{year}.png'
 
         print(f'\nFetching predictions for year {year}\n')
         predictions = tm.predict(year=year,
                    start_month=start_month,
                    end_month=end_month,
-                   lat_lon_pairs=lat_lon_pairs, 
-                   soc_path=r'DataProcessing/soc_hex_grid.csv',
+                   soc_path=r'DataProcessing/hex_grid_avg_c.csv',
                    patch_size_meters_landsat=patch_size_meters_landsat,
                    patch_size_meters_climate=patch_size_meters_climate, patch_size_meters_terrain=patch_size_meters_terrain,
                    save=True,
-                   output_path=predictions_output_path)
+                   output_path=predictions_output_path,
+                   error_output_path=error_output_path)
         map_utils.plot_actual_map(year)
         map_utils.plot_predicted_map(year=year, 
                                      predictions=predictions,
@@ -33,7 +30,7 @@ class map_utils:
     def plot_actual_map(year):
         soil_data = pd.read_csv(r'DataProcessing/soc_gdf.csv')
         soil_data_year = soil_data[soil_data['Year'] == year]
-        DataProcessing.grid_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
+        DataProcessing.grid_utils.grid_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
                                            title=f'Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=False,
                                            savePlot=True,
@@ -47,7 +44,7 @@ class map_utils:
             return None
         
         predictions_year = predictions[predictions['Year'] == year]
-        DataProcessing.grid_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
+        DataProcessing.grid_utils.grid_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
                                            title=f'Predicted Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=False,
                                            savePlot=True,
