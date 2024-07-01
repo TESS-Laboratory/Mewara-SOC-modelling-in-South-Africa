@@ -347,9 +347,6 @@ class training_data_utils:
         return np.array(landsat_data), np.array(climate_data), np.array(terrain_data), np.array(targets)
 
     def save_patches(output_path, patches_dict):
-        if patches_dict is None:
-            return None
-        
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         with h5py.File(output_path, 'w') as h5f:

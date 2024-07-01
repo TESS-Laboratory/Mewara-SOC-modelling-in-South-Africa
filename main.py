@@ -12,8 +12,8 @@ from Maps.maps_utils import map_utils
 # Set environment variables for XLA flags
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
-years = [1998, 1998, 1999, 2000, 2002, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
-#years = [1998, 2007, 2008, 1998, 2007, 2008, 2018]
+years = [1998, 1999, 2000, 2002, 2007, 2008, 2009, 2010, 2016, 2017, 2018]
+#years = [1998, 2007, 2008, 2018]
 start_month = 1
 end_month = 12
 epochs = 30
@@ -149,15 +149,12 @@ if __name__ == "__main__":
 
     '''CNN'''
     #train(model=cnn, model_output_path=model_output_cnn)
-    #cnn_test = CNN(model_path=model_output_cnn, use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
-    #test(cnn_test)
 
     '''RF'''
     #train(model=rf, model_output_path=model_output_rf)
 
     #cnn_model = CNN(model_path=model_output_cnn)
-    #cnn_model.interpret_shap(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data)
-
+   
     '''Maps'''
     #plot_maps(model_kind='RF', model_path=model_output_rf)
   
