@@ -20,10 +20,10 @@ class grid:
     @staticmethod
     def save_soc_hex_grid():
         soil_data = pd.read_csv(r'DataProcessing/soc_gdf.csv')
-        hex_grid = grid_utils.get_hex_grid(hex_size=0.1)
+        hex_grid = pd.read_csv(r'DataProcessing/hex_grid.csv')
         soc_hex_grid = grid_utils.get_soc_hex_grid(hex_grid_df=hex_grid,
                                              soil_data=soil_data) 
-        hex_grid.to_csv(r'DataProcessing/hex_grid.csv', mode='w')
+        #hex_grid.to_csv(r'DataProcessing/hex_grid.csv', mode='w')
         soc_hex_grid.to_csv(r'DataProcessing/soc_hex_grid.csv', mode='w')
         avg_cols = ['Hex_ID']
       

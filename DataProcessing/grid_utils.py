@@ -133,7 +133,7 @@ class grid_utils:
         hex_grid = grid_utils.get_geoframe(hex_grid_df, 'geometry')
 
         # Perform spatial join
-        joined = gpd.sjoin(soil_data, hex_grid[['Hex_ID', 'geometry']], how='left', predicate='within')
+        joined = gpd.sjoin(soil_data, hex_grid[['Hex_ID', 'geometry', 'Hex_Center_Lat', 'Hex_Center_Lon']], how='left', predicate='within')
         
         joined.drop(columns='index_right', inplace=True)
 
@@ -145,19 +145,21 @@ class grid_utils:
     def get_avg_c_each_grid(df, group_by_cols, avg_col, avgc_col_rename):
         carbon_mapping = grid_utils.get_carbon_mapping()
         hex_agg = df.groupby(group_by_cols).agg({avg_col: 'mean'}).reset_index().rename(columns={avg_col: avgc_col_rename})
-        
-        # Categorize aggregated carbon content
+        return grid_utils.categorize_c_carbon_mapping(hex_agg, 'Avg_C', carbon_mapping)
+    
+    @staticmethod
+    def categorize_c_carbon_mapping(df, c_col, carbon_mapping):
         bins = [-np.inf, 0.5, 1, 2, 3, 4, np.inf]
         labels = ["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"]
-        hex_agg['C_range'] = pd.cut(hex_agg['Avg_C'], bins=bins, labels=labels)
+        df['C_range'] = pd.cut(df[c_col], bins=bins, labels=labels)
 
         # Map colors to 'C_range' values
-        hex_agg['Color'] = hex_agg['C_range'].map(carbon_mapping).astype(str)
+        df['Color'] = df['C_range'].map(carbon_mapping).astype(str)
 
         # Convert categorical column to string for saving
-        hex_agg['C_range'] = hex_agg['C_range'].astype(str)
+        df['C_range'] = df['C_range'].astype(str)
 
-        return hex_agg
+        return df
 
     @staticmethod
     def plot_heat_map(data_avg_c_color_geometry, title, savePlot = False, output_plot_path='', geometry_col='geometry'):

@@ -2,7 +2,6 @@ import os
 #os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import pandas as pd
 from Model.training_data_utils import training_data_utils
-from DataProcessing.grid_utils import grid_utils
 
 class test_metrics:
     def __init__(self, model):
@@ -51,16 +50,13 @@ class test_metrics:
                 climate_patch = climate_patches_dict.get((year, month, lat, lon))
                
                 if c_percent is not None and landsat_patch is None:
-                if c_percent is not None and landsat_patch is None:
                     test_metrics.log_error(error_output_path=error_output_path,
                                            error_text=f"\nlandsat patch for year {year} month {month} lat {lat} and lon {lon} is missing")
                 
                 if c_percent is not None and climate_patch is None:
-                if c_percent is not None and climate_patch is None:
                     test_metrics.log_error(error_output_path=error_output_path,
                                            error_text=f"\nclimate patch for year {year} month {month} lat {lat} and lon {lon} is missing")
                 
-                if c_percent is not None and terrain_patch is None:
                 if c_percent is not None and terrain_patch is None:
                     test_metrics.log_error(error_output_path=error_output_path,
                                            error_text=f"\nterrain patch for year {year} month {month} lat {lat} and lon {lon} is missing")

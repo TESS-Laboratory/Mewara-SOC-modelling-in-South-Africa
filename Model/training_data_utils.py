@@ -6,12 +6,21 @@ import pandas as pd
 import rasterio
 from rasterio.windows import Window
 from rasterio.transform import from_origin
+from pyproj import Transformer
 
 class training_data_utils:
     @staticmethod
     def lat_lon_to_pixel(dataset, lat, lon):
+        if (dataset.crs.to_epsg() == 3857):
+            transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
+            x, y = transformer.transform(lat, lon)    
+        elif (dataset.crs.to_epsg() == 4326):
+            x, y = lon, lat
+        else:
+           raise ValueError("Unknown CRS")
+
         transform = dataset.transform
-        pixel_x, pixel_y = ~transform * (lon, lat)
+        pixel_x, pixel_y = ~transform * (x, y)
         return int(pixel_x), int(pixel_y)
 
     @staticmethod
@@ -84,7 +93,7 @@ class training_data_utils:
         return data[~invalid_rows]
    
     def get_bd_patches_dict(lat_lon_pairs):
-        raster_path=f'Data/BulkDensity/bulk_density.tif'
+        raster_path=f'Data/BulkDensity/BulkDensity.tif'
       
         if not os.path.exists(raster_path):
             return None
