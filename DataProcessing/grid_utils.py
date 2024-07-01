@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Patch, Polygon
 from rasterio.mask import mask
 from shapely.geometry import Point, Polygon
+from shapely import wkt
 
 class grid_utils:
     @staticmethod
@@ -64,6 +65,8 @@ class grid_utils:
 
     @staticmethod
     def get_hex_grid(hex_size):
+        sa_shape = grid_utils.get_sa_shape()
+
         # Get the bounding box for South Africa in geographic CRS (EPSG:4326)
         bbox = grid_utils.get_sa_bbox()
 
@@ -93,7 +96,7 @@ class grid_utils:
                     (x - hex_size, y + height / 2)
                 ])
 
-                if hexagon.intersects(bbox):
+                if hexagon.intersects(sa_shape.unary_union):
                     hexagons.append(hexagon)
                     hex_ids.append(f"hex_{row}_{col}")
 
@@ -107,133 +110,59 @@ class grid_utils:
         hex_grid = hex_grid[hex_grid.is_valid]
 
         return hex_grid
-
+    
     @staticmethod
-    def get_hex_grid_avg_carbon_color(hex_grid, carbon_mapping, soil_data, join_type = 'left'):
-        # Drop rows with missing Latitude and Longitude
-        soil_data = soil_data.dropna(subset=['Lat', 'Lon'])
-
-        # Create geometry column from Lat and Lon
-        soil_data['geometry'] = [Point(xy) for xy in zip(soil_data['Lon'], soil_data['Lat'])]
-        soil_data = gpd.GeoDataFrame(soil_data, geometry='geometry', crs='EPSG:4326')
-
-        # Perform spatial join
-        joined = gpd.sjoin(soil_data, hex_grid[['Hex_ID', 'geometry']], how='left', predicate='within')
-
-        # Aggregate average carbon content by Hex_ID
-        hex_agg = joined.groupby('Hex_ID').agg({'C': 'mean'}).reset_index().rename(columns={'C': 'Avg_C'})
-        joined = pd.merge(joined, hex_agg, on='Hex_ID', how='left')
-        joined = pd.merge(joined, hex_grid, on='Hex_ID', how='left')
-        joined = joined.dropna(subset=['Avg_C'])
-        
-        if join_type == 'right':
-            joined = pd.merge(hex_grid, joined, on='Hex_ID', how='left')
-
-        # Categorize aggregated carbon content
-        bins = [-np.inf, 0.5, 1, 2, 3, 4, np.inf]
-        labels = ["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"]
-        joined['C_range'] = pd.cut(joined['Avg_C'], bins=bins, labels=labels)
-
-        # Map colors to 'C_range' values
-        joined['Color'] = joined['C_range'].map(carbon_mapping).astype(str)
-
-        # Convert categorical column to string for saving
-        joined['C_range'] = joined['C_range'].astype(str)
-
-        return joined
-
-    @staticmethod
-    def get_square_grid(grid_size_in_meters):
-        # Get the bounding box for South Africa in geographic CRS (EPSG:4326)
-        bbox = grid_utils.get_sa_bbox()
-
-        minx, miny, maxx, maxy = bbox.bounds
-
-        width = height = grid_size_in_meters
-        cols = int(np.ceil((maxx - minx) / width)) + 1
-        rows = int(np.ceil((maxy - miny) / height)) + 1
-
-        squares = []
-        square_ids = []
-
-        for row in range(rows):
-            for col in range(cols):
-                x = minx + col * width
-                y = miny + row * height
-
-                square = Polygon([
-                    (x, y),
-                    (x + width, y),
-                    (x + width, y + height),
-                    (x, y + height),
-                    (x, y)
-                ])
-
-                if square.intersects(bbox):
-                    squares.append(square)
-                    square_ids.append(f"square_{row}_{col}")
-
-        square_grid = gpd.GeoDataFrame({'geometry': squares, 'Square_ID': square_ids}, crs='EPSG:4326')
-
-        # Calculate centroid coordinates for the square grid
-        square_grid['Square_Center_Lat'] = square_grid.centroid.y
-        square_grid['Square_Center_Lon'] = square_grid.centroid.x
+    def get_geoframe(df_with_geometry, geometry_col):
+        df_with_geometry[geometry_col] = df_with_geometry[geometry_col].apply(wkt.loads)
 
         # Filter out invalid geometries
-        square_grid = square_grid[square_grid.is_valid]
+        df_with_geometry = df_with_geometry[df_with_geometry[geometry_col].apply(lambda geom: geom.is_valid)]
 
-        return square_grid
-
+        gdf = gpd.GeoDataFrame(df_with_geometry, geometry=geometry_col, crs='EPSG:4326')
+        gdf.set_crs(epsg=4326, inplace=True)
+        return gdf
+    
     @staticmethod
-    def get_square_grid_avg_carbon_color(square_grid, carbon_mapping, soil_data):
+    def get_soc_hex_grid(soil_data, hex_grid_df):
         # Drop rows with missing Latitude and Longitude
         soil_data = soil_data.dropna(subset=['Lat', 'Lon'])
 
         # Create geometry column from Lat and Lon
         soil_data['geometry'] = [Point(xy) for xy in zip(soil_data['Lon'], soil_data['Lat'])]
         soil_data = gpd.GeoDataFrame(soil_data, geometry='geometry', crs='EPSG:4326')
+        hex_grid = grid_utils.get_geoframe(hex_grid_df, 'geometry')
 
         # Perform spatial join
-        joined = gpd.sjoin(soil_data, square_grid[['Square_ID', 'geometry']], how='left', predicate='within')
+        joined = gpd.sjoin(soil_data, hex_grid[['Hex_ID', 'geometry', 'Hex_Center_Lat', 'Hex_Center_Lon']], how='left', predicate='within')
+        
+        joined.drop(columns='index_right', inplace=True)
 
-        # Aggregate average carbon content by Square_ID
-        square_agg = joined.groupby('Square_ID').agg({'C': 'mean'}).reset_index().rename(columns={'C': 'Avg_C'})
-        joined = joined.merge(square_agg, on='Square_ID', how='left')
-
-        # Categorize aggregated carbon content
-        bins = [-np.inf, 0.5, 1, 2, 3, 4, np.inf]
-        labels = ["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"]
-        joined['C_range'] = pd.cut(joined['Avg_C'], bins=bins, labels=labels)
-
-        # Map colors to 'C_range' values
-        joined['color'] = joined['C_range'].map(carbon_mapping).astype(str)
-
-        # Convert categorical column to string for saving
-        joined['C_range'] = joined['C_range'].astype(str)
-
-        # Drop rows with missing Avg_C
-        joined = joined.dropna(subset=['Avg_C'])
-
-        # Calculate centroid coordinates for the square grid
-        joined['Square_Center_Lat'] = square_grid['Square_Center_Lat']
-        joined['Square_Center_Lon'] = square_grid['Square_Center_Lon']
+        joined.reset_index(drop=True, inplace=True)
 
         return joined
-
+ 
     @staticmethod
-    def plot_soil_data_heat_map(soil_data, title, use_square_grid = False, savePlot=False, output_plot_path=''):
+    def get_avg_c_each_grid(df, group_by_cols, avg_col, avgc_col_rename):
         carbon_mapping = grid_utils.get_carbon_mapping()
-        if use_square_grid:
-            grid = grid_utils.get_square_grid()
-            joined = grid_utils.get_square_grid_avg_carbon_color(square_grid=grid, carbon_mapping=carbon_mapping, soil_data=soil_data)
-        else:
-            grid = grid_utils.get_hex_grid(hex_size=0.1)
-            joined = grid_utils.get_hex_grid_avg_carbon_color(hex_grid=grid, carbon_mapping=carbon_mapping, soil_data=soil_data)
+        hex_agg = df.groupby(group_by_cols).agg({avg_col: 'mean'}).reset_index().rename(columns={avg_col: avgc_col_rename})
+        return grid_utils.categorize_c_carbon_mapping(hex_agg, 'Avg_C', carbon_mapping)
+    
+    @staticmethod
+    def categorize_c_carbon_mapping(df, c_col, carbon_mapping):
+        bins = [-np.inf, 0.5, 1, 2, 3, 4, np.inf]
+        labels = ["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"]
+        df['C_range'] = pd.cut(df[c_col], bins=bins, labels=labels)
 
-        grid_utils.plot_heat_map(soil_data_with_avg_c_color=joined, title=title, savePlot=savePlot, output_plot_path=output_plot_path)
+        # Map colors to 'C_range' values
+        df['Color'] = df['C_range'].map(carbon_mapping).astype(str)
+
+        # Convert categorical column to string for saving
+        df['C_range'] = df['C_range'].astype(str)
+
+        return df
 
     @staticmethod
-    def plot_heat_map(soil_data_with_avg_c_color, title, savePlot = False, output_plot_path=''):
+    def plot_heat_map(data_avg_c_color_geometry, title, savePlot = False, output_plot_path='', geometry_col='geometry'):
         carbon_mapping = grid_utils.get_carbon_mapping()
 
         # Plot the result
@@ -252,17 +181,20 @@ class grid_utils:
         # Plot South Africa boundary with thicker line
         grid_utils.get_sa_shape().boundary.plot(ax=ax, linewidth=1, edgecolor='black')
 
-        soil_data_with_avg_c_color = soil_data_with_avg_c_color.set_geometry('geometry_x')
+        data_avg_c_color_geometry = data_avg_c_color_geometry.set_geometry(geometry_col)
+
+        # Drop nan
+        joined_minus_nan = data_avg_c_color_geometry.dropna(subset=['Avg_C', 'Color'])
 
         # Plot the grid with the appropriate colors
-        soil_data_with_avg_c_color.plot(ax=ax, color=soil_data_with_avg_c_color['Color'])
+        joined_minus_nan.plot(ax=ax, color=joined_minus_nan['Color'])
 
         # Create custom legend
         handles = [Patch(color=color, label=label) for label, color in carbon_mapping.items()]
-        ax.legend(handles=handles, title='Carbon (% by mass)', loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12, title_fontsize=14)
+        legend = ax.legend(handles=handles, title=r'Carbon (% by mass)', loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12, title_fontsize=14)
 
         ax.tick_params(axis='both', which='major', labelsize=16)
 
         if savePlot:
             os.makedirs(os.path.dirname(output_plot_path), exist_ok=True)
-            plt.savefig(output_plot_path)
+            plt.savefig(output_plot_path, bbox_inches='tight', bbox_extra_artists=[legend])

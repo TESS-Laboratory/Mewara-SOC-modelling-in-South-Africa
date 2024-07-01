@@ -128,7 +128,7 @@ def get_model(model_kind, model_path):
     
 def plot_maps(model_kind, model_path):
     model = get_model(model_kind=model_kind, model_path=model_path)
-    for year in [1999, 2008, 2018]:
+    for year in [2008, 2018, 1999]:
         map_utils.create_map(year=year, 
                         start_month=1, 
                         end_month=12,
@@ -143,14 +143,14 @@ if __name__ == "__main__":
     cnn = CNN(use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
 
     variables = f'_L{use_landsat}_C{use_climate}_T{use_terrain}_'
-    model_output_cnn = f'Model/CNN_Models/CNN{variables}{epochs}_{years}.keras'
-    model_output_rf = f'Model/RF_Models/RF{variables}{epochs}'
+    model_output_cnn = f'Model/Best_CNN_Model.keras'
+    model_output_rf = f'Model/Best_RF_Model'
 
     '''KerasTuner'''
     #keras_tuner()
 
     '''CNN'''
-    train(model=cnn, model_output_path=model_output_cnn)
+    #train(model=cnn, model_output_path=model_output_cnn)
 
     '''RF'''
     #train(model=rf, model_output_path=model_output_rf)

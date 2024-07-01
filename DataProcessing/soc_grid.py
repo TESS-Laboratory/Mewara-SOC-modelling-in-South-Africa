@@ -8,15 +8,18 @@ from Model.training_data_utils import training_data_utils
 south_africa = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres')).query('name == "South Africa"')
 
 def get_soc_data():
-    return pd.read_csv(r'DataPreprocessing/soc_gdf.csv')
+    return pd.read_csv(r'DataProcessing/soc_gdf.csv')
+
+def merge_save_bulk_density_isda():
+    soc_data = merge_bulk_density_isda(get_soc_data())
+    soc_data.to_csv('DataProcessing/soc_gdf.csv')
 
 def merge_bulk_density_isda(soc_data):
-    soc_empty_bulk_density = soc_data[soc_data['BD'] == '']
+    soc_empty_bulk_density = soc_data[soc_data['BD'].isna()]
     lat_lon_pairs = list(set(zip(soc_empty_bulk_density['Lat'], soc_empty_bulk_density['Lon'])))
     patches = training_data_utils.get_bd_patches_dict(lat_lon_pairs=lat_lon_pairs)
     for lat, lon in lat_lon_pairs:
-        soc_lat_lon = soc_data[soc_data['Lat'] == lat & soc_data['Lon'] == lon]
-        soc_lat_lon['BD_iSDA'] = patches.get((lat, lon))
+        soc_data.loc[(soc_data['Lat'] == lat) & (soc_data['Lon'] == lon), 'BD_iSDA'] = patches.get((lat, lon))
 
     return soc_data
 
@@ -102,3 +105,4 @@ def preprocess_data():
     soc_gdf.to_csv(r"DataProcessing/soc_gdf.csv", index=False)
 
 #preprocess_data()
+merge_save_bulk_density_isda()
