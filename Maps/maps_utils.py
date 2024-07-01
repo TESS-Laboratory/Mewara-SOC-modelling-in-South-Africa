@@ -1,6 +1,8 @@
 import pandas as pd
+
+from DataProcessing.grid_utils import grid_utils
 from Maps.test_metrics import test_metrics
-import DataProcessing.grid_utils
+from Model.CNN import CNN
 
 class map_utils:
     @staticmethod
@@ -15,7 +17,7 @@ class map_utils:
         predictions = tm.predict(year=year,
                    start_month=start_month,
                    end_month=end_month,
-                   soc_path=r'DataProcessing/hex_grid_avg_c.csv',
+                   soc_path=r'DataProcessing/soc_hex_grid.csv',
                    patch_size_meters_landsat=patch_size_meters_landsat,
                    patch_size_meters_climate=patch_size_meters_climate, patch_size_meters_terrain=patch_size_meters_terrain,
                    save=True,
@@ -30,7 +32,7 @@ class map_utils:
     def plot_actual_map(year):
         soil_data = pd.read_csv(r'DataProcessing/soc_gdf.csv')
         soil_data_year = soil_data[soil_data['Year'] == year]
-        DataProcessing.grid_utils.grid_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
+        grid_utils.plot_soil_data_heat_map(soil_data=soil_data_year, 
                                            title=f'Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=False,
                                            savePlot=True,
@@ -44,9 +46,11 @@ class map_utils:
             return None
         
         predictions_year = predictions[predictions['Year'] == year]
-        DataProcessing.grid_utils.grid_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
+        grid_utils.plot_soil_data_heat_map(soil_data=predictions_year, 
                                            title=f'Predicted Average C (% by Mass) for South Africa in year {year}',
                                            use_square_grid=False,
                                            savePlot=True,
                                            output_plot_path=predictions_plot_path)
         #input('press key to continue')
+#cnn = CNN(model_path=r'C:\Mewara-SOC-modelling-in-South-Africa\Model\CNN_Models\CNN_LTrue_CTrue_TTrue_30.keras', use_climate=True, use_landsat=True, use_terrain=True)
+#map_utils.create_map(2008, 1, 12, cnn, 30720, 30720, 30720)

@@ -133,7 +133,7 @@ class training_data_utils:
                 if twi_patch is None or not twi_patch.any():
                     terrain_patches_dict[(lat, lon)]= None
                     continue
-                stacked_patch = np.stack([aspect_patch[0], twi_patch[0]], axis=-1)
+                stacked_patch = np.stack([aspect_patch[0]], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 terrain_patches_dict[(lat, lon)] = stacked_patch
         return terrain_patches_dict
@@ -188,7 +188,7 @@ class training_data_utils:
                 if tmax_patch is None or not tmax_patch.any():
                     climate_patches_dict[(year, month, lat, lon)]= None
                     continue
-                stacked_patch = np.stack([prec_patch[0]/no_of_days, tmin_patch[0], tmax_patch[0]], axis=-1)
+                stacked_patch = np.stack([tmin_patch[0], tmax_patch[0]], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 climate_patches_dict[(year, month, lat, lon)] = stacked_patch
         return climate_patches_dict
@@ -226,7 +226,7 @@ class training_data_utils:
                 evi_band = patch[5]
                 savi_band = patch[6]
                 rvi_band = patch[7]
-                stacked_patch = np.stack([ndvi_band, evi_band, savi_band, rvi_band], axis=-1)
+                stacked_patch = np.stack([ndvi_band, savi_band, rvi_band], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 landsat_patches_dict[(year, lat, lon)] = stacked_patch
         return landsat_patches_dict
@@ -250,13 +250,16 @@ class training_data_utils:
         all_terrain_patches_dict = {}
         all_landsat_patches_dict = {}
         all_climate_patches_dict = {}
+        use_saved_patches = True
+        save_patches = True
 
         terrain_patches_path = f"Data/{folder_name}/Terrain/{folder_name}_terrain.h5"
-        if os.path.exists(terrain_patches_path):
+        if os.path.exists(terrain_patches_path) and use_saved_patches:
             terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
         else:
             terrain_patches_dict = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
-            training_data_utils.save_patches(output_path=terrain_patches_path, patches_dict=terrain_patches_dict)
+            if save_patches:
+                training_data_utils.save_patches(output_path=terrain_patches_path, patches_dict=terrain_patches_dict)
 
         if terrain_patches_dict is None:
             return None
@@ -269,11 +272,12 @@ class training_data_utils:
             lat_lon_pairs_yearly = list(set(zip(soc_data_yearly[lat_field], soc_data_yearly[lon_field])))
             
             landsat_patches_path = f"Data/{folder_name}/Landsat/{year}/{folder_name}_landsat_{year}.h5"
-            if os.path.exists(landsat_patches_path):
+            if os.path.exists(landsat_patches_path) and use_saved_patches:
                 landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
             else:
                 landsat_patches_dict = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs_yearly, patch_size_meters=patch_size_meters_landsat)
-                training_data_utils.save_patches(output_path=landsat_patches_path, patches_dict=landsat_patches_dict)
+                if save_patches:
+                    training_data_utils.save_patches(output_path=landsat_patches_path, patches_dict=landsat_patches_dict)
 
             if landsat_patches_dict is None:
                 continue
@@ -289,11 +293,12 @@ class training_data_utils:
                 lat_lon_pairs_monthly = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
 
                 climate_patches_path = f"Data/{folder_name}/Climate/{year}/{folder_name}_climate_{year}_{month}.h5"
-                if os.path.exists(climate_patches_path):
+                if os.path.exists(climate_patches_path) and use_saved_patches:
                     climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
                 else:
                     climate_patches_dict = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
-                    training_data_utils.save_patches(output_path=climate_patches_path, patches_dict=climate_patches_dict)
+                    if save_patches:
+                        training_data_utils.save_patches(output_path=climate_patches_path, patches_dict=climate_patches_dict)
 
                 if climate_patches_dict is None:
                     continue
@@ -307,8 +312,6 @@ class training_data_utils:
         climate_data = []
         terrain_data = []
         targets = []
-
-        print(f'\n Fetching {prefix} data:\n')
 
         terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=soc_data_path,
                                                                                                             folder_name=prefix,

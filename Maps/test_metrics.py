@@ -11,8 +11,8 @@ class test_metrics:
         predictions_columns = ['Year', 'Month', 'Lat', 'Lon', 'C', 'Target_C']  
         predictions = []
         soc_data = pd.read_csv(soc_path)
-        lat_field = 'Hex_Center_Lat_x'
-        lon_field = 'Hex_Center_Lon_x'
+        lat_field = 'Lat'
+        lon_field = 'Lon'
        
         terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=soc_path,
                                                           folder_name='Test',

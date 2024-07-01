@@ -19,3 +19,4 @@ shap
 keras_tuner
 rtree
 h5py
+pickle
