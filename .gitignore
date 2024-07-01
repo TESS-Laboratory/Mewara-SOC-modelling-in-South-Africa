@@ -293,5 +293,5 @@ Model/CNN_Models
 Model/Best_CNN_Models
 Model/RF_Models
 
-Maps/ActualMaps
-Maps/PredictedMaps
+*/ActualMaps
+*/PredictedMaps
