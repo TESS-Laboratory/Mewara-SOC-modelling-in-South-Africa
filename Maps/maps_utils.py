@@ -58,7 +58,7 @@ class map_utils:
         hex_grid_soc_hex = pd.merge(hex_grid, soc_hex_grid, on=['Hex_ID', 'Year', 'Month'], how='left')
 
         soc_hex_avg_c = DataProcessing.grid_utils.grid_utils.get_avg_c_each_grid(df=hex_grid_soc_hex,
-                                                        group_by_cols=['Hex_ID', 'Hex_Center_Lat', 'Hex_Center_Lon', 'Year', 'Month', 'geometry_x'],
+                                                        group_by_cols=['Hex_ID', 'Hex_Center_Lat_x', 'Hex_Center_Lon_x', 'Year', 'Month', 'geometry_x'],
                                                         avg_col='C',
                                                         avgc_col_rename='Avg_C')
         soc_hex_avg_c = DataProcessing.grid_utils.grid_utils.get_geoframe(soc_hex_avg_c, 'geometry_x')
@@ -124,4 +124,4 @@ class map_utils:
         plt.show()
         input('press')
 
-map_utils.plot_interpolated_map(r'Maps\PredictedMaps\RF_LTrue_CTrue_TTrue_30\Predictions\predictions_2008.csv')
+#map_utils.plot_interpolated_map(r'Maps\PredictedMaps\RF_LTrue_CTrue_TTrue_30\Predictions\predictions_2008.csv')

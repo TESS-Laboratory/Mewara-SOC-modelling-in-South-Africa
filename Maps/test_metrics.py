@@ -9,8 +9,8 @@ class test_metrics:
     
     def predict(self, year, start_month, end_month, hex_grid_year_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, save, output_path, error_output_path):
         predictions_columns = ['Year', 'Month', 'Lat', 'Lon', 'C', 'Target_C']  
-        lat_field = 'Hex_Center_Lat'
-        lon_field = 'Hex_Center_Lon'
+        lat_field = 'Hex_Center_Lat_x'
+        lon_field = 'Hex_Center_Lon_x'
         predictions = []
 
         lat_lon_pairs_total = list(set(zip(hex_grid_year_month[lat_field], hex_grid_year_month[lon_field])))
@@ -67,7 +67,6 @@ class test_metrics:
                 else:
                     prediction = self.model.predict(landsat_patch=landsat_patch, climate_patch=climate_patch, terrain_patch=terrain_patch)
                 
-                predictions.append([year, month, lat, lon, prediction, c_percent])
                 predictions.append([year, month, lat, lon, prediction, c_percent])
 
         predictions_df = pd.DataFrame(predictions, columns=predictions_columns)

@@ -250,9 +250,7 @@ class training_data_utils:
                                                     patch_size_meters_climate=patch_size_meters_climate,
                                                     patch_size_meters_terrain=patch_size_meters_terrain)
         
-    def get_patches(soc_data_path, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field):
-        soc_data = pd.read_csv(soc_data_path)
-
+    def get_patches(soc_data, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field):
         lat_lon_pairs = list(set(zip(soc_data[lat_field], soc_data[lon_field])))
   
         print(f'\n Fetching {folder_name} data:\n')
@@ -319,7 +317,7 @@ class training_data_utils:
 
         print(f'\n Fetching {prefix} data:\n')
 
-        terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=soc_data_path,
+        terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data=soc_data,
                                                                                                             folder_name=prefix,
                                                                                                             years=years,
                                                                                                             start_month=start_month,

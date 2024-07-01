@@ -42,10 +42,11 @@ def get_training_dataset():
 
 def save_training_patches_as_images():
     years = [2008]
-    soc_data = pd.read_csv(training_soc_path)
     lat_field = 'Lat'
     lon_field = 'Lon'
-    terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data_path=r'DataProcessing\soc_gdf.csv',
+    soc_data = pd.read_csv(training_soc_path)
+
+    terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data=soc_data,
                                                           folder_name='Train',
                                                           years=years, 
                                                           start_month=1,
@@ -126,7 +127,7 @@ def get_model(model_kind, model_path):
     
 def plot_maps(model_kind, model_path):
     model = get_model(model_kind=model_kind, model_path=model_path)
-    for year in years:
+    for year in [2008, 2018, 1999]:
         map_utils.create_map(year=year, 
                         start_month=1, 
                         end_month=12,
@@ -141,11 +142,11 @@ if __name__ == "__main__":
     cnn = CNN(use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain)
 
     variables = f'_L{use_landsat}_C{use_climate}_T{use_terrain}_'
-    model_output_cnn = f'Model/CNN_Models/CNN{variables}{epochs}.keras'
-    model_output_rf = f'Model/RF_Models/RF{variables}{epochs}'
+    model_output_cnn = f'Model/CNN_Models/Best_CNN_Model.keras'
+    model_output_rf = f'Model/RF_Models/Best_RF_Model'
 
     '''KerasTuner'''
-    keras_tuner()
+    #keras_tuner()
 
     '''CNN'''
     #train(model=cnn, model_output_path=model_output_cnn)
@@ -156,6 +157,6 @@ if __name__ == "__main__":
     #cnn_model = CNN(model_path=model_output_cnn)
    
     '''Maps'''
-    #plot_maps(model_kind='RF', model_path=model_output_rf)
+    plot_maps(model_kind='RF', model_path=model_output_rf)
   
     #save_training_patches_as_images()
