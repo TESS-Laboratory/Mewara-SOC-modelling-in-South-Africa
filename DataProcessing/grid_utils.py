@@ -47,8 +47,8 @@ class grid_utils:
             "<0.5": "red",
             "0.5-1": "orange",
             "1-2": "yellow",
-            "2-3": "green",
-            "3-4": "blue",
+            "2-3": "lightgreen",
+            "3-4": "green",
             ">4": "darkgreen"
         }
         return carbon_mapping
@@ -120,7 +120,7 @@ class grid_utils:
 
         gdf = gpd.GeoDataFrame(df_with_geometry, geometry=geometry_col, crs='EPSG:4326')
         gdf.set_crs(epsg=4326, inplace=True)
-        return gdf
+        return gdf[gdf.is_valid]
     
     @staticmethod
     def get_soc_hex_grid(soil_data, hex_grid_df):
@@ -186,6 +186,9 @@ class grid_utils:
         # Drop nan
         joined_minus_nan = data_avg_c_color_geometry.dropna(subset=['Avg_C', 'Color'])
 
+        if joined_minus_nan.empty:
+            return
+        
         # Plot the grid with the appropriate colors
         joined_minus_nan.plot(ax=ax, color=joined_minus_nan['Color'])
 

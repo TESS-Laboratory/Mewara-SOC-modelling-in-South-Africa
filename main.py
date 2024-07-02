@@ -40,7 +40,7 @@ def get_training_dataset():
         patch_size_meters_climate=patch_size_meters_climate,
         patch_size_meters_terrain=patch_size_meters_terrain
         )   
-    return np.round(landsat_data, 1), np.round(climate_data, 1), np.round(terrain_data, 1), np.round(targets, 1)
+    return np.round(landsat_data,8), np.round(climate_data, 8), np.round(terrain_data, 8), np.round(targets, 8)
 
 def save_training_patches_as_images():
     years = [2008]
