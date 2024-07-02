@@ -44,12 +44,14 @@ class grid_utils:
     @staticmethod
     def get_carbon_mapping():
         carbon_mapping = {
-            "<0.5": "red",
-            "0.5-1": "orange",
-            "1-2": "yellow",
-            "2-3": "lightgreen",
-            "3-4": "green",
-            ">4": "darkgreen"
+            "<0.5": "brown",
+            "0.5-1.0": "red",
+            "1.0-1.5": "orange",
+            "1.5-2.0": "lightpink",
+            "2.0-2.5": "yellow",
+            "2.5-3.0": "lightgreen",
+            "3.0-3.5": "green",
+            ">3.5": "darkgreen"
         }
         return carbon_mapping
 

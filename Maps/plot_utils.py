@@ -19,9 +19,10 @@ class plot_utils:
     def get_carbon_mapping():
         carbon_mapping = grid_utils.get_carbon_mapping()
         # Create boundaries and colors for the colormap
-        boundaries = [0, 0.5, 1, 2, 3, 4, 5]
-        colors = [carbon_mapping["<0.5"], carbon_mapping["0.5-1"], carbon_mapping["1-2"],
-                carbon_mapping["2-3"], carbon_mapping["3-4"], carbon_mapping[">4"]]
+        boundaries = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+        colors = [carbon_mapping["<0.5"], carbon_mapping["0.5-1.0"], carbon_mapping["1.0-1.5"],
+                carbon_mapping["1.5-2.0"], carbon_mapping["2.0-2.5"], carbon_mapping["2.5-3.0"], 
+                carbon_mapping["3.0-3.5"], carbon_mapping[">3.5"]]
         
         # Create the colormap and norm
         cmap = mcolors.ListedColormap(colors)

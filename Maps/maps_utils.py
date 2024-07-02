@@ -100,4 +100,4 @@ class map_utils:
                pred = pd.read_csv(predictions_path)
                plot_utils.plot_predictions(year=year, predictions=pred, map_output_path=output_path)
 
-map_utils.plot_predicted_maps()
+#map_utils.plot_predicted_maps()
