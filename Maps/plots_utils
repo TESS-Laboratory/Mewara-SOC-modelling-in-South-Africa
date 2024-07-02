@@ -1,0 +1,25 @@
+from matplotlib import pyplot as plt
+import pandas as pd
+
+class plots_utils:
+    def scatter_plot_predict_c_targetc(df):
+        df = df.dropna(subset=['Target_C'])
+
+        # Plot the data
+        plt.figure(figsize=(10, 6))
+        plt.scatter(df['C'], df['Target_C'], color='blue', label='Data points')
+        plt.plot([df['C'].min(), df['C'].max()], [df['C'].min(), df['C'].max()], color='red', linestyle='--', label='Ideal fit')
+
+        plt.xlabel('Predicted C')
+        plt.ylabel('Target C')
+        plt.title('Predicted Carbon (C) vs Target Carbon (Target_C)')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+pred_1999 = pd.read_csv(r'Maps\Best_RF_Model\Predictions\predictions_1999.csv')
+pred_2008 = pd.read_csv(r'Maps\Best_RF_Model\Predictions\predictions_2008.csv')
+pred_2018 = pd.read_csv(r'Maps\Best_RF_Model\Predictions\predictions_2018.csv')
+pred = [pred_2008]
+predictions = pd.DataFrame(pred, columns=['Year', 'Month', 'Lat', 'Lon', 'C', 'Target_C'])
+plots_utils.scatter_plot_predict_c_targetc(predictions)
