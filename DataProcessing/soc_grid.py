@@ -84,11 +84,6 @@ def preprocess_data():
     # Concatenate with conservation data for South Africa if available
     soc_data = pd.concat([soc_data, get_conservation_SA_data()], ignore_index=True)
 
-    # Bin C values into categories
-    soc_data['C_range'] = pd.cut(soc_data['C'], 
-                                 bins=[-float("inf"), 0.5, 1, 2, 3, 4, float("inf")], 
-                                 labels=["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"])
-
     # Convert 'Date' column to datetime format and extract year and month
     soc_data['Date'] = pd.to_datetime(soc_data['Date'])
     soc_data['Year'] = soc_data['Date'].dt.year
@@ -105,4 +100,4 @@ def preprocess_data():
     soc_gdf.to_csv(r"DataProcessing/soc_gdf.csv", index=False)
 
 #preprocess_data()
-merge_save_bulk_density_isda()
+#merge_save_bulk_density_isda()

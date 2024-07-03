@@ -19,10 +19,10 @@ class plot_utils:
     def get_carbon_mapping():
         carbon_mapping = grid_utils.get_carbon_mapping()
         # Create boundaries and colors for the colormap
-        boundaries = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+        boundaries = [-np.inf, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, np.inf]
         colors = [carbon_mapping["<0.5"], carbon_mapping["0.5-1.0"], carbon_mapping["1.0-1.5"],
                 carbon_mapping["1.5-2.0"], carbon_mapping["2.0-2.5"], carbon_mapping["2.5-3.0"], 
-                carbon_mapping["3.0-3.5"], carbon_mapping[">3.5"]]
+                carbon_mapping["3.0-3.5"], carbon_mapping["3.5-4.0"], carbon_mapping[">4.0"]]
         
         # Create the colormap and norm
         cmap = mcolors.ListedColormap(colors)
@@ -33,21 +33,23 @@ class plot_utils:
     def plot_predictions(year, predictions, map_output_path):
         gdf = plot_utils.get_predictions_geoframe(predictions)
 
-        carbon_cmap, carbon_norm = plot_utils.get_carbon_mapping()
+        carbon_cmap, carbon_norm = grid_utils.get_carbon_mapping_bins_colors()
         
         # Plot the result
-        plt.figure(figsize=(10, 8))
-        plt.scatter(gdf['Lon'], gdf['Lat'], c=gdf['C'], cmap=carbon_cmap, norm=carbon_norm)
-        plt.xlabel('Longitude', fontsize=16)
-        plt.ylabel('Latitude', fontsize=16)
-        plt.title(f'Predicted Carbon (% by Mass) Distribution in South Aftrica in Year {year}', fontsize=16)
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.scatter(gdf['Lon'], gdf['Lat'], c=gdf['C'], cmap=carbon_cmap, norm=carbon_norm)
+        ax.set_xlabel('Longitude', fontsize=16)
+        ax.set_ylabel('Latitude', fontsize=16)
+        ax.set_title(f'Predicted Carbon (% by Mass) Distribution in South Aftrica in Year {year}', fontsize=16)
+
+        grid_utils.get_sa_shape().boundary.plot(ax=ax, linewidth=1, edgecolor='black')
 
         # Create custom legend
         handles = [Patch(color=color, label=label) for label, color in grid_utils.get_carbon_mapping().items()]
-        plt.legend(handles=handles, title=r'Carbon (% by mass)', loc='center left', bbox_to_anchor=(1, 0.5), fontsize=14, title_fontsize=16)
+        legend = ax.legend(handles=handles, title=r'Carbon (% by mass)', loc='center left', bbox_to_anchor=(1, 0.5), fontsize=14, title_fontsize=16)
 
         os.makedirs(os.path.dirname(map_output_path), exist_ok=True)
-        plt.savefig(map_output_path, bbox_inches='tight')
+        plt.savefig(map_output_path, bbox_inches='tight', bbox_extra_artists=[legend])
 
         #plt.show()
    
@@ -56,11 +58,11 @@ class plot_utils:
 
         # Plot the data
         plt.figure(figsize=(10, 6))
-        plt.scatter(df['C'], df['Target_C'], color='blue', label='Data points')
+        plt.scatter(df['Target_C'], df['C'], color='blue', label='Data points')
         plt.plot([df['C'].min(), df['C'].max()], [df['C'].min(), df['C'].max()], color='red', linestyle='--', label='Ideal fit')
 
-        plt.xlabel(f'Predicted C (% by Mass)')
-        plt.ylabel(f'Target C (% by Mass)')
+        plt.ylabel(f'Predicted C (% by Mass)')
+        plt.xlabel(f'Target C (% by Mass)')
         plt.title(f'Predicted Carbon vs Target Carbon')
         plt.legend()
         plt.grid(True)
@@ -69,13 +71,3 @@ class plot_utils:
         plt.savefig(output_path, bbox_inches='tight')
 
         #plt.show()
-
-pred_1999 = pd.read_csv('Maps\Best_RF_Model\Predictions\predictions_1999.csv')
-pred_2008 = pd.read_csv('Maps\Best_RF_Model\Predictions\predictions_2008.csv')
-pred_2018 = pd.read_csv('Maps\Best_RF_Model\Predictions\predictions_2018.csv')
-
-combined_df = pd.concat([pred_1999, pred_2008, pred_2018], ignore_index=True)
-
-#plot_utils.scatter_plot_predict_c_targetc(combined_df, r'Maps\Best_RF_Model\ScatterPlots\rf_scatter_plot.png')
-
-#plot_utils.plot_predictions(year=2008, predictions=pred_2008, map_output_path=r'Maps\Best_RF_Model\PredictedMaps\predictions_2008.png')

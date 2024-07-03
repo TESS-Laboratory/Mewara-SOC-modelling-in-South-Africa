@@ -92,12 +92,22 @@ class map_utils:
             hex_avg_grid_C = map_utils.get_hex_grid_avg_c(year)
             map_utils.plot_actual_map(year=year, hex_grid_avg_c=hex_avg_grid_C)
 
-    def plot_predicted_maps():
-        for year in range(1986, 2023):
-            predictions_path = f'Maps\Best_RF_Model\Predictions\predictions_{year}.csv'
-            output_path = f'Maps\Best_RF_Model\PredictedMaps\predictions_{year}.png'
+    def plot_predicted_maps_scatter_plot(model_name):
+        combined_df = pd.DataFrame()
+        for year in range(2008, 2009):
+            predictions_path = f'Maps\Best_{model_name}_Model\Predictions\predictions_{year}.csv'
+            output_path = f'Maps\Best_{model_name}_Model\PredictedMaps\predictions_{year}.png'
+    
             if os.path.exists(predictions_path):
                pred = pd.read_csv(predictions_path)
+               combined_df = pd.concat([combined_df, pred], ignore_index=True)
                plot_utils.plot_predictions(year=year, predictions=pred, map_output_path=output_path)
+        
+        plot_utils.scatter_plot_predict_c_targetc(combined_df, f'Maps\Best_{model_name}_Model\ScatterPlots\{model_name}_scatter_plot.png')
 
-#map_utils.plot_predicted_maps()
+#map_utils.plot_actual_maps()
+map_utils.plot_predicted_maps_scatter_plot('CNN')
+map_utils.plot_predicted_maps_scatter_plot('RF')
+
+plot_utils.plot_predictions(year='(1987-2022)', predictions=pd.read_csv('DataProcessing/soc_gdf.csv'),
+                            map_output_path='Maps/ActualMaps/test_heat_map.png')
