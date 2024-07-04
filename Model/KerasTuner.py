@@ -25,9 +25,9 @@ class KerasTuner:
 
     @staticmethod
     def _build_model(hp):
-        input_shape_landsat = (256,256,4)
+        input_shape_landsat = (256,256,8)
         input_shape_climate = (7,7,3)
-        input_shape_terrain = (256,256,2)
+        input_shape_terrain = (256,256,4)
         landsat_layer, landsat_branch = KerasTuner.create_branch(input_shape=input_shape_landsat, name='landsat', hp=hp)
         climate_layer, climate_branch = KerasTuner.create_branch(input_shape=input_shape_climate, name='climate', hp=hp)
         terrain_layer, terrain_branch = KerasTuner.create_terrain_branch(input_shape=input_shape_terrain, hp=hp)

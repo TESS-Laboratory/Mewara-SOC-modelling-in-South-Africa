@@ -1,9 +1,5 @@
 import os
-from matplotlib import pyplot as plt
-import numpy as np
 import pandas as pd
-
-from DataProcessing.grid_utils import grid_utils
 from Maps.test_metrics import test_metrics
 from Maps.plot_utils import plot_utils
 import DataProcessing.grid_utils
@@ -15,9 +11,10 @@ class map_utils:
         output_dir = f'Maps/{model.get_model_name()}'
         error_output_path = f'{output_dir}/Errors/error_{year}.txt'
         predictions_output_path = f'{output_dir}/Predictions/predictions_{year}.csv'
-        predicted_plot_output_path = f'{output_dir}/PredictedMaps/predictions_{year}.png'
+        predicted_plot_output_path = f'{output_dir}/PredictedMaps/prediction_points_{year}.png'
 
         hex_grid_avg_c = map_utils.get_hex_grid_avg_c(year)
+        
         
         if not skip_predictions:
             print(f'\nFetching predictions for year {year}\n')
@@ -32,8 +29,8 @@ class map_utils:
                     error_output_path=error_output_path)
             
         plot_utils.plot_predictions(year=year,
-                                     predictions=predictions,
-                                     map_output_path=predicted_plot_output_path)
+                                    predictions=predictions,
+                                    map_output_path=predicted_plot_output_path)
 
     @staticmethod
     def plot_actual_map(year, hex_grid_avg_c):
@@ -63,7 +60,7 @@ class map_utils:
         soc_hex_avg_c = DataProcessing.grid_utils.grid_utils.get_geoframe(soc_hex_avg_c, 'geometry_x')
                                          
         return soc_hex_avg_c
-    '''   
+     
     @staticmethod
     def plot_predicted_map(year, predictions, predictions_plot_path):
         if predictions is None or len(predictions) == 0:
@@ -86,7 +83,12 @@ class map_utils:
                                                             savePlot=True,
                                                             output_plot_path=predictions_plot_path)
         #input('press key to continue')
-    '''
+
+    def plot_actual_maps():
+        for year in range(1986, 2023):
+            hex_avg_grid_C = map_utils.get_hex_grid_avg_c(year)
+            map_utils.plot_actual_map(year=year, hex_grid_avg_c=hex_avg_grid_C)
+
     def plot_actual_maps():
         for year in range(1986, 2023):
             hex_avg_grid_C = map_utils.get_hex_grid_avg_c(year)

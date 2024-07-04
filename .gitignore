@@ -286,9 +286,18 @@ Data/References
 Data/Train
 Data/Test
 Data/Patches
+Data/Carbon_iSDA
 
 DataProcessing/Patches
 Model/KerasTuner
 Model/CNN_Models
 Model/Best_CNN_Models
 Model/RF_Models
+
+GoogleStorage/Credentials
+RasterMaps
+
+*.qgz
+*.tif
+*.tif.aux.xml
+*.keras

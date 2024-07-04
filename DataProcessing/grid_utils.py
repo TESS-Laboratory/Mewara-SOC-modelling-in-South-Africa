@@ -25,17 +25,18 @@ class grid_utils:
 
     @staticmethod
     def clip_to_sa(rasterfile_path, south_africa, output_path):
-        # Open the DEM file
+        # Open the file
         with rasterio.open(rasterfile_path) as src:
-            # Clip the DEM to the South Africa boundary
-            clipped, transform = mask(src, south_africa.geometry, crop=True)
+            # Clip the to the South Africa boundary
+            clipped, transform = mask(src, south_africa.geometry, crop=True, nodata=np.nan)
 
             # Update metadata
             out_meta = src.meta
             out_meta.update({
                 "height": clipped.shape[1],
                 "width": clipped.shape[2],
-                "transform": transform
+                "transform": transform,
+                "nodata": np.nan
             })
 
             # Write the clipped DEM to a new GeoTIFF file

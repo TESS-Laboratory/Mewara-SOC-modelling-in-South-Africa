@@ -1,10 +1,6 @@
 import os
 import numpy as np
 import rasterio
-from rasterio.mask import mask
-from rasterio.merge import merge
-from rasterio.plot import show
-import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 
@@ -50,60 +46,14 @@ def resample_raster(src_path, dst_path, scale_factor):
                     resampling=Resampling.bilinear
                 )
 
-def clip_dem_to_sa(dem_path, south_africa, output_path):
-    # Open the DEM file
-    with rasterio.open(dem_path) as src:
-        # Clip the DEM to the South Africa boundary
-        clipped, transform = mask(src, south_africa.geometry, crop=True)
-
-        # Update metadata
-        out_meta = src.meta
-        out_meta.update({
-            "height": clipped.shape[1],
-            "width": clipped.shape[2],
-            "transform": transform
-        })
-
-        # Write the clipped DEM to a new GeoTIFF file
-        with rasterio.open(output_path, "w", **out_meta) as dst:
-            dst.write(clipped)
-
 def save_terrain_data():
-    output_dir = r"Data/TerrainData/Elevation2/Output"
+    output_dir = r"Data\TerrainData"
     os.makedirs(output_dir, exist_ok=True)
-    elevation_folder = r'Data/TerrainData/Elevation2'
 
-    tile_files = []
-    for file in os.listdir(elevation_folder):
-        filename = os.fsdecode(file)
-        if filename.endswith('.tif'):
-            tile_path = os.path.join(elevation_folder, filename)
-            resampled_tile_output = os.path.join(f'{output_dir}/resampled', f"resampled_{filename}")
-            if not os.path.exists(resampled_tile_output):
-                resample_raster(tile_path, resampled_tile_output, scale_factor=4)
-            tile_files.append(tile_path)
-
-    # Merge all resampled tiles
-    mosaic_path = os.path.join(output_dir, 'mosaic.tif')
-    '''with rasterio.open(mosaic_path) as src:
-        mosaic, out_trans = merge(tile_files)
-        profile = src.profile.copy()
-
-        # Update metadata
-        profile.update({
-            "height": mosaic.shape[1],
-            "width": mosaic.shape[2],
-            "transform": out_trans
-        })
-    '''
-        # Write the merged mosaic to a new GeoTIFF file
-        #with rasterio.open(mosaic_path, "w", **profile) as dst:
-           # dst.write(mosaic)
-
-    #Clip the merged DEM to South Africa boundary
-    #clip_dem_to_sa(mosaic_path, south_africa, clipped_dem_path)
-
-    # Calculate terrain metrics for the clipped DEM
+    dem_path = r'Data\TerrainData\mosaic.tif'
+    mosaic_path = r'Data\TerrainData\DEM.tif'
+    resample_raster(src_path=dem_path, dst_path=mosaic_path, scale_factor=4)
+    
     with rasterio.open(mosaic_path) as src:
         dem_data = src.read(1)
         transform = src.transform
@@ -115,9 +65,10 @@ def save_terrain_data():
         twi = calculate_twi(dem_data, slope)
 
         # Save DEM, slope, aspect, and TWI data to GeoTIFF files
-        for data, name in zip([dem_data, slope, aspect, twi], ['DEM', 'Slope', 'Aspect', 'TWI']):
-            profile.update(dtype=rasterio.float32, count=1)
+        for data, name in zip([slope, aspect, twi], ['Slope', 'Aspect', 'TWI']):
+            profile.update(dtype=rasterio.float64, count=1)
             output_path = os.path.join(output_dir, f"{name}.tif")
             with rasterio.open(output_path, 'w', **profile) as dst:
                 dst.write(data.astype(rasterio.float64), 1)
 
+#save_terrain_data()
