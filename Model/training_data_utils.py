@@ -292,7 +292,7 @@ class training_data_utils:
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 landsat_patches_dict[(year, lat, lon)] = stacked_patch
         return landsat_patches_dict
-     
+    
     def get_training_data(soc_data_path, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain):
         return training_data_utils._get_training_test_data(prefix='Train',
                                                     soc_data_path=soc_data_path,
@@ -303,15 +303,13 @@ class training_data_utils:
                                                     patch_size_meters_climate=patch_size_meters_climate,
                                                     patch_size_meters_terrain=patch_size_meters_terrain)
         
-    def get_patches(soc_data, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field, use_saved_patches = True, save_patches = True):
+    def get_patches(soc_data, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field, use_saved_patches = False, save_patches = False):
         lat_lon_pairs = list(set(zip(soc_data[lat_field], soc_data[lon_field])))
   
         print(f'\n Fetching {folder_name} data:\n')
         all_terrain_patches_dict = {}
         all_landsat_patches_dict = {}
         all_climate_patches_dict = {}
-        use_saved_patches = True
-        save_patches = True
 
         terrain_patches_path = f"Data/{folder_name}/Terrain/{folder_name}_terrain.h5"
         if os.path.exists(terrain_patches_path) and use_saved_patches:

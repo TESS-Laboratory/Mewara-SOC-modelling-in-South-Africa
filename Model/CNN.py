@@ -2,7 +2,7 @@ import os
 import numpy as np
 import tensorflow as tf
 from keras import layers, models, metrics, losses, optimizers
-from Model.base_model_utils import base_model_utils
+from Model.base_data_utils import base_data_utils
 from keras.callbacks import EarlyStopping
 from GoogleStorage import google_storage_service
 
@@ -159,7 +159,7 @@ class CNN():
         # Split data into training and test sets
         landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, \
               terrain_train, terrain_val, terrain_test, targets_train, targets_val, targets_test \
-            = base_model_utils.get_train_val_test_data(landsat_data=landsat_data,
+            = base_data_utils.get_train_val_test_data(landsat_data=landsat_data,
                                                   climate_data=climate_data,
                                                   terrain_data=terrain_data,
                                                   targets=targets)

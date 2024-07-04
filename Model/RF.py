@@ -24,11 +24,6 @@ class RF:
         climate_data = climate_data.reshape(n_samples, -1)
         terrain_data = terrain_data.reshape(n_samples, -1)
 
-        landsat_data = np.round(landsat_data, 2)
-        climate_data = np.round(climate_data, 2)
-        terrain_data = np.round(terrain_data, 2)
-        targets = np.round(targets, 2)
-
         mtry = int(sqrt(n_covariates))
     
         X = np.concatenate((landsat_data, climate_data, terrain_data), axis=1)
@@ -84,10 +79,6 @@ class RF:
         landsat_patch_arr = np.array([landsat_patch]) 
         climate_patch_arr = np.array([climate_patch])
         terrain_patch_arr = np.array([terrain_patch])
-        
-        landsat_patch_arr = np.round(landsat_patch_arr, 2)
-        climate_patch_arr = np.round(climate_patch_arr, 2)
-        terrain_patch_arr = np.round(terrain_patch_arr, 2)
 
         n_samples = landsat_patch_arr.shape[0]
     

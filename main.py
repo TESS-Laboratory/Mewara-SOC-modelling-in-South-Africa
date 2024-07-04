@@ -1,12 +1,14 @@
+import os
 import numpy as np
 from Model.CNN import CNN
 from Model.KerasTuner import KerasTuner
 from Model.RF import RF
-from Model.base_model_utils import base_model_utils
+from Model.base_data_utils import base_data_utils
 from Maps.maps_utils import map_utils
+from Model.data_analysis import data_analysis
 
 # Set environment variables for XLA flags
-#os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
+os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
 years = [1998, 1999, 2000, 2001, 2002, 2004, 2007, 2008, 2009, 2010, 2012, 2016, 2017, 2018]
 #years=[1998, 1999]
@@ -23,26 +25,20 @@ patch_size_meters_climate = 30720 # roughly 7*7 pixels
 patch_size_meters_terrain = 30720
 
 training_soc_path = r'DataProcessing/soc_gdf.csv'
-training_data_cache_path = f'Data/Train/training_data_cache_{years}.pkl'
 
 def get_training_dataset():
-    landsat_data, climate_data, terrain_data, targets = base_model_utils.get_training_data_with_cache(
-        cache_path=training_data_cache_path,
+    landsat_data, climate_data, terrain_data, targets = base_data_utils.get_test_train_data(
         soc_data_path=training_soc_path,
         years=years,
         start_month=start_month,
         end_month=end_month,
         patch_size_meters_landsat=patch_size_meters_landsat,
         patch_size_meters_climate=patch_size_meters_climate,
-        patch_size_meters_terrain=patch_size_meters_terrain
-        )   
-    return np.round(landsat_data, 6), np.round(climate_data, 6), np.round(terrain_data, 6), np.round(targets, 6)
+        patch_size_meters_terrain=patch_size_meters_terrain)   
+    return np.round(landsat_data, 3), np.round(climate_data, 3), np.round(terrain_data, 3), np.round(targets, 3)
 
-def train(model, model_output_path):
-    print(f'\n Fetching training dataset for years {years}:\n')
-    landsat_data, climate_data, terrain_data, targets = get_training_dataset()
+def train(model, model_output_path, landsat_data, climate_data, terrain_data, targets):
     print(f'\n Training {model.__class__.__name__} model:\n')
-
     history = model.train(landsat_data=landsat_data,
                         climate_data=climate_data,
                         terrain_data=terrain_data,
@@ -51,7 +47,7 @@ def train(model, model_output_path):
                         epochs=epochs)
     
     if (history != None):
-        base_model_utils.plot_trainin_validation_loss(train_loss=history['loss'], val_loss=history['val_loss'])
+        base_data_utils.plot_trainin_validation_loss(train_loss=history['loss'], val_loss=history['val_loss'])
         #input('Press any key to continue')
 
 def keras_tuner():
@@ -86,14 +82,23 @@ if __name__ == "__main__":
     rf = RF()
     cnn = CNN(use_landsat=use_landsat, use_climate=use_climate, use_terrain=use_terrain, cloud_storage=cloud_storage_cnn)
 
+    '''Training Data'''
+    print(f'\n Fetching training dataset for years {years}:\n')
+    landsat_data, climate_data, terrain_data, targets = get_training_dataset()
+    
     '''KerasTuner'''
     #keras_tuner()
 
+    '''Pearsons Coefficient'''
+    data_analysis.print_pearson_coefficient(input_data=landsat_data, target_data=targets)
+    data_analysis.print_pearson_coefficient(input_data=climate_data, target_data=targets)
+    data_analysis.print_pearson_coefficient(input_data=terrain_data, target_data=targets)
+
     '''RF'''
-    train(model=rf, model_output_path=model_output_rf)
+    train(model=rf, model_output_path=model_output_rf, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
 
     '''CNN'''
-    train(model=cnn, model_output_path=model_output_cnn)
+    train(model=cnn, model_output_path=model_output_cnn, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
 
     #cnn_model = CNN(model_path=model_output_cnn)
    

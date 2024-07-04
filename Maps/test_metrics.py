@@ -26,7 +26,9 @@ class test_metrics:
                                                           patch_size_meters_climate=patch_size_meters_climate,
                                                           patch_size_meters_terrain=patch_size_meters_terrain,
                                                           lat_field=lat_field,
-                                                          lon_field=lon_field)
+                                                          lon_field=lon_field,
+                                                          use_saved_patches=True,
+                                                          save_patches=True)
        
         for month in range(start_month, end_month + 1):
             soc_avg_monthly = hex_grid_year_month[(hex_grid_year_month['Year'] == year) & (hex_grid_year_month['Month'] == month)]
