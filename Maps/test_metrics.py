@@ -14,6 +14,7 @@ class test_metrics:
         predictions = []
 
         lat_lon_pairs_total = list(set(zip(hex_grid_year_month[lat_field], hex_grid_year_month[lon_field])))
+        error_logs = []
 
         print(f'\nStart predictions for total {len(lat_lon_pairs_total)} in year {year}\n')
         terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data=hex_grid_year_month,
@@ -50,16 +51,16 @@ class test_metrics:
                 climate_patch = climate_patches_dict.get((year, month, lat, lon))
                
                 if c_percent is not None and landsat_patch is None:
-                    test_metrics.log_error(error_output_path=error_output_path,
-                                           error_text=f"\nlandsat patch for year {year} month {month} lat {lat} and lon {lon} is missing")
+                    error_logs.append(f"\nlandsat patch for year {year} month {month} lat {lat} and lon {lon} is missing")
+                    continue
                 
                 if c_percent is not None and climate_patch is None:
-                    test_metrics.log_error(error_output_path=error_output_path,
-                                           error_text=f"\nclimate patch for year {year} month {month} lat {lat} and lon {lon} is missing")
-                
+                    error_logs.append(f"\nclimate patch for year {year} month {month} lat {lat} and lon {lon} is missing")
+                    continue
+            
                 if c_percent is not None and terrain_patch is None:
-                    test_metrics.log_error(error_output_path=error_output_path,
-                                           error_text=f"\nterrain patch for year {year} month {month} lat {lat} and lon {lon} is missing")
+                    error_logs.append(f"\nterrain patch for year {year} month {month} lat {lat} and lon {lon} is missing")
+                    continue
                 
                 if landsat_patch is None or climate_patch is None or terrain_patch is None:
                     prediction = None
@@ -69,6 +70,7 @@ class test_metrics:
                 
                 predictions.append([year, month, lat, lon, prediction, c_percent])
 
+        test_metrics.log_errors(error_output_path=error_output_path, errors=error_logs)
         predictions_df = pd.DataFrame(predictions, columns=predictions_columns)
 
         if save:
@@ -76,8 +78,8 @@ class test_metrics:
             training_data_utils.save_csv(arr = predictions, column_names= predictions_columns, output_path=f'{output_path}')
         return predictions_df
     
-    def log_error(error_output_path, error_text):
+    def log_errors(error_output_path, errors):
         if not os.path.exists(error_output_path):
             os.makedirs(os.path.dirname(error_output_path), exist_ok=True)
-        with open(error_output_path, "a") as err:
-            err.write(error_text)
+        with open(error_output_path, "w") as err:
+            err.write(errors)

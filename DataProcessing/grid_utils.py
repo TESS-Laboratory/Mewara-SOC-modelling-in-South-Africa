@@ -8,6 +8,7 @@ from matplotlib.patches import Patch, Polygon
 from rasterio.mask import mask
 from shapely.geometry import Point, Polygon
 from shapely import wkt
+import matplotlib.colors as mcolors
 
 class grid_utils:
     @staticmethod
@@ -24,17 +25,18 @@ class grid_utils:
 
     @staticmethod
     def clip_to_sa(rasterfile_path, south_africa, output_path):
-        # Open the DEM file
+        # Open the file
         with rasterio.open(rasterfile_path) as src:
-            # Clip the DEM to the South Africa boundary
-            clipped, transform = mask(src, south_africa.geometry, crop=True)
+            # Clip the to the South Africa boundary
+            clipped, transform = mask(src, south_africa.geometry, crop=True, nodata=np.nan)
 
             # Update metadata
             out_meta = src.meta
             out_meta.update({
                 "height": clipped.shape[1],
                 "width": clipped.shape[2],
-                "transform": transform
+                "transform": transform,
+                "nodata": np.nan
             })
 
             # Write the clipped DEM to a new GeoTIFF file
@@ -44,14 +46,32 @@ class grid_utils:
     @staticmethod
     def get_carbon_mapping():
         carbon_mapping = {
-            "<0.5": "red",
-            "0.5-1": "orange",
-            "1-2": "yellow",
-            "2-3": "green",
-            "3-4": "blue",
-            ">4": "darkgreen"
+            "<0.5": "brown",
+            "0.5-1.0": "red",
+            "1.0-1.5": "orange",
+            "1.5-2.0": "lightpink",
+            "2.0-2.5": "yellow",
+            "2.5-3.0": "lightgreen",
+            "3.0-3.5": "green",
+            "3.5-4.0": "darkgreen",
+            ">4.0": "blue"
         }
         return carbon_mapping
+    
+    @staticmethod
+    def get_carbon_mapping_bins_colors():
+        carbon_mapping = grid_utils.get_carbon_mapping()
+        # Create boundaries and colors for the colormap
+        boundaries = [-np.inf, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, np.inf]
+        colors = [carbon_mapping["<0.5"], carbon_mapping["0.5-1.0"], carbon_mapping["1.0-1.5"],
+                carbon_mapping["1.5-2.0"], carbon_mapping["2.0-2.5"], carbon_mapping["2.5-3.0"], 
+                carbon_mapping["3.0-3.5"], carbon_mapping["3.5-4.0"], carbon_mapping[">4.0"]]
+        
+        # Create the colormap and norm
+        cmap = mcolors.ListedColormap(colors)
+        norm = mcolors.BoundaryNorm(boundaries, cmap.N)
+        
+        return cmap, norm
 
     @staticmethod
     def get_soil_data(soil_csv_path):
@@ -120,7 +140,7 @@ class grid_utils:
 
         gdf = gpd.GeoDataFrame(df_with_geometry, geometry=geometry_col, crs='EPSG:4326')
         gdf.set_crs(epsg=4326, inplace=True)
-        return gdf
+        return gdf[gdf.is_valid]
     
     @staticmethod
     def get_soc_hex_grid(soil_data, hex_grid_df):
@@ -149,8 +169,8 @@ class grid_utils:
     
     @staticmethod
     def categorize_c_carbon_mapping(df, c_col, carbon_mapping):
-        bins = [-np.inf, 0.5, 1, 2, 3, 4, np.inf]
-        labels = ["<0.5", "0.5-1", "1-2", "2-3", "3-4", ">4"]
+        bins = [-np.inf, 0.5, 1.0, 1.5, 2.0, 2,5, 3.0, 3.5, 4.0, np.inf]
+        labels = ["<0.5", "0.5-1.0", "1.0-1.5", "1.5-2.0", "2.0-2.5", "2.5-3.0", "3.0-3.5", "3.5-4.0", ">4.0"]
         df['C_range'] = pd.cut(df[c_col], bins=bins, labels=labels)
 
         # Map colors to 'C_range' values
@@ -186,6 +206,9 @@ class grid_utils:
         # Drop nan
         joined_minus_nan = data_avg_c_color_geometry.dropna(subset=['Avg_C', 'Color'])
 
+        if joined_minus_nan.empty:
+            return
+        
         # Plot the grid with the appropriate colors
         joined_minus_nan.plot(ax=ax, color=joined_minus_nan['Color'])
 

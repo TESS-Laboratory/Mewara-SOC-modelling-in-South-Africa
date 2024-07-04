@@ -1,7 +1,8 @@
-from matplotlib import pyplot as plt
-import numpy as np
 import pandas as pd
+
+from DataProcessing.grid_utils import grid_utils
 from Maps.test_metrics import test_metrics
+from Maps.plot_utils import plot_utils
 import DataProcessing.grid_utils
 from scipy.interpolate import griddata
 
@@ -12,14 +13,11 @@ class map_utils:
         output_dir = f'Maps/{model.get_model_name()}'
         error_output_path = f'{output_dir}/Errors/error_{year}.txt'
         predictions_output_path = f'{output_dir}/Predictions/predictions_{year}.csv'
-        predicted_plot_output_path = f'{output_dir}/PredictedMaps/predicted_{year}.png'
-
-        avg_cols = ['Hex_ID', 'Year']
+        predicted_plot_output_path = f'{output_dir}/PredictedMaps/prediction_points_{year}.png'
 
         hex_grid_avg_c = map_utils.get_hex_grid_avg_c(year)
         
-        map_utils.plot_actual_map(year=year, hex_grid=hex_grid_avg_c)
-
+        
         if not skip_predictions:
             print(f'\nFetching predictions for year {year}\n')
             predictions = tm.predict(year=year,
@@ -32,9 +30,9 @@ class map_utils:
                     output_path=predictions_output_path,
                     error_output_path=error_output_path)
             
-        map_utils.plot_predicted_map(year=year,
-                                     predictions=predictions,
-                                     predictions_plot_path=predicted_plot_output_path)
+        plot_utils.plot_predictions(year=year,
+                                    predictions=predictions,
+                                    map_output_path=predicted_plot_output_path)
 
     @staticmethod
     def plot_actual_map(year, hex_grid):
@@ -64,7 +62,7 @@ class map_utils:
         soc_hex_avg_c = DataProcessing.grid_utils.grid_utils.get_geoframe(soc_hex_avg_c, 'geometry_x')
                                          
         return soc_hex_avg_c
-        
+     
     @staticmethod
     def plot_predicted_map(year, predictions, predictions_plot_path):
         if predictions is None or len(predictions) == 0:
@@ -88,40 +86,29 @@ class map_utils:
                                                             output_plot_path=predictions_plot_path)
         #input('press key to continue')
 
+    def plot_actual_maps():
+        for year in range(1986, 2023):
+            hex_avg_grid_C = map_utils.get_hex_grid_avg_c(year)
+            map_utils.plot_actual_map(year=year, hex_grid_avg_c=hex_avg_grid_C)
 
-    def plot_interpolated_map(predictions_path):
-        predictions = pd.read_csv(predictions_path)
-        hex_grid = pd.read_csv(r'DataProcessing/hex_grid.csv')
-        gdf = DataProcessing.grid_utils.grid_utils.get_soc_hex_grid(hex_grid_df=hex_grid,
-                                             soil_data=predictions) 
+    def plot_predicted_maps_scatter_plot(model_name):
+        combined_df = pd.DataFrame()
+        for year in range(2008, 2009):
+            predictions_path = f'Maps\Best_{model_name}_Model\Predictions\predictions_{year}.csv'
+            output_path = f'Maps\Best_{model_name}_Model\PredictedMaps\predictions_{year}.png'
+    
+            if os.path.exists(predictions_path):
+               pred = pd.read_csv(predictions_path)
+               combined_df = pd.concat([combined_df, pred], ignore_index=True)
+               plot_utils.plot_predictions(year=year, predictions=pred, map_output_path=output_path)
+        
+        plot_utils.scatter_plot_predict_c_targetc(combined_df, f'Maps\Best_{model_name}_Model\ScatterPlots\{model_name}_scatter_plot.png')
 
-        # Extract coordinates and SOC values
-        points = gdf[['Hex_Center_Lat', 'Hex_Center_Lon']].values
-        values = gdf['C'].values
+'''
+#map_utils.plot_actual_maps()
+map_utils.plot_predicted_maps_scatter_plot('CNN')
+map_utils.plot_predicted_maps_scatter_plot('RF')
 
-        gdf = gdf.dropna(subset=['C'])
-
-        # Define the grid over which to interpolate
-        grid_lat, grid_lon = np.mgrid[
-            gdf['Hex_Center_Lat'].min():gdf['Hex_Center_Lat'].max():100j,
-            gdf['Hex_Center_Lon'].min():gdf['Hex_Center_Lon'].max():100j
-        ]
-
-        # Perform the interpolation
-        grid_C = griddata(points, values, (grid_lat, grid_lon), method='cubic')
-
-        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
-        DataProcessing.grid_utils.grid_utils.get_sa_shape().boundary.plot(ax=ax, linewidth=1, edgecolor='black')
-        #gdf.plot(column='C', ax=ax, legend=True, cmap='viridis', edgecolor='black')
-
-        # Plot the interpolated SOC map
-        plt.imshow(grid_C.T, extent=(gdf['Hex_Center_Lon'].min(), gdf['Hex_Center_Lon'].max(), gdf['Hex_Center_Lat'].min(), gdf['Hex_Center_Lat'].max()), origin='lower', cmap='inferno', alpha=0.6)
-
-        plt.title('Interpolated SOC Content Map of South Africa')
-        plt.xlabel('Longitude')
-        plt.ylabel('Latitude')
-        plt.colorbar(label='SOC Content')
-        plt.show()
-        input('press')
-
-#map_utils.plot_interpolated_map(r'Maps\PredictedMaps\RF_LTrue_CTrue_TTrue_30\Predictions\predictions_2008.csv')
+plot_utils.plot_predictions(year='(1987-2022)', predictions=pd.read_csv('DataProcessing/soc_gdf.csv'),
+                            map_output_path='Maps/ActualMaps/test_heat_map.png')
+'''

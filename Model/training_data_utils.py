@@ -59,7 +59,6 @@ class training_data_utils:
         patch = dataset.read(window=window)
 
         data_augment = True
-        save_patch = False
 
         if (data_augment) :
             patch_size = patch_size_pixels
@@ -71,27 +70,61 @@ class training_data_utils:
                             (0, patch_size - patch.shape[2]))
                 patch = np.pad(patch, pad_width, mode='constant', constant_values=np.nan)
 
-        patch = training_data_utils.replace_nan_inf_data(data=patch)
+        patch = training_data_utils.replace_nan_inf_data(patch=patch)
 
+        if (save_patch):
+            res = (dataset.transform.a, dataset.transform.e)
+            lon_min, lat_max = dataset.xy(window_row_off, window_col_off)
+            transform = from_origin(
+                lon_min,
+                lat_max,
+                res[0], 
+                abs(res[1])
+             )
+            
+            training_data_utils.save_patch_as_raster(patch=patch, 
+                                            patch_size=patch_size if data_augment else patch_size_pixels, 
+                                            is_augmented=data_augment,
+                                            transform=transform,
+                                            dataset=dataset,
+                                            output_folder=output_patch_folder,
+                                            output_filename=output_patch_filename)
         return patch
+    
+    def replace_nan_inf_data(patch):
+        mask_invalid = np.logical_or(np.isnan(patch), np.isinf(patch), np.isneginf(patch))
+        patch_valid = np.ma.masked_array(patch, mask=mask_invalid)
+    
+        # Calculate mean values for each layer ignoring NaNs, Infs, and -Infs
+        mean_values = np.nanmean(patch_valid, axis=(1, 2), keepdims=True)
+      
+        for i in range(patch.shape[0]):
+            patch[i, mask_invalid[i]] = mean_values[i]
         
-    def replace_nan_inf_data(data):
-       # Mask out NaNs, Infs, and -Infs
-        mask_invalid = np.logical_or(np.isnan(data), np.isinf(data))
-        data_valid = np.ma.masked_array(data, mask=mask_invalid)
-        
-        # Calculate mean values ignoring NaN, Inf, or -Inf
-        mean_value = np.nanmean(data_valid, axis=(0, 1))
-        
-        # Replace NaN, Inf, and -Inf with mean values
-        for i in range(data.shape[-1]):
-            data[mask_invalid[..., i], i] = mean_value[i]
+        return patch
 
-        # Identify rows that are completely invalid (all NaN or Inf or -Inf)
-        invalid_rows = np.all(np.logical_or(np.isnan(data), np.isinf(data), np.isneginf(data)), axis=(1, 2))
-
-        return data[~invalid_rows]
-   
+    def save_patch_as_raster(patch, patch_size, is_augmented, transform, dataset, output_folder, output_filename):
+        if is_augmented:
+            output_folder = f'{output_folder}\Augmented'
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        
+        output_path = os.path.join(output_folder, output_filename)
+        
+        with rasterio.open(
+            output_path,
+            'w',
+            driver='GTiff',
+            height=patch_size,
+            width=patch_size,
+            count=patch.shape[0],  # Number of bands
+            dtype=patch.dtype,
+            crs=dataset.crs,
+            transform=transform,
+        ) as dst:
+            for band in range(patch.shape[0]):
+                dst.write(patch[band], band + 1)
+        
     def get_bd_patches_dict(lat_lon_pairs):
         raster_path=f'Data/BulkDensity/BulkDensity.tif'
       
@@ -112,42 +145,48 @@ class training_data_utils:
                 bd_patches_dict[(lat, lon)] = patch[0]
         return bd_patches_dict
     
-    def get_terrain_patches_dict(lat_lon_pairs, patch_size_meters):
-        dem_path =f'Data/TerrainData/Elevation/DEM.tif'
-        aspect_path = f'Data/TerrainData/Elevation/Aspect.tif'
-        twi_path = f'Data/TerrainData/Elevation/TWI.tif'
-
-        output_dem_folder=f'DataProcessing/Patches/Terrain/DEM/{patch_size_meters}'
-        output_aspect_folder=f'DataProcessing/Patches/Terrain/Aspect/{patch_size_meters}'
-        output_twi_folder=f'DataProcessing/Patches/Terrain/TWI/{patch_size_meters}'
+    def get_terrain_patches_dict(lat_lon_pairs, patch_size_meters, save_patches = False):
+        dem_path =f'Data\TerrainData\DEM.tif'
+        aspect_path = f'Data\TerrainData\Aspect.tif'
+        slope_path = f'Data\TerrainData\Slope.tif'
+        twi_path = f'Data\TerrainData\TWI.tif'
 
         patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=120)
-        
-        if not (os.path.exists(dem_path) and os.path.exists(aspect_path) and os.path.exists(twi_path)):
-            return None
         
         terrain_patches_dict = {}
 
         with rasterio.open(dem_path) as dem_dataset, \
              rasterio.open(aspect_path) as aspect_dataset, \
+             rasterio.open(slope_path) as slope_dataset, \
              rasterio.open(twi_path) as twi_dataset:
 
             for lat, lon in lat_lon_pairs:
                 output_filename=f'({lat}_{lon}).tif'
+                dem_patch = training_data_utils.extract_patch(dataset=dem_dataset, 
+                                                               lat=lat, 
+                                                               lon=lon, 
+                                                               patch_size_pixels=patch_size_pixels)
+                if dem_patch is None or not dem_patch.any():
+                    terrain_patches_dict[(lat, lon)]= None
+                    continue
                 aspect_patch = training_data_utils.extract_patch(dataset=aspect_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
                 if aspect_patch is None or not aspect_patch.any():
+                    terrain_patches_dict[(lat, lon)]= None
+                    continue
+                slope_patch = training_data_utils.extract_patch(dataset=slope_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
+                if slope_patch is None or not slope_patch.any():
                     terrain_patches_dict[(lat, lon)]= None
                     continue
                 twi_patch = training_data_utils.extract_patch(dataset=twi_dataset, lat=lat, lon=lon, patch_size_pixels=patch_size_pixels)
                 if twi_patch is None or not twi_patch.any():
                     terrain_patches_dict[(lat, lon)]= None
                     continue
-                stacked_patch = np.stack([aspect_patch[0], twi_patch[0]], axis=-1)
+                stacked_patch = np.stack([dem_patch[0], aspect_patch[0], slope_patch[0], twi_patch[0]], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 terrain_patches_dict[(lat, lon)] = stacked_patch
         return terrain_patches_dict
     
-    def get_climate_patches_dict(year, month, lat_lon_pairs, patch_size_meters):
+    def get_climate_patches_dict(year, month, lat_lon_pairs, patch_size_meters, save_patches = False):
         prec_raster_path =f'Data/WorldClim_SA/wc2.1_2.5m_prec_{year}-{month:02d}.tif'
         tmin_raster_path = f'Data/WorldClim_SA/wc2.1_2.5m_tmin_{year}-{month:02d}.tif'
         tmax_raster_path = f'Data/WorldClim_SA/wc2.1_2.5m_tmax_{year}-{month:02d}.tif'
@@ -165,7 +204,9 @@ class training_data_utils:
         meters_per_pixel = (2.5/60) * 111111 # 2.5 degrees from the equator ~ 111111 * 2.5 meters = 4,629.625 meters
         patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=meters_per_pixel)
 
-        output_prec_patch_folder=f'DataProcessing/Patches/Climate/Precipitation/{patch_size_meters}/{year}/{month}'
+        output_prec_patch_folder=f'DataProcessing/Patches/{patch_size_meters}/Climate/Precipitation/{year}_{month}'
+        output_tmin_patch_folder=f'DataProcessing/Patches/{patch_size_meters}/Climate/Tmin/{year}_{month}'
+        output_tmax_patch_folder=f'DataProcessing/Patches/{patch_size_meters}/Climate/Tmax/{year}_{month}'
        
         if not (os.path.exists(prec_raster_path) and os.path.exists(tmin_raster_path) and os.path.exists(tmax_raster_path)):
             return None
@@ -183,27 +224,39 @@ class training_data_utils:
                                                     lat=lat, 
                                                     lon=lon, 
                                                     patch_size_pixels=patch_size_pixels,  
-                                                    save_patch=True, 
+                                                    save_patch=save_patches, 
                                                     output_patch_folder=output_prec_patch_folder, 
                                                     output_patch_filename=output_filename)
                 if prec_patch is None or not prec_patch.any():
                     climate_patches_dict[(year, month, lat, lon)]= None
                     continue
-                tmin_patch = training_data_utils.extract_patch(tmin_dataset, lat, lon, patch_size_pixels)
+                tmin_patch = training_data_utils.extract_patch(tmin_dataset, 
+                                                               lat, 
+                                                               lon, 
+                                                               patch_size_pixels,
+                                                               save_patch=save_patches, 
+                                                               output_patch_folder=output_tmin_patch_folder, 
+                                                               output_patch_filename=output_filename)
                 if tmin_patch is None or not tmin_patch.any():
                     climate_patches_dict[(year, month, lat, lon)]= None
                     continue
-                tmax_patch = training_data_utils.extract_patch(tmax_dataset, lat, lon, patch_size_pixels)
+                tmax_patch = training_data_utils.extract_patch(tmax_dataset, 
+                                                               lat, 
+                                                               lon, 
+                                                               patch_size_pixels,
+                                                               save_patch=save_patches, 
+                                                               output_patch_folder=output_tmax_patch_folder, 
+                                                               output_patch_filename=output_filename)
                 if tmax_patch is None or not tmax_patch.any():
                     climate_patches_dict[(year, month, lat, lon)]= None
                     continue
-                stacked_patch = np.stack([prec_patch[0]/no_of_days, tmin_patch[0], tmax_patch[0]], axis=-1)
+                stacked_patch = np.stack([prec_patch[0], tmin_patch[0], tmax_patch[0]], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 climate_patches_dict[(year, month, lat, lon)] = stacked_patch
         return climate_patches_dict
     
-    def get_landsat_patches_dict(year, lat_lon_pairs, patch_size_meters):
-        raster_path=f'Data/LandSat/Annual_Processed/{year}/Landsat_{year}.tif'
+    def get_landsat_patches_dict(year, lat_lon_pairs, patch_size_meters, save_patches = False):
+        raster_path=f'Data/LandSat/Annual_Processed/Landsat_{year}.tif'
         output_folder=f'DataProcessing/Patches/Landsat/{patch_size_meters}/{year}'
 
         # Landsat was downsampled by 4, therefore each pixel is 30 m * 4 = 120 meters
@@ -221,7 +274,7 @@ class training_data_utils:
                                                 lat=lat, 
                                                 lon=lon, 
                                                 patch_size_pixels=patch_size_pixels,  
-                                                save_patch=True, 
+                                                save_patch=save_patches, 
                                                 output_patch_folder=output_folder, 
                                                 output_patch_filename=output_filename)
                 if patch is None or not patch.any():
@@ -235,7 +288,7 @@ class training_data_utils:
                 evi_band = patch[5]
                 savi_band = patch[6]
                 rvi_band = patch[7]
-                stacked_patch = np.stack([ndvi_band, evi_band, savi_band, rvi_band], axis=-1)
+                stacked_patch = np.stack([red_band, green_band, blue_band, nir_band, ndvi_band, evi_band, savi_band, rvi_band], axis=-1)
                 stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
                 landsat_patches_dict[(year, lat, lon)] = stacked_patch
         return landsat_patches_dict
@@ -250,20 +303,23 @@ class training_data_utils:
                                                     patch_size_meters_climate=patch_size_meters_climate,
                                                     patch_size_meters_terrain=patch_size_meters_terrain)
         
-    def get_patches(soc_data, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field):
+    def get_patches(soc_data, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field, use_saved_patches = True, save_patches = True):
         lat_lon_pairs = list(set(zip(soc_data[lat_field], soc_data[lon_field])))
   
         print(f'\n Fetching {folder_name} data:\n')
         all_terrain_patches_dict = {}
         all_landsat_patches_dict = {}
         all_climate_patches_dict = {}
+        use_saved_patches = True
+        save_patches = True
 
         terrain_patches_path = f"Data/{folder_name}/Terrain/{folder_name}_terrain.h5"
-        if os.path.exists(terrain_patches_path):
+        if os.path.exists(terrain_patches_path) and use_saved_patches:
             terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
         else:
             terrain_patches_dict = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
-            training_data_utils.save_patches(output_path=terrain_patches_path, patches_dict=terrain_patches_dict)
+            if save_patches:
+                training_data_utils.save_patches_dict(output_path=terrain_patches_path, patches_dict=terrain_patches_dict)
 
         if terrain_patches_dict is None:
             return None
@@ -276,11 +332,12 @@ class training_data_utils:
             lat_lon_pairs_yearly = list(set(zip(soc_data_yearly[lat_field], soc_data_yearly[lon_field])))
             
             landsat_patches_path = f"Data/{folder_name}/Landsat/{year}/{folder_name}_landsat_{year}.h5"
-            if os.path.exists(landsat_patches_path):
+            if os.path.exists(landsat_patches_path) and use_saved_patches:
                 landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
             else:
                 landsat_patches_dict = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs_yearly, patch_size_meters=patch_size_meters_landsat)
-                training_data_utils.save_patches(output_path=landsat_patches_path, patches_dict=landsat_patches_dict)
+                if save_patches:
+                    training_data_utils.save_patches_dict(output_path=landsat_patches_path, patches_dict=landsat_patches_dict)
 
             if landsat_patches_dict is None:
                 continue
@@ -296,11 +353,12 @@ class training_data_utils:
                 lat_lon_pairs_monthly = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
 
                 climate_patches_path = f"Data/{folder_name}/Climate/{year}/{folder_name}_climate_{year}_{month}.h5"
-                if os.path.exists(climate_patches_path):
+                if os.path.exists(climate_patches_path) and use_saved_patches:
                     climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
                 else:
                     climate_patches_dict = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
-                    training_data_utils.save_patches(output_path=climate_patches_path, patches_dict=climate_patches_dict)
+                    if save_patches:
+                        training_data_utils.save_patches_dict(output_path=climate_patches_path, patches_dict=climate_patches_dict)
 
                 if climate_patches_dict is None:
                     continue
@@ -353,7 +411,7 @@ class training_data_utils:
                             
         return np.array(landsat_data), np.array(climate_data), np.array(terrain_data), np.array(targets)
 
-    def save_patches(output_path, patches_dict):
+    def save_patches_dict(output_path, patches_dict):
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         with h5py.File(output_path, 'w') as h5f:

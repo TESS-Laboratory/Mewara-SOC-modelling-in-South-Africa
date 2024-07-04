@@ -122,6 +122,3 @@ class raster_processor:
 
                 # Set new band names
                 dst.descriptions = new_band_names
-
-raster_processor.merge_rasters(r'Data/LandSat/Annual_Processed/2007/2007/resampled', 'Landsat_2007.tif', r'Data/LandSat/Annual_Processed/2007')
-#new_band_names = ['Red', 'Green', 'Blue', 'NIR', 'NDVI', 'EVI', 'SAVI', 'RVI']

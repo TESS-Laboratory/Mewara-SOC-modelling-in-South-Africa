@@ -1,16 +1,15 @@
 import os
-from matplotlib import pyplot as plt
-import shap
 import numpy as np
-from tensorflow import keras
+import tensorflow as tf
 from keras import layers, models, metrics, losses, optimizers
 from Model.base_model_utils import base_model_utils
 from keras.callbacks import EarlyStopping
+from GoogleStorage import google_storage_service
 
 class CNN():
-    def __init__(self,  use_landsat, use_climate, use_terrain, model_path = None):
+    def __init__(self,  use_landsat, use_climate, use_terrain, cloud_storage, model_path = None):
         if model_path is not None:
-            self.model = self.load_model(model_path=model_path)
+            self.model = self.load_model(model_path=model_path, cloud_storage=cloud_storage)
             self.model_name = os.path.basename(model_path)
         else:
             self.model = None
@@ -22,8 +21,11 @@ class CNN():
     def get_model_name(self):
         return self.model_name
     
-    def load_model(self, model_path):
-        self.model = models.load_model(model_path)
+    def load_model(self, model_path, cloud_storage):
+        if cloud_storage:
+            self.model = google_storage_service.load_model_cloud(model_path)
+        else:
+            self.model = tf.keras.models.load_model(model_path)
         return self.model
     
     def create_landsat_terrain_branch(self, input_shape):
@@ -36,7 +38,7 @@ class CNN():
         x = layers.MaxPooling2D((2, 2), padding='same')(x)
         x = layers.Flatten()(x)
         x = layers.Dense(280, activation='relu')(x)
-        x = layers.Dropout(0.5)(x)
+        x = layers.Dropout(0.2)(x)
         return input_layer, x
 
     def create_climate_branch(self, input_shape):
@@ -127,7 +129,7 @@ class CNN():
 
         if self.use_terrain:
             # Terrain CNN branch
-            terrain_input, terrain_branch = self.create_cnn_branch(input_shape=input_shape_terrain)
+            terrain_input, terrain_branch = self.create_landsat_terrain_branch(input_shape=input_shape_terrain)
             inputs.append(terrain_input)
             branches.append(terrain_branch)
 
@@ -152,12 +154,7 @@ class CNN():
         terrain_data = np.array(terrain_data) 
         targets = np.array(targets)
 
-        landsat_data = np.round(landsat_data, 2)
-        climate_data = np.round(climate_data, 2)
-        terrain_data = np.round(terrain_data, 2)
-        targets = np.round(targets, 2)
-
-        batch_size = 32
+        batch_size = 8
 
         # Split data into training and test sets
         landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, \
@@ -166,7 +163,7 @@ class CNN():
                                                   climate_data=climate_data,
                                                   terrain_data=terrain_data,
                                                   targets=targets)
-       
+        print(f'\nNo of training samples: {landsat_train.shape[0]}\n')
         # build model
         self.model = self._build_model(input_shape_landsat=landsat_data[0].shape, 
                                        input_shape_climate=climate_data[0].shape, 
@@ -218,11 +215,6 @@ class CNN():
         landsat_patch = np.array([landsat_patch]) 
         climate_patch = np.array([climate_patch]) 
         terrain_patch = np.array([terrain_patch]) 
-
-        landsat_patch = np.round(landsat_patch, 2)
-        climate_patch = np.round(climate_patch, 2)
-        terrain_patch = np.round(terrain_patch, 2)
-
         inputs = []
         if self.use_landsat:
             inputs.append(landsat_patch)
@@ -233,4 +225,4 @@ class CNN():
         if self.use_terrain:
             inputs.append(terrain_patch)
 
-        return self.model.predict(inputs)[0]
+        return self.model.predict(inputs)[0][0]

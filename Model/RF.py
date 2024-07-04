@@ -121,7 +121,7 @@ class RF:
         plt.show()
 
     def save_model(self, model_output_path):
-        joblib.dump(self.model, filename = os.path.basename(model_output_path))
+        joblib.dump(self.model, model_output_path)
         print(f"Model saved to {model_output_path}")
 
     def load_model(self, model_path):
