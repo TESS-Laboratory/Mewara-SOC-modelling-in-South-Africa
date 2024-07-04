@@ -105,9 +105,11 @@ class map_utils:
         
         plot_utils.scatter_plot_predict_c_targetc(combined_df, f'Maps\Best_{model_name}_Model\ScatterPlots\{model_name}_scatter_plot.png')
 
+'''
 #map_utils.plot_actual_maps()
 map_utils.plot_predicted_maps_scatter_plot('CNN')
 map_utils.plot_predicted_maps_scatter_plot('RF')
 
 plot_utils.plot_predictions(year='(1987-2022)', predictions=pd.read_csv('DataProcessing/soc_gdf.csv'),
                             map_output_path='Maps/ActualMaps/test_heat_map.png')
+'''

@@ -69,23 +69,23 @@ def clip_dem_to_sa(dem_path, south_africa, output_path):
             dst.write(clipped)
 
 def save_terrain_data():
-    output_dir = r"Data/TerrainData"
+    output_dir = r"Data/TerrainData/Elevation2/Output"
     os.makedirs(output_dir, exist_ok=True)
-    elevation_folder = r'Data\TerrainData\Elevation2'
+    elevation_folder = r'Data/TerrainData/Elevation2'
 
     tile_files = []
     for file in os.listdir(elevation_folder):
         filename = os.fsdecode(file)
         if filename.endswith('.tif'):
             tile_path = os.path.join(elevation_folder, filename)
-            resampled_tile_output = os.path.join(f'{output_dir}\resampled', f"resampled_{filename}")
+            resampled_tile_output = os.path.join(f'{output_dir}/resampled', f"resampled_{filename}")
             if not os.path.exists(resampled_tile_output):
                 resample_raster(tile_path, resampled_tile_output, scale_factor=4)
             tile_files.append(tile_path)
 
     # Merge all resampled tiles
     mosaic_path = os.path.join(output_dir, 'mosaic.tif')
-    with rasterio.open(tile_files[0]) as src:
+    '''with rasterio.open(mosaic_path) as src:
         mosaic, out_trans = merge(tile_files)
         profile = src.profile.copy()
 
@@ -95,18 +95,16 @@ def save_terrain_data():
             "width": mosaic.shape[2],
             "transform": out_trans
         })
-
+    '''
         # Write the merged mosaic to a new GeoTIFF file
-        with rasterio.open(mosaic_path, "w", **profile) as dst:
-            dst.write(mosaic)
-
-    dem_path = os.path.join(output_dir, 'dem.tif')
+        #with rasterio.open(mosaic_path, "w", **profile) as dst:
+           # dst.write(mosaic)
 
     #Clip the merged DEM to South Africa boundary
     #clip_dem_to_sa(mosaic_path, south_africa, clipped_dem_path)
 
     # Calculate terrain metrics for the clipped DEM
-    with rasterio.open(dem_path) as src:
+    with rasterio.open(mosaic_path) as src:
         dem_data = src.read(1)
         transform = src.transform
         profile = src.profile
@@ -121,6 +119,5 @@ def save_terrain_data():
             profile.update(dtype=rasterio.float32, count=1)
             output_path = os.path.join(output_dir, f"{name}.tif")
             with rasterio.open(output_path, 'w', **profile) as dst:
-                dst.write(data.astype(rasterio.float32), 1)
+                dst.write(data.astype(rasterio.float64), 1)
 
-save_terrain_data()
