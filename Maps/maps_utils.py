@@ -1,10 +1,8 @@
+import os
 import pandas as pd
-
-from DataProcessing.grid_utils import grid_utils
 from Maps.test_metrics import test_metrics
 from Maps.plot_utils import plot_utils
 import DataProcessing.grid_utils
-from scipy.interpolate import griddata
 
 class map_utils:
     @staticmethod
@@ -35,8 +33,8 @@ class map_utils:
                                     map_output_path=predicted_plot_output_path)
 
     @staticmethod
-    def plot_actual_map(year, hex_grid):
-        DataProcessing.grid_utils.grid_utils.plot_heat_map(data_avg_c_color_geometry=hex_grid,       
+    def plot_actual_map(year, hex_grid_avg_c):
+        DataProcessing.grid_utils.grid_utils.plot_heat_map(data_avg_c_color_geometry=hex_grid_avg_c,       
                                                             title=f'Average C (% by Mass) for South Africa in Year {year}',
                                                             geometry_col='geometry_x',
                                                             savePlot=True,
@@ -85,6 +83,11 @@ class map_utils:
                                                             savePlot=True,
                                                             output_plot_path=predictions_plot_path)
         #input('press key to continue')
+
+    def plot_actual_maps():
+        for year in range(1986, 2023):
+            hex_avg_grid_C = map_utils.get_hex_grid_avg_c(year)
+            map_utils.plot_actual_map(year=year, hex_grid_avg_c=hex_avg_grid_C)
 
     def plot_actual_maps():
         for year in range(1986, 2023):
