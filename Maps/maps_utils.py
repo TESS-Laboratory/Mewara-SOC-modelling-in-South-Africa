@@ -123,7 +123,7 @@ class map_utils:
         plot_utils.scatter_plot_predict_c_targetc(df=combined_df, model_name=model_name, output_path=f'{predictions_folder}/scatter_plot.png')
 
 #map_utils.plot_actual_maps()
-map_utils.plot_actual_heat_map()
+#map_utils.plot_actual_heat_map()
 #map_utils.plot_predicted_maps_and_scatter_plot(model_name='CNN', predictions_folder='Maps/CNN_Model.keras/Predictions')
 #map_utils.plot_predicted_maps_and_scatter_plot(model_name='RF', predictions_folder='Maps/RF_Model/Predictions')
 #map_utils.plot_predicted_points(2008, predictions=pd.read_csv('Maps\CNN_Model.keras\Predictions\predictions_2008.csv'), predictions_plot_path='Maps\CNN_Model.keras\Predictions\HexGridMap\predictions_points_2008.png')
