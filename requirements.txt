@@ -1,5 +1,6 @@
 requests
 pandas
+numpy
 earthpy
 landsatxplore
 elevation
@@ -14,3 +15,9 @@ tensorflow_addons
 scikit-learn
 ee
 Basemap
+shap
+keras_tuner
+rtree
+h5py
+pickle
+spatial-kfold
