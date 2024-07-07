@@ -306,13 +306,14 @@ class training_data_utils:
     def get_patches(soc_data, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field, use_saved_patches = False, save_patches = False):
         lat_lon_pairs = list(set(zip(soc_data[lat_field], soc_data[lon_field])))
   
-        print(f'\n Fetching {folder_name} data:\n')
+        print(f'\nFetching {folder_name} data:\n')
         all_terrain_patches_dict = {}
         all_landsat_patches_dict = {}
         all_climate_patches_dict = {}
 
         terrain_patches_path = f"Data/{folder_name}/Terrain/{folder_name}_terrain.h5"
         if os.path.exists(terrain_patches_path) and use_saved_patches:
+            print(f'\n\tFetching data from cache: {terrain_patches_path}')
             terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
         else:
             terrain_patches_dict = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
@@ -331,6 +332,7 @@ class training_data_utils:
             
             landsat_patches_path = f"Data/{folder_name}/Landsat/{year}/{folder_name}_landsat_{year}.h5"
             if os.path.exists(landsat_patches_path) and use_saved_patches:
+                print(f'\n\t\tFetching data from cache: {landsat_patches_path}')
                 landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
             else:
                 landsat_patches_dict = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs_yearly, patch_size_meters=patch_size_meters_landsat)
@@ -352,6 +354,7 @@ class training_data_utils:
 
                 climate_patches_path = f"Data/{folder_name}/Climate/{year}/{folder_name}_climate_{year}_{month}.h5"
                 if os.path.exists(climate_patches_path) and use_saved_patches:
+                    print(f'\n\t\tFetching data from cache: {climate_patches_path}')
                     climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
                 else:
                     climate_patches_dict = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs_monthly, patch_size_meters=patch_size_meters_climate)
@@ -362,10 +365,62 @@ class training_data_utils:
                     continue
                 all_climate_patches_dict.update(climate_patches_dict)
         return all_terrain_patches_dict, all_landsat_patches_dict, all_climate_patches_dict
-                
+
+    def get_all_test_patches(lat_lon_pairs, folder_name, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field, lon_field, use_saved_patches = True, save_patches = True):  
+        print(f'\nFetching {folder_name} data:\n')
+        all_terrain_patches_dict = {}
+        all_landsat_patches_dict = {}
+        all_climate_patches_dict = {}
+
+        terrain_patches_path = f"Data/{folder_name}/Terrain/{folder_name}_terrain.h5"
+        if os.path.exists(terrain_patches_path) and use_saved_patches:
+            print(f'\n\tFetching data from cache: {terrain_patches_path}')
+            terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
+        else:
+            terrain_patches_dict = training_data_utils.get_terrain_patches_dict(lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_terrain)
+            if save_patches:
+                training_data_utils.save_patches_dict(output_path=terrain_patches_path, patches_dict=terrain_patches_dict)
+
+        if terrain_patches_dict is None:
+            return None
+        
+        all_terrain_patches_dict.update(terrain_patches_dict)
+        
+        for year in years:
+            print(f'\nProcessing {folder_name} {year}\n')            
+            landsat_patches_path = f"Data/{folder_name}/Landsat/{year}/{folder_name}_landsat_{year}.h5"
+            if os.path.exists(landsat_patches_path) and use_saved_patches:
+                print(f'\n\t\tFetching data from cache: {landsat_patches_path}')
+                landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
+            else:
+                landsat_patches_dict = training_data_utils.get_landsat_patches_dict(year=year, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_landsat)
+                if save_patches:
+                    training_data_utils.save_patches_dict(output_path=landsat_patches_path, patches_dict=landsat_patches_dict)
+
+            if landsat_patches_dict is None:
+                continue
+
+            all_landsat_patches_dict.update(landsat_patches_dict)
+
+            for month in range(start_month, end_month + 1):                
+                climate_patches_path = f"Data/{folder_name}/Climate/{year}/{folder_name}_climate_{year}_{month}.h5"
+                if os.path.exists(climate_patches_path) and use_saved_patches:
+                    print(f'\n\t\tFetching data from cache: {climate_patches_path}')
+                    climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
+                else:
+                    climate_patches_dict = training_data_utils.get_climate_patches_dict(year=year, month=month, lat_lon_pairs=lat_lon_pairs, patch_size_meters=patch_size_meters_climate)
+                    if save_patches:
+                        training_data_utils.save_patches_dict(output_path=climate_patches_path, patches_dict=climate_patches_dict)
+
+                if climate_patches_dict is None:
+                    continue
+                all_climate_patches_dict.update(climate_patches_dict)
+        return all_terrain_patches_dict, all_landsat_patches_dict, all_climate_patches_dict
+          
     def _get_training_test_data(prefix, soc_data_path, years, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, lat_field = 'Lat', lon_field = 'Lon'):
         soc_data = pd.read_csv(soc_data_path)
 
+        lat_lon_data = []
         landsat_data = []
         climate_data = []
         terrain_data = []
@@ -386,28 +441,41 @@ class training_data_utils:
         for year in years:
             print(f'\nProcessing {prefix} {year}\n')
             
-            for month in range(start_month, end_month + 1):
-                soc_data_monthly = soc_data[(soc_data['Year'] == year) & (soc_data['Month'] == month)]
+            soc_data_yearly = soc_data[(soc_data['Year'] == year)]
+
+            lat_lon_pairs_yearly = list(set(zip(soc_data_yearly[lat_field], soc_data_yearly[lon_field])))
+
+            for lat, lon in lat_lon_pairs_yearly:
+                terrain_patch = terrain_patches_dict.get((lat, lon))
+                landsat_patch = landsat_patches_dict.get((year, lat, lon))
                 
-                if soc_data_monthly.empty == True:
-                    continue
+                yearly_climate_sum = np.zeros((7,7,3))
+                no_months = 0
+                total_c = 0
 
-                lat_lon_pairs_monthly = list(set(zip(soc_data_monthly[lat_field], soc_data_monthly[lon_field])))
-
-                for lat, lon in lat_lon_pairs_monthly:
-                    terrain_patch = terrain_patches_dict.get((lat, lon))
-                    landsat_patch = landsat_patches_dict.get((year, lat, lon))
+                for month in range(start_month, end_month + 1):
+                    soc = soc_data_yearly[((soc_data_yearly[lat_field] == lat) & (soc_data_yearly[lon_field] == lon) & (soc_data_yearly['Month'] == month))]
+                    
+                    if soc.empty == True:
+                        continue
+                    
                     climate_patch = climate_patches_dict.get((year, month, lat, lon))
+                    
+                    if climate_patch is None:
+                        continue
 
-                    if terrain_patch is not None and landsat_patch is not None and climate_patch is not None:
-                        c_percent = soc_data_monthly[(soc_data_monthly[lat_field] == lat) & (soc_data_monthly[lon_field] == lon)]['C'].values[0]
+                    yearly_climate_sum += climate_patch
+                    no_months += 1
+                    total_c += soc['C'].values[0]
+                
+                if terrain_patch is not None and landsat_patch is not None and no_months > 0:
+                    lat_lon_data.append((lat, lon))
+                    landsat_data.append(landsat_patch)
+                    climate_data.append(yearly_climate_sum/no_months)
+                    terrain_data.append(terrain_patch)
+                    targets.append(total_c/no_months)
 
-                        landsat_data.append(landsat_patch)
-                        climate_data.append(climate_patch)
-                        terrain_data.append(terrain_patch)
-                        targets.append(c_percent)
-                            
-        return np.array(landsat_data), np.array(climate_data), np.array(terrain_data), np.array(targets)
+        return np.array(lat_lon_data), np.array(landsat_data), np.array(climate_data), np.array(terrain_data), np.array(targets)
 
     def save_patches_dict(output_path, patches_dict):
         os.makedirs(os.path.dirname(output_path), exist_ok=True)

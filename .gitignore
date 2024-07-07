@@ -301,3 +301,4 @@ RasterMaps
 *.tif
 *.tif.aux.xml
 *.keras
+*.pgw

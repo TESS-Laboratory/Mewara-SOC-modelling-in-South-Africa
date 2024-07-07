@@ -1,5 +1,6 @@
 import os
 #os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+import numpy as np
 import pandas as pd
 from Model.training_data_utils import training_data_utils
 
@@ -7,17 +8,24 @@ class test_metrics:
     def __init__(self, model):
         self.model = model
     
-    def predict(self, year, start_month, end_month, hex_grid_year_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, save, output_path, error_output_path):
+    def predict(self, year, start_month, end_month, hex_grid_year, 
+                patch_size_meters_landsat, 
+                patch_size_meters_climate, 
+                patch_size_meters_terrain, 
+                landsat_bands,
+                climate_bands,
+                terrain_bands,
+                save, output_path, error_output_path):
         predictions_columns = ['Year', 'Month', 'Lat', 'Lon', 'C', 'Target_C']  
         lat_field = 'Hex_Center_Lat_x'
         lon_field = 'Hex_Center_Lon_x'
-        predictions = []
+        predictions_df = pd.DataFrame(columns=predictions_columns)
 
-        lat_lon_pairs_total = list(set(zip(hex_grid_year_month[lat_field], hex_grid_year_month[lon_field])))
+        lat_lon_pairs = list(set(zip(hex_grid_year[lat_field], hex_grid_year[lon_field])))
         error_logs = []
 
-        print(f'\nStart predictions for total {len(lat_lon_pairs_total)} in year {year}\n')
-        terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_patches(soc_data=hex_grid_year_month,
+        print(f'\nStart predictions for total {len(lat_lon_pairs)} in year {year}\n')
+        terrain_patches_dict, landsat_patches_dict, climate_patches_dict = training_data_utils.get_all_test_patches(lat_lon_pairs=lat_lon_pairs,
                                                           folder_name='Test',
                                                           years=[year], 
                                                           start_month=start_month,
@@ -29,59 +37,78 @@ class test_metrics:
                                                           lon_field=lon_field,
                                                           use_saved_patches=True,
                                                           save_patches=True)
-       
-        for month in range(start_month, end_month + 1):
-            soc_avg_monthly = hex_grid_year_month[(hex_grid_year_month['Year'] == year) & (hex_grid_year_month['Month'] == month)]
+        
+        years = []
+        lats = []
+        lons = []
+        targets = []
+        predictions = []
+        
+        soc_avg_yearly = hex_grid_year[(hex_grid_year['Year'] == year)]
                 
-            if soc_avg_monthly.empty == True:
+        if soc_avg_yearly.empty == True:
+            return
+
+        lat_lon_pairs = list(set(zip(soc_avg_yearly[lat_field], soc_avg_yearly[lon_field])))
+
+        for lat, lon in lat_lon_pairs:   
+            c_percent = None
+            soc = soc_avg_yearly[(soc_avg_yearly[lat_field] == lat) & (soc_avg_yearly[lon_field] == lon)]
+            if not soc.empty:
+                c_percent = soc['Avg_C'].values[0]
+
+            terrain_patch = terrain_patches_dict.get((lat, lon))
+                
+            landsat_patch = landsat_patches_dict.get((year, lat, lon))
+        
+            yearly_climate_sum = np.zeros((7,7,3))
+            no_months = 0
+
+            for month in range(start_month, end_month + 1):
+                climate_patch = climate_patches_dict.get((year, month, lat, lon))
+                
+                if climate_patch is None:
+                    continue
+
+                yearly_climate_sum += climate_patch
+                no_months += 1
+
+            if c_percent is not None and landsat_patch is None:
+                error_logs.append(f"\nlandsat patch for year {year} lat {lat} and lon {lon} is missing")
+                continue
+            
+            if c_percent is not None and yearly_climate_sum is None:
+                error_logs.append(f"\nclimate patch for year {year} lat {lat} and lon {lon} is missing")
+                continue
+        
+            if c_percent is not None and terrain_patch is None:
+                error_logs.append(f"\nterrain patch for year {year} lat {lat} and lon {lon} is missing")
+                continue
+            
+            if landsat_patch is None or yearly_climate_sum is None or terrain_patch is None:
                 continue
 
-            lat_lon_pairs = list(set(zip(soc_avg_monthly[lat_field], soc_avg_monthly[lon_field])))
-
-            for lat, lon in lat_lon_pairs:
-                c_percent = None
-                soc = soc_avg_monthly[(soc_avg_monthly[lat_field] == lat) & 
-                                       (soc_avg_monthly[lon_field] == lon)]
-                if not soc.empty:
-                    c_percent = soc['Avg_C'].values[0]
-                    c_percent = soc['Avg_C'].values[0]
-
-                terrain_patch = terrain_patches_dict.get((lat, lon))
-                    
-                landsat_patch = landsat_patches_dict.get((year, lat, lon))
+            climate_avg_patch = yearly_climate_sum / no_months
             
-                climate_patch = climate_patches_dict.get((year, month, lat, lon))
-               
-                if c_percent is not None and landsat_patch is None:
-                    error_logs.append(f"\nlandsat patch for year {year} month {month} lat {lat} and lon {lon} is missing")
-                    continue
-                
-                if c_percent is not None and climate_patch is None:
-                    error_logs.append(f"\nclimate patch for year {year} month {month} lat {lat} and lon {lon} is missing")
-                    continue
+            landsat_patch_bands = np.round(landsat_patch[:, :, landsat_bands], 3)
+            climate_patch_bands = np.round(climate_avg_patch[:, :, climate_bands], 3)
+            terrain_patch_bands = np.round(terrain_patch[:, :, terrain_bands], 3)
             
-                if c_percent is not None and terrain_patch is None:
-                    error_logs.append(f"\nterrain patch for year {year} month {month} lat {lat} and lon {lon} is missing")
-                    continue
-                
-                if landsat_patch is None or climate_patch is None or terrain_patch is None:
-                    prediction = None
-                    continue
-                else:
-                    prediction = self.model.predict(landsat_patch=landsat_patch, climate_patch=climate_patch, terrain_patch=terrain_patch)
-                
-                predictions.append([year, month, lat, lon, prediction, c_percent])
+            prediction = self.model.predict(landsat_patch=landsat_patch_bands, climate_patch=climate_patch_bands, terrain_patch=terrain_patch_bands)
+            predictions.append([year, month, lat, lon, prediction, c_percent])
 
-        test_metrics.log_errors(error_output_path=error_output_path, errors=error_logs)
         predictions_df = pd.DataFrame(predictions, columns=predictions_columns)
-
+        test_metrics.log_errors(error_output_path=error_output_path, errors=error_logs)
+       
         if save:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            training_data_utils.save_csv(arr = predictions, column_names= predictions_columns, output_path=f'{output_path}')
+            predictions_df.to_csv(f'{output_path}', index=False)
         return predictions_df
     
     def log_errors(error_output_path, errors):
         if not os.path.exists(error_output_path):
             os.makedirs(os.path.dirname(error_output_path), exist_ok=True)
         with open(error_output_path, "w") as err:
-            err.write(errors)
+            errors_str = "\n".join(errors)
+            err.write(errors_str)
+

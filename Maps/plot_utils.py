@@ -30,30 +30,30 @@ class plot_utils:
         
         return cmap, norm
     
-    def plot_predictions(year, predictions, map_output_path):
+    def plot_predictions(model_name, year_str, predictions, map_output_path, carbon_col='C'):
         gdf = plot_utils.get_predictions_geoframe(predictions)
 
         carbon_cmap, carbon_norm = grid_utils.get_carbon_mapping_bins_colors()
         
         # Plot the result
         fig, ax = plt.subplots(figsize=(10, 8))
-        ax.scatter(gdf['Lon'], gdf['Lat'], c=gdf['C'], cmap=carbon_cmap, norm=carbon_norm)
+        ax.scatter(gdf['Lon'], gdf['Lat'], c=gdf[carbon_col], cmap=carbon_cmap, norm=carbon_norm)
         ax.set_xlabel('Longitude', fontsize=16)
         ax.set_ylabel('Latitude', fontsize=16)
-        ax.set_title(f'Predicted Carbon (% by Mass) Distribution in South Aftrica in Year {year}', fontsize=16)
+        ax.set_title(f'{model_name} Predicted Carbon (% by Mass) for South Africa in Year {year_str}', fontsize=16)
 
         grid_utils.get_sa_shape().boundary.plot(ax=ax, linewidth=1, edgecolor='black')
 
         # Create custom legend
         handles = [Patch(color=color, label=label) for label, color in grid_utils.get_carbon_mapping().items()]
-        legend = ax.legend(handles=handles, title=r'Carbon (% by mass)', loc='center left', bbox_to_anchor=(1, 0.5), fontsize=14, title_fontsize=16)
+        legend = ax.legend(handles=handles, title=r'Carbon (% by mass)', loc='center left', bbox_to_anchor=(1, 0.5), fontsize=15, title_fontsize=16)
 
         os.makedirs(os.path.dirname(map_output_path), exist_ok=True)
         plt.savefig(map_output_path, bbox_inches='tight', bbox_extra_artists=[legend])
 
         #plt.show()
    
-    def scatter_plot_predict_c_targetc(df, output_path):
+    def scatter_plot_predict_c_targetc(df, model_name, output_path):
         df = df.dropna(subset=['Target_C'])
 
         # Plot the data
@@ -63,7 +63,7 @@ class plot_utils:
 
         plt.ylabel(f'Predicted C (% by Mass)')
         plt.xlabel(f'Target C (% by Mass)')
-        plt.title(f'Predicted Carbon vs Target Carbon')
+        plt.title(f'{model_name} Predicted Carbon vs Target Carbon')
         plt.legend()
         plt.grid(True)
 

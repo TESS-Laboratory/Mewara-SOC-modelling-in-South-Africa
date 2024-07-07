@@ -23,7 +23,8 @@ class CNN():
     
     def load_model(self, model_path, cloud_storage):
         if cloud_storage:
-            self.model = google_storage_service.load_model_cloud(model_path)
+            local_file_name = google_storage_service.download_model(model_output_path=model_path)
+            self.model = tf.keras.models.load_model(local_file_name)
         else:
             self.model = tf.keras.models.load_model(model_path)
         return self.model
@@ -147,27 +148,13 @@ class CNN():
         model.summary()
         return model
         
-    def train(self, landsat_data, climate_data, terrain_data, targets, model_output_path, epochs):
-        # Normalize data
-        landsat_data = np.array(landsat_data) 
-        climate_data = np.array(climate_data) 
-        terrain_data = np.array(terrain_data) 
-        targets = np.array(targets)
-
+    def train(self, landsat_train, climate_train, terrain_train, targets_train, landsat_val, climate_val, terrain_val, targets_val, landsat_test, climate_test, terrain_test, targets_test, model_output_path, epochs):
         batch_size = 8
 
-        # Split data into training and test sets
-        landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, \
-              terrain_train, terrain_val, terrain_test, targets_train, targets_val, targets_test \
-            = base_data_utils.get_train_val_test_data(landsat_data=landsat_data,
-                                                  climate_data=climate_data,
-                                                  terrain_data=terrain_data,
-                                                  targets=targets)
-        print(f'\nNo of training samples: {landsat_train.shape[0]}\n')
         # build model
-        self.model = self._build_model(input_shape_landsat=landsat_data[0].shape, 
-                                       input_shape_climate=climate_data[0].shape, 
-                                       input_shape_terrain=terrain_data[0].shape)
+        self.model = self._build_model(input_shape_landsat=landsat_train[0].shape, 
+                                       input_shape_climate=climate_train[0].shape, 
+                                       input_shape_terrain=terrain_train[0].shape)
         
         early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
@@ -179,6 +166,8 @@ class CNN():
             epochs=epochs, batch_size=batch_size, callbacks = [early_stopping],
             validation_data=(val_inputs, targets_val))
         
+        base_data_utils.plot_trainin_validation_loss(train_loss=history.history['loss'], val_loss=history.history['val_loss'])
+        
         # Evaluate the model on the validation set
         print(f'\nEvaluating Testing Data:\n')
         test_loss, test_r2, test_mae, test_rmse  = self.model.evaluate(test_inputs, targets_test, batch_size=batch_size)
@@ -187,7 +176,7 @@ class CNN():
         self.model.save(model_output_path, overwrite=True)
         print(f"CNN model '{model_output_path}' saved succesfully.")
 
-        return history.history
+        return test_r2
 
     def get_train_val_test_inputs(self, landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, terrain_train, terrain_val, terrain_test):
         train_inputs = []
@@ -211,10 +200,11 @@ class CNN():
         return train_inputs,val_inputs,test_inputs
 
     def predict(self, landsat_patch, climate_patch, terrain_patch):
-        # Normalize data
+         # Normalize data
         landsat_patch = np.array([landsat_patch]) 
         climate_patch = np.array([climate_patch]) 
         terrain_patch = np.array([terrain_patch]) 
+        
         inputs = []
         if self.use_landsat:
             inputs.append(landsat_patch)
