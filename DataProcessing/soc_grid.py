@@ -1,18 +1,20 @@
-import geopandas as gpd
 import pandas as pd
-from shapely.geometry import Point
 import re
+from DataProcessing import grid_utils
 from Model.training_data_utils import training_data_utils
 
-#south_africa = data_utils.get_sa_shape()
-south_africa = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres')).query('name == "South Africa"')
+def calculate_soc(soc_data):
+    soc_data['SOC'] = soc_data['C'] * soc_data['BulkDensity'] * 20
+    return soc_data
 
-def get_soc_data():
-    return pd.read_csv(r'DataProcessing/soc_gdf.csv')
+def save_hex_grid_with_bulk_density():
+    hex_grid = grid_utils.grid_utils.get_hex_grid(0.1)
+    lat_lon_pairs = list(set(zip(hex_grid['Hex_Center_Lat'], hex_grid['Hex_Center_Lon'])))
+    patches = training_data_utils.get_bd_patches_dict(lat_lon_pairs=lat_lon_pairs)
+    for lat, lon in lat_lon_pairs:
+        hex_grid.loc[(hex_grid['Hex_Center_Lat'] == lat) & (hex_grid['Hex_Center_Lon'] == lon), 'Hex_Center_BD'] = patches.get((lat, lon))
 
-def merge_save_bulk_density_isda():
-    soc_data = merge_bulk_density_isda(get_soc_data())
-    soc_data.to_csv('DataProcessing/soc_gdf.csv')
+    hex_grid.to_csv(r'DataProcessing/hex_grid.csv', index=False)
 
 def merge_bulk_density_isda(soc_data):
     soc_empty_bulk_density = soc_data[soc_data['BD'].isna()]
@@ -21,6 +23,7 @@ def merge_bulk_density_isda(soc_data):
     for lat, lon in lat_lon_pairs:
         soc_data.loc[(soc_data['Lat'] == lat) & (soc_data['Lon'] == lon), 'BD_iSDA'] = patches.get((lat, lon))
 
+    soc_data['BulkDensity'] = soc_data['BD'].fillna(soc_data['BD_iSDA'])
     return soc_data
 
 def degrees_to_decimal(lat_or_lon):
@@ -55,6 +58,19 @@ def degrees_to_decimal(lat_or_lon):
     
     return decimal
 
+def get_iSDA_data():
+    isda_2018_df = pd.read_csv(r'Data/FieldSamples/iSDA.csv')
+    isda_2018 = pd.DataFrame({
+        'Source': 'iSDA',
+        'Date': isda_2018_df['Date'],
+        'Lat': isda_2018_df['Lat'],
+        'Lon': isda_2018_df['Lon'],
+        'C': isda_2018_df['C'],
+        'UniqueID': isda_2018_df['UniqueID']
+    })
+
+    return isda_2018
+
 def get_conservation_SA_data():
     soc_2022_df = pd.read_excel(r'Data/FieldSamples/Mitsubishi_SOC_Baseline_December_2022.xlsx')
 
@@ -82,7 +98,7 @@ def preprocess_data():
     soc_data = pd.read_excel(r'Data/FieldSamples/SOC Data from Heidi 20230124 - cleaned_additional.xlsx')
 
     # Concatenate with conservation data for South Africa if available
-    soc_data = pd.concat([soc_data, get_conservation_SA_data()], ignore_index=True)
+    soc_data = pd.concat([soc_data, get_conservation_SA_data(), get_iSDA_data()], ignore_index=True)
 
     # Convert 'Date' column to datetime format and extract year and month
     soc_data['Date'] = pd.to_datetime(soc_data['Date'])
@@ -90,14 +106,32 @@ def preprocess_data():
     soc_data['Month'] = soc_data['Date'].dt.month
 
     soc_data = soc_data.dropna(subset=['Lat', 'Lon']) # Drop rows with empty latitude or longitude
-    soc_data = soc_data[soc_data['C'] <= 20] # Drop rows where C % is greater 20
+    soc_data = soc_data[(soc_data['C'] <= 60)] # Drop rows where C % is greater 60
     soc_data.drop_duplicates(['Source', 'Date', 'Lat', 'Lon', 'C', 'BD'], inplace=True) # Drop duplicates
 
     soc_data = merge_bulk_density_isda(soc_data=soc_data)
+    soc_data = calculate_soc(soc_data=soc_data)
 
-    geometry = [Point(xy) for xy in zip(soc_data.Lon, soc_data.Lat)]
-    soc_gdf = gpd.GeoDataFrame(soc_data, crs="EPSG:4326", geometry=geometry)
-    soc_gdf.to_csv(r"DataProcessing/soc_gdf.csv", index=False)
+    save_soc_hex_grid(soc_data)
 
+def save_soc_hex_grid(soil_data):
+    hex_grid = pd.read_csv(r'DataProcessing/hex_grid.csv')
+    soc_hex_grid = grid_utils.grid_utils.get_soc_hex_grid(hex_grid_df=hex_grid,
+                                            soil_data=soil_data) 
+    soc_hex_grid.to_csv(r'DataProcessing/soc_hex_grid.csv', index=False)
+    
+    soc_hex_avg_c = grid_utils.grid_utils.get_avg_c_each_grid(df=soc_hex_grid,
+                                                    group_by_cols=['Hex_ID'],
+                                                    avg_col='C',
+                                                    avgc_col_rename='Avg_C')
+    
+    hex_grid_avg_c = pd.merge(hex_grid, soc_hex_avg_c, on='Hex_ID', how='left')
+    
+    grid_utils.grid_utils.plot_heat_map(data_avg_c_color_geometry=hex_grid_avg_c, 
+                            title=f'Long Term Average Carbon (% by Mass) of South Africa (1986-2022)',
+                            geometry_col='geometry',
+                            savePlot=True,
+                            output_plot_path='Plots/C_HeatMap.png')
+
+#save_hex_grid_with_bulk_density()
 #preprocess_data()
-#merge_save_bulk_density_isda()

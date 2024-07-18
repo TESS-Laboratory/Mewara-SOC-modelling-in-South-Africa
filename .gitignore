@@ -288,12 +288,14 @@ Data/Train
 Data/Test
 Data/Patches
 Data/Carbon_iSDA
+Data/Weather
+*.7z
 
 DataProcessing/Patches
 Model/KerasTuner
-Model/CNN_Models
+Model/CNN_Models_*
 Model/Best_CNN_Models
-Model/RF_Models
+Model/RF_Models_*
 Model/Best_RF_Models
 
 GoogleStorage/Credentials

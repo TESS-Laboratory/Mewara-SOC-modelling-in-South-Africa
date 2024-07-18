@@ -3,7 +3,7 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, train_test_split
 from Model.training_data_utils import training_data_utils
 import geopandas as gpd
 from shapely.geometry import Point
@@ -11,18 +11,6 @@ from spatialkfold.clusters import spatial_kfold_clusters
 from spatialkfold.blocks import spatial_blocks
 
 class base_data_utils:
-    def get_train_val_test_data(lat_lon_data, landsat_data, climate_data, terrain_data, targets):
-        # Split data into training and test sets
-        landsat_train, landsat_test, climate_train, climate_test, dem_train, dem_test, targets_train, targets_test = train_test_split(
-            landsat_data, climate_data, terrain_data, targets, test_size=0.1, random_state=42)
-
-        # Split data into train and validation sets
-        landsat_train, landsat_val, climate_train, climate_val, dem_train, dem_val, targets_train, targets_val = train_test_split(
-            landsat_train, climate_train, dem_train, targets_train, test_size=0.1, random_state=42)
-        
-        return landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, dem_train, dem_val, dem_test, \
-        targets_train, targets_val, targets_test
-
     def spatial_leave_cluster_out_split(lat_lon_data, landsat_data, climate_data, terrain_data, targets):
         # Create GeoDataFrame from lat_lon_data
         gdf = gpd.GeoDataFrame(lat_lon_data, columns=['lat', 'lon'])
@@ -30,7 +18,7 @@ class base_data_utils:
         
         # Perform KMeans clustering on the spatial data
         coords = gdf[['lat', 'lon']].values
-        kmeans = KMeans(n_clusters=10, random_state=42)
+        kmeans = KMeans(n_clusters=50, random_state=42)
         gdf['cluster'] = kmeans.fit_predict(coords)
         
         # Create an array of the cluster labels
@@ -56,14 +44,16 @@ class base_data_utils:
 
         # Randomly select clusters for validation and testing
         val_cluster_label = np.random.choice(unique_clusters, 1)[0]
-        test_cluster_label = np.random.choice(unique_clusters[unique_clusters != val_cluster_label], 1)[0]
 
         for cluster_label in unique_clusters:
             cluster_indices = np.where(clusters == cluster_label)[0]
             if (cluster_label == val_cluster_label):
-                val_indices.extend(cluster_indices)
-            elif (cluster_label == test_cluster_label):
-                test_indices.extend(cluster_indices)
+                if len(cluster_indices) > 1:
+                    val_idx, test_idx = train_test_split(cluster_indices, test_size=0.5, shuffle=True, random_state=42)
+                    val_indices.extend(val_idx)
+                    test_indices.extend(test_idx)
+                else:
+                    val_indices.extend(cluster_indices)
             else:
                 train_indices.extend(cluster_indices)
 
@@ -74,14 +64,13 @@ class base_data_utils:
         return train_sets, val_sets, test_sets
 
     def spatial_split(lat_lon_data, landsat_data, climate_data, terrain_data, targets):
-        n_samples = np.sqrt(landsat_data.shape[0])
         # Create GeoDataFrame from lat_lon_data
         gdf = gpd.GeoDataFrame(lat_lon_data, columns=['lat', 'lon'])
         gdf['geometry'] = gdf.apply(lambda row: Point(row['lon'], row['lat']), axis=1)
         
         # Perform KMeans clustering on the spatial data
         coords = gdf[['lat', 'lon']].values
-        kmeans = KMeans(n_clusters=min(50, int(n_samples)), random_state=42)
+        kmeans = KMeans(n_clusters=50, random_state=42)
         gdf['cluster'] = kmeans.fit_predict(coords)
         
         # Create an array of the cluster labels
@@ -105,17 +94,20 @@ class base_data_utils:
         for cluster_label in np.unique(clusters):
             cluster_indices = np.where(clusters == cluster_label)[0]
 
-            kf = KFold(n_splits=2, shuffle=True, random_state=42)
-            if len(cluster_indices) > 1: 
-                train_idx, val_idx = next(kf.split(cluster_indices))
-                train_indices.extend(train_idx)
+            if len(cluster_indices) > 1:
+                # Split 99% for training and 2% for validation and test
+                train_idx, val_test_idx = train_test_split(cluster_indices, test_size=0.05, shuffle=True, random_state=42)
 
-                if len(val_idx) > 1:
-                    val_test_idx, test_idx = next(kf.split(val_idx))
-                    val_indices.extend(val_test_idx)
-                    test_indices.extend(test_idx)
+                # Further split 20% into 10% validation and 10% test
+                if len(val_test_idx) > 1:
+                    val_idx, test_idx = train_test_split(val_test_idx, test_size=0.5, shuffle=True, random_state=42)
                 else:
-                    val_indices.extend(val_idx)
+                    val_idx = val_test_idx
+                    test_idx = val_test_idx
+
+                train_indices.extend(train_idx)
+                val_indices.extend(val_idx)
+                test_indices.extend(test_idx)
             else:
                 train_indices.extend(cluster_indices)
         
@@ -133,7 +125,7 @@ class base_data_utils:
         targets_array = []
 
         for year in years:
-            cache_path = f'Data\Train\Cache\L{patch_size_meters_landsat}_C{patch_size_meters_climate}_T{patch_size_meters_terrain}\Train_{year}.pkl'
+            cache_path = f'Data/Train/Cache/L{patch_size_meters_landsat}_C{patch_size_meters_climate}_T{patch_size_meters_terrain}/Train_{year}.pkl'
             # Check if cache exists
             if os.path.exists(cache_path) and use_cache:
                 print(f"Loading data from cache: {cache_path}")
@@ -177,15 +169,15 @@ class base_data_utils:
                 terrain_array.extend(terrain_data)
                 targets_array.extend(targets)
 
-        return lat_lon_array, landsat_array, climate_array, terrain_array, targets_array
+        return np.array(lat_lon_array), np.array(landsat_array), np.array(climate_array), np.array(terrain_array), np.array(targets_array)
 
-    def plot_trainin_validation_loss(train_loss, val_loss):
-        epochs = range(1, len(train_loss) + 1)
+    def plot_trainin_validation(train, val, metric_label):
+        epochs = range(1, len(train) + 1)
         plt.figure(figsize=(10, 6))
-        plt.plot(epochs, train_loss, 'b', label='Training Loss')
-        plt.plot(epochs, val_loss, 'r', label='Validation Loss')
-        plt.title('Training and Validation Loss')
+        plt.plot(epochs, train, 'b', label=f'Training {metric_label}')
+        plt.plot(epochs, val, 'r', label=f'Validation {metric_label}')
+        plt.title(f'Training and Validation {metric_label}')
         plt.xlabel('Epochs')
-        plt.ylabel('Loss')
+        plt.ylabel(f'{metric_label}')
         plt.legend()
         plt.show()

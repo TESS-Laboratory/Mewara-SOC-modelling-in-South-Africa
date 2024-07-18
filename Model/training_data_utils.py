@@ -112,8 +112,6 @@ class training_data_utils:
         return patch[~invalid_rows]
 
     def save_patch_as_raster(patch, patch_size, is_augmented, transform, dataset, output_folder, output_filename):
-        if is_augmented:
-            output_folder = f'{output_folder}\Augmented'
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         
@@ -157,10 +155,10 @@ class training_data_utils:
         return bd_patches_dict
     
     def get_terrain_patches_dict(lat_lon_pairs, patch_size_meters, save_patches = False):
-        dem_path =f'Data\TerrainData\DEM.tif'
-        aspect_path = f'Data\TerrainData\Aspect.tif'
-        slope_path = f'Data\TerrainData\Slope.tif'
-        twi_path = f'Data\TerrainData\TWI.tif'
+        dem_path =f'Data/TerrainData/DEM.tif'
+        aspect_path = f'Data/TerrainData/Aspect.tif'
+        slope_path = f'Data/TerrainData/Slope.tif'
+        twi_path = f'Data/TerrainData/TWI.tif'
 
         patch_size_pixels = training_data_utils.get_patch_size_pixels(patch_size_meters=patch_size_meters, meters_per_pixel=120)
         
@@ -197,7 +195,37 @@ class training_data_utils:
                 terrain_patches_dict[(lat, lon)] = stacked_patch
         return terrain_patches_dict
     
+    def get_climate_patches_2022_2023(year, month, lat_lon_pairs, patch_size_pixels, output_prec_patch_folder, save_patches = False):
+        prec_raster_path =f'Data/Weather/chirps_prec_{year}-{month}.tif'
+     
+        meters_per_pixel = 30
+               
+        if not (os.path.exists(prec_raster_path)):
+            return None
+        
+        _, no_of_days = calendar.monthrange(year=year, month=month)
+        climate_patches_dict = {}
+
+        with rasterio.open(prec_raster_path) as prec_dataset:
+            for lat, lon in lat_lon_pairs:
+                output_filename=f'({lat}_{lon}).tif'
+                prec_patch = training_data_utils.extract_patch(dataset=prec_dataset, 
+                                                    lat=lat, 
+                                                    lon=lon, 
+                                                    patch_size_pixels=patch_size_pixels,  
+                                                    save_patch=save_patches, 
+                                                    output_patch_folder=output_prec_patch_folder, 
+                                                    output_patch_filename=output_filename)
+                if prec_patch is None or not prec_patch.any():
+                    climate_patches_dict[(year, month, lat, lon)]= None
+                    continue
+                stacked_patch = np.stack([prec_patch[0], np.zeros((patch_size_pixels, patch_size_pixels)), np.zeros((patch_size_pixels, patch_size_pixels))], axis=-1)
+                stacked_patch = training_data_utils.replace_nan_inf_data(stacked_patch)
+                climate_patches_dict[(year, month, lat, lon)] = stacked_patch
+        return climate_patches_dict
+    
     def get_climate_patches_dict(year, month, lat_lon_pairs, patch_size_meters, save_patches = False):
+   
         prec_raster_path =f'Data/WorldClim_SA/wc2.1_2.5m_prec_{year}-{month:02d}.tif'
         tmin_raster_path = f'Data/WorldClim_SA/wc2.1_2.5m_tmin_{year}-{month:02d}.tif'
         tmax_raster_path = f'Data/WorldClim_SA/wc2.1_2.5m_tmax_{year}-{month:02d}.tif'
@@ -218,7 +246,10 @@ class training_data_utils:
         output_prec_patch_folder=f'DataProcessing/Patches/{patch_size_meters}/Climate/Precipitation/{year}_{month}'
         output_tmin_patch_folder=f'DataProcessing/Patches/{patch_size_meters}/Climate/Tmin/{year}_{month}'
         output_tmax_patch_folder=f'DataProcessing/Patches/{patch_size_meters}/Climate/Tmax/{year}_{month}'
-       
+
+        if year in [2022, 2023]:
+            return training_data_utils.get_climate_patches_2022_2023(year, month, lat_lon_pairs, patch_size_pixels, output_prec_patch_folder, save_patches)
+
         if not (os.path.exists(prec_raster_path) and os.path.exists(tmin_raster_path) and os.path.exists(tmax_raster_path)):
             return None
         
@@ -383,7 +414,7 @@ class training_data_utils:
         all_landsat_patches_dict = {}
         all_climate_patches_dict = {}
 
-        terrain_patches_path = f"Data/{folder_name}/Terrain/{folder_name}_terrain.h5"
+        terrain_patches_path = f"Data/{folder_name}/L{patch_size_meters_landsat}_C{patch_size_meters_climate}_T{patch_size_meters_terrain}/Terrain/{folder_name}_terrain.h5"
         if os.path.exists(terrain_patches_path) and use_saved_patches:
             print(f'\n\tFetching data from cache: {terrain_patches_path}')
             terrain_patches_dict = training_data_utils.load_patches(terrain_patches_path)
@@ -399,7 +430,7 @@ class training_data_utils:
         
         for year in years:
             print(f'\nProcessing {folder_name} {year}\n')            
-            landsat_patches_path = f"Data/{folder_name}/Landsat/{year}/{folder_name}_landsat_{year}.h5"
+            landsat_patches_path = f"Data/{folder_name}/L{patch_size_meters_landsat}_C{patch_size_meters_climate}_T{patch_size_meters_terrain}/Landsat/{year}/{folder_name}_landsat_{year}.h5"
             if os.path.exists(landsat_patches_path) and use_saved_patches:
                 print(f'\n\t\tFetching data from cache: {landsat_patches_path}')
                 landsat_patches_dict = training_data_utils.load_patches(landsat_patches_path)
@@ -414,7 +445,7 @@ class training_data_utils:
             all_landsat_patches_dict.update(landsat_patches_dict)
 
             for month in range(start_month, end_month + 1):                
-                climate_patches_path = f"Data/{folder_name}/Climate/{year}/{folder_name}_climate_{year}_{month}.h5"
+                climate_patches_path = f"Data/{folder_name}/L{patch_size_meters_landsat}_C{patch_size_meters_climate}_T{patch_size_meters_terrain}/Climate/{year}/{folder_name}_climate_{year}_{month}.h5"
                 if os.path.exists(climate_patches_path) and use_saved_patches:
                     print(f'\n\t\tFetching data from cache: {climate_patches_path}')
                     climate_patches_dict = training_data_utils.load_patches(climate_patches_path)
@@ -478,7 +509,7 @@ class training_data_utils:
 
                     yearly_climate_sum += climate_patch
                     no_months += 1
-                    total_c += soc['C'].values[0]
+                    total_c += soc['C'].values.mean()
                 
                 if terrain_patch is not None and landsat_patch is not None and no_months > 0:
                     lat_lon_data.append((lat, lon))
