@@ -27,9 +27,9 @@ use_terrain = True
 use_cache = True
 update_cache = True
 
-patch_size_meters_landsat = 1920 # roughly 128*128 pixels
+patch_size_meters_landsat = 15360 # roughly 128*128 pixels
 patch_size_meters_climate = 20000 # roughly 4*4 pixels
-patch_size_meters_terrain = 1920 # roughly 128*128 pixels
+patch_size_meters_terrain = 15360 # roughly 128*128 pixels
 
 training_soc_path = r'DataProcessing/soc_hex_grid.csv'
 landsat_bands = [0,1,2,4,5,6,7]

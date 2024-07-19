@@ -63,7 +63,7 @@ class plot_utils:
             return
 
         # Plot the data
-        plt.figure(figsize=(60, 20))
+        plt.figure(figsize=(10, 8))
         plt.scatter(df['Target_C'], df['C'], color=sns.color_palette("viridis", as_cmap=True)(0.6), label='Data points')
         plt.plot([df['C'].min(), df['C'].max()], [df['C'].min(), df['C'].max()], color=sns.color_palette("viridis", as_cmap=True)(0.9), linestyle='--', label='Ideal fit')
 
@@ -75,12 +75,12 @@ class plot_utils:
         min_bin = 0
         max_bin = np.ceil(max_val / bin_width) * bin_width
 
-        plt.xlim(min_bin, max_bin)
-        plt.ylim(min_bin, max_bin)
+        #plt.xlim(min_bin, max_bin)
+        #plt.ylim(min_bin, max_bin)
 
         # Set the ticks to match the bins
-        plt.xticks(np.arange(min_bin, max_bin + bin_width, bin_width))
-        plt.yticks(np.arange(min_bin, max_bin + bin_width, bin_width))
+        #plt.xticks(np.arange(min_bin, max_bin + bin_width, bin_width))
+        #plt.yticks(np.arange(min_bin, max_bin + bin_width, bin_width))
         
         plt.xlabel(f'Target Carbon (% by Mass)')
         plt.ylabel(f'Predicted Carbon (% by Mass)')

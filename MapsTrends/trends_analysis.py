@@ -1,10 +1,8 @@
 import os
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 from shapely.geometry import Point
 from sklearn.linear_model import TheilSenRegressor
-import seaborn as sns
 import geopandas as gpd
 
 class trends_analysis:
@@ -48,9 +46,7 @@ class trends_analysis:
         lat_lon_pairs = set(zip(pixel_long_term_mean_c['Lat'], pixel_long_term_mean_c['Lon']))
 
         soc_changes = []
-        total_soc = 0
-        total_soc_change = 0
-
+        
         for lat, lon in lat_lon_pairs:
             long_mean_soc = np.mean(pixel_long_term_mean_c[(pixel_long_term_mean_c['Lat'] == lat) & (pixel_long_term_mean_c['Lon'] == lon)]['Mean_SOC'].values)
             
@@ -58,16 +54,17 @@ class trends_analysis:
             
             coefficient, intercept = trends_analysis.theil_sen_regression(pixel_preds['Year'], pixel_preds['Mean_SOC_Year'])
           
-            soc_change = (coefficient / long_mean_soc)
-            total_soc += long_mean_soc
-            total_soc_change += soc_change
+            soc_change_percent = (coefficient / long_mean_soc) * 100
+            
+            soc_changes.append([lat, lon, long_mean_soc, soc_change_percent])
 
-            soc_changes.append([lat, lon, long_mean_soc, soc_change])
-
-        soc_df = pd.DataFrame(data=soc_changes, columns=['Lat', 'Lon', 'Mean_SOC', 'SOC_Change'])
+        soc_df = pd.DataFrame(data=soc_changes, columns=['Lat', 'Lon', 'Mean_SOC', 'SOC_Change_Percent'])
         os.makedirs(output_folder, exist_ok=True)
         soc_df.to_csv(f'{output_folder}/{biome}.csv', index=False)
-        return biome, total_soc, total_soc_change
+
+        net_soc = soc_df['Mean_SOC'].sum()
+        net_soc_change_percent = soc_df['SOC_Change_Percent'].mean()
+        return biome, net_soc, net_soc_change_percent
     
     def theil_sen_regression(X, y):
         theil_sen = TheilSenRegressor()
@@ -83,9 +80,11 @@ class trends_analysis:
         biome_trend = []
 
         for biome in biomes:   
-           biome, net_C, net_Change = trends_analysis.biome_trends(biome, output_folder, f'{predictions_folder}/combined_predictions.csv')
-           biome_trend.append([biome, net_C, net_Change])
+           biome, net_SOC, net_SOC_Change_Percent = trends_analysis.biome_trends(biome, output_folder, f'{predictions_folder}/combined_predictions.csv')
+           biome_trend.append([biome, net_SOC, net_SOC_Change_Percent])
 
-        biome_trend_df = pd.DataFrame(biome_trend, columns=['Biome', 'Net_C', 'Net_Change'])
+        biome_trend_df = pd.DataFrame(biome_trend, columns=['Biome', 'Net_SOC', 'Net_SOC_Change_Percent'])
         os.makedirs(output_folder, exist_ok=True)
         biome_trend_df.to_csv(f'{output_folder}/Biome_Trends.csv', index=False)
+
+#trends_analysis.save_biome_trends('MapsTrends\RF_Model\Predictions', 'MapsTrends\RF_Model\Trends')

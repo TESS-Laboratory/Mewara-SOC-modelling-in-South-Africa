@@ -94,7 +94,7 @@ class test_metrics:
             terrain_patch_bands = np.round(terrain_patch[:, :, terrain_bands], 2)
             
             prediction = self.model.predict(landsat_patch=landsat_patch_bands, climate_patch=climate_patch_bands, terrain_patch=terrain_patch_bands)
-            soc = prediction*bd*20
+            soc = (prediction/100)*bd*20
             predictions.append([year, lat, lon, prediction, c_percent, bd, soc])
 
         predictions_df = pd.DataFrame(predictions, columns=predictions_columns)
@@ -102,7 +102,7 @@ class test_metrics:
        
         if save:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            predictions_df.to_csv(f'{output_path}', index=False)
+            predictions_df.to_csv(f'{output_path}', index=False, mode='w+')
         return predictions_df
     
     def log_errors(error_output_path, errors):

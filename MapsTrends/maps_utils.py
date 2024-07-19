@@ -131,5 +131,7 @@ class map_utils:
                pred = pd.read_csv(predictions_path)
                combined_df = pd.concat([combined_df, pred], ignore_index=True)
 
-        combined_df.to_csv(os.path.join(predictions_folder, f'combined_predictions.csv'), columns=['Year', 'Lat', 'Lon', 'C', 'Target_C', 'Target_BD', 'SOC'], index=False)
+        combined_df.to_csv(os.path.join(predictions_folder, f'combined_predictions.csv'), columns=['Year', 'Lat', 'Lon', 'C', 'Target_C', 'Target_BD', 'SOC'], index=False, mode='w+')
         plot_utils.plot_utils.scatter_plot_predict_c_targetc(df=combined_df, model_name=model_name, output_path=f'{predictions_folder}/scatter_plot.png')
+
+#map_utils.plot_combined_predictions_scatter_plot('RF', 'MapsTrends\RF_Model\Predictions')

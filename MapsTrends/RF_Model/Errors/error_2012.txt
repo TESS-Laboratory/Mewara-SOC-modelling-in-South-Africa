@@ -1,344 +1,54 @@
 
-landsat patch for year 2012 lat -33.77380331400475 and lon 25.858 is missing
-
-landsat patch for year 2012 lat -25.546561978052583 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -24.593934033889703 and lon 26.258000000000003 is missing
-
-landsat patch for year 2012 lat -29.443676295082565 and lon 27.458 is missing
-
-landsat patch for year 2012 lat -25.89297213956636 and lon 31.658000000000005 is missing
-
 landsat patch for year 2012 lat -30.049894077731672 and lon 28.458 is missing
 
 landsat patch for year 2012 lat -29.18386867394724 and lon 29.258 is missing
 
-landsat patch for year 2012 lat -30.396304239245445 and lon 17.258 is missing
-
-landsat patch for year 2012 lat -34.38002109665386 and lon 18.458 is missing
-
-landsat patch for year 2012 lat -25.200151816538813 and lon 25.658 is missing
-
-landsat patch for year 2012 lat -25.3733568972957 and lon 23.658 is missing
-
-landsat patch for year 2012 lat -28.577650891298124 and lon 17.458 is missing
-
-landsat patch for year 2012 lat -32.38816266794964 and lon 18.258 is missing
-
-landsat patch for year 2012 lat -26.58579246259392 and lon 30.858 is missing
-
 landsat patch for year 2012 lat -30.915919481516102 and lon 30.457999999999995 is missing
-
-landsat patch for year 2012 lat -29.18386867394724 and lon 27.658 is missing
-
-landsat patch for year 2012 lat -34.12021347551853 and lon 22.258000000000003 is missing
-
-landsat patch for year 2012 lat -22.25566544367172 and lon 30.457999999999995 is missing
-
-landsat patch for year 2012 lat -29.79008645659633 and lon 17.058 is missing
-
-landsat patch for year 2012 lat -23.55470354934838 and lon 27.058000000000003 is missing
-
-landsat patch for year 2012 lat -27.10540770486457 and lon 32.858000000000004 is missing
-
-landsat patch for year 2012 lat -25.45995943767414 and lon 23.858 is missing
-
-landsat patch for year 2012 lat -31.262329643029883 and lon 30.058000000000003 is missing
 
 landsat patch for year 2012 lat -25.806369599187917 and lon 22.658 is missing
 
-landsat patch for year 2012 lat -34.55322617741074 and lon 20.458 is missing
-
-landsat patch for year 2012 lat -34.20681601589696 and lon 24.458 is missing
-
-landsat patch for year 2012 lat -34.12021347551853 and lon 24.258 is missing
-
-landsat patch for year 2012 lat -27.884830568270576 and lon 32.658 is missing
-
-landsat patch for year 2012 lat -26.412587381837024 and lon 30.858 is missing
-
-landsat patch for year 2012 lat -25.3733568972957 and lon 25.658 is missing
-
-landsat patch for year 2012 lat -30.396304239245445 and lon 27.658 is missing
-
-landsat patch for year 2012 lat -28.577650891298124 and lon 19.458 is missing
-
-landsat patch for year 2012 lat -28.924061052811897 and lon 19.058 is missing
-
-landsat patch for year 2012 lat -30.049894077731672 and lon 28.858 is missing
-
-landsat patch for year 2012 lat -25.71976705880947 and lon 24.858 is missing
-
-landsat patch for year 2012 lat -33.0809829909772 and lon 17.857999999999997 is missing
-
-landsat patch for year 2012 lat -29.963291537353225 and lon 17.058 is missing
-
-landsat patch for year 2012 lat -28.837458512433454 and lon 18.058 is missing
-
-landsat patch for year 2012 lat -25.71976705880947 and lon 25.258 is missing
-
 landsat patch for year 2012 lat -28.231240729784343 and lon 32.658 is missing
-
-landsat patch for year 2012 lat -31.08912456227299 and lon 17.658 is missing
-
-landsat patch for year 2012 lat -26.84560008372924 and lon 32.658 is missing
-
-landsat patch for year 2012 lat -27.27861278562146 and lon 32.858000000000004 is missing
-
-landsat patch for year 2012 lat -32.214957587192764 and lon 18.258 is missing
-
-landsat patch for year 2012 lat -28.75085597205501 and lon 28.258000000000003 is missing
-
-landsat patch for year 2012 lat -26.758997543350795 and lon 20.858 is missing
-
-landsat patch for year 2012 lat -33.0809829909772 and lon 27.858 is missing
-
-landsat patch for year 2012 lat -29.79008645659633 and lon 29.058000000000003 is missing
-
-landsat patch for year 2012 lat -30.56950932000233 and lon 28.058 is missing
-
-landsat patch for year 2012 lat -31.34893218340833 and lon 17.857999999999997 is missing
-
-landsat patch for year 2012 lat -32.647970289084974 and lon 28.458 is missing
-
-landsat patch for year 2012 lat -32.041752506435884 and lon 18.258000000000003 is missing
 
 landsat patch for year 2012 lat -26.758997543350795 and lon 32.458000000000006 is missing
 
-landsat patch for year 2012 lat -28.924061052811897 and lon 27.858 is missing
-
-landsat patch for year 2012 lat -30.22309915848855 and lon 30.858 is missing
-
-landsat patch for year 2012 lat -32.561367748706544 and lon 18.258 is missing
-
-landsat patch for year 2012 lat -22.25566544367172 and lon 30.858 is missing
-
-landsat patch for year 2012 lat -33.77380331400475 and lon 26.258 is missing
-
-landsat patch for year 2012 lat -28.837458512433454 and lon 18.458 is missing
-
-landsat patch for year 2012 lat -33.600598233247865 and lon 18.258 is missing
-
-landsat patch for year 2012 lat -24.33412641275437 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -28.49104835091967 and lon 32.458000000000006 is missing
-
-landsat patch for year 2012 lat -33.860405854383195 and lon 25.658000000000005 is missing
-
-landsat patch for year 2012 lat -29.963291537353225 and lon 29.058000000000003 is missing
-
-landsat patch for year 2012 lat -33.6872007736263 and lon 26.858000000000004 is missing
-
 landsat patch for year 2012 lat -25.200151816538813 and lon 23.258 is missing
-
-landsat patch for year 2012 lat -26.325984841458578 and lon 22.258 is missing
 
 landsat patch for year 2012 lat -26.758997543350795 and lon 32.858000000000004 is missing
 
 landsat patch for year 2012 lat -23.814511170483705 and lon 26.858 is missing
 
-landsat patch for year 2012 lat -34.12021347551853 and lon 18.258 is missing
-
-landsat patch for year 2012 lat -28.40444581054123 and lon 17.458 is missing
-
-landsat patch for year 2012 lat -25.806369599187917 and lon 31.458 is missing
-
 landsat patch for year 2012 lat -33.860405854383195 and lon 26.458 is missing
 
 landsat patch for year 2012 lat -31.52213726416521 and lon 29.858 is missing
 
-landsat patch for year 2012 lat -25.71976705880947 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -28.664253431676563 and lon 16.458 is missing
-
-landsat patch for year 2012 lat -29.963291537353225 and lon 31.058 is missing
-
-landsat patch for year 2012 lat -22.169062903293277 and lon 29.058000000000003 is missing
-
-landsat patch for year 2012 lat -25.89297213956636 and lon 20.858 is missing
-
-landsat patch for year 2012 lat -28.664253431676563 and lon 17.658 is missing
-
-landsat patch for year 2012 lat -34.4666236370323 and lon 19.058000000000003 is missing
-
-landsat patch for year 2012 lat -32.561367748706544 and lon 28.658 is missing
-
-landsat patch for year 2012 lat -27.01880516448613 and lon 31.058 is missing
-
 landsat patch for year 2012 lat -28.058035649027453 and lon 32.658 is missing
-
-landsat patch for year 2012 lat -29.530278835461008 and lon 29.258 is missing
 
 landsat patch for year 2012 lat -28.664253431676563 and lon 19.258000000000003 is missing
 
-landsat patch for year 2012 lat -33.77380331400475 and lon 26.658 is missing
-
-landsat patch for year 2012 lat -28.1446381894059 and lon 16.858 is missing
-
-landsat patch for year 2012 lat -23.901113710862152 and lon 31.858 is missing
-
-landsat patch for year 2012 lat -25.89297213956636 and lon 31.258000000000003 is missing
-
-landsat patch for year 2012 lat -29.357073754704118 and lon 16.858 is missing
-
-landsat patch for year 2012 lat -34.033610935140075 and lon 25.258 is missing
-
 landsat patch for year 2012 lat -25.546561978052583 and lon 24.058000000000003 is missing
-
-landsat patch for year 2012 lat -34.4666236370323 and lon 20.658 is missing
-
-landsat patch for year 2012 lat -25.3733568972957 and lon 22.858 is missing
-
-landsat patch for year 2012 lat -34.55322617741074 and lon 19.258 is missing
-
-landsat patch for year 2012 lat -34.12021347551853 and lon 23.058 is missing
 
 landsat patch for year 2012 lat -25.63316451843103 and lon 25.058000000000003 is missing
 
-landsat patch for year 2012 lat -24.507331493511256 and lon 26.458 is missing
-
-landsat patch for year 2012 lat -31.608739804543657 and lon 29.658 is missing
-
-landsat patch for year 2012 lat -34.033610935140075 and lon 23.658 is missing
-
-landsat patch for year 2012 lat -28.49104835091967 and lon 16.458 is missing
-
-landsat patch for year 2012 lat -28.664253431676563 and lon 28.458 is missing
-
-landsat patch for year 2012 lat -26.49918992221547 and lon 20.658 is missing
-
-landsat patch for year 2012 lat -26.06617722032325 and lon 20.858 is missing
-
-landsat patch for year 2012 lat -25.63316451843103 and lon 25.458 is missing
-
-landsat patch for year 2012 lat -29.876688996974774 and lon 27.258000000000003 is missing
-
 landsat patch for year 2012 lat -23.12169084745616 and lon 27.658 is missing
-
-landsat patch for year 2012 lat -27.27861278562146 and lon 31.658000000000005 is missing
-
-landsat patch for year 2012 lat -24.680536574268142 and lon 26.058000000000003 is missing
-
-landsat patch for year 2012 lat -22.775280685942388 and lon 28.058 is missing
-
-landsat patch for year 2012 lat -25.02694673578192 and lon 20.458 is missing
-
-landsat patch for year 2012 lat -25.02694673578192 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -34.12021347551853 and lon 23.458 is missing
-
-landsat patch for year 2012 lat -34.4666236370323 and lon 21.458 is missing
 
 landsat patch for year 2012 lat -34.55322617741074 and lon 20.858 is missing
 
-landsat patch for year 2012 lat -34.20681601589696 and lon 24.858 is missing
-
-landsat patch for year 2012 lat -22.428870524428607 and lon 28.858 is missing
-
 landsat patch for year 2012 lat -26.758997543350795 and lon 21.258000000000003 is missing
 
-landsat patch for year 2012 lat -28.924061052811897 and lon 16.657999999999998 is missing
-
-landsat patch for year 2012 lat -22.51547306480705 and lon 28.658 is missing
-
-landsat patch for year 2012 lat -29.530278835461008 and lon 31.258000000000003 is missing
-
-landsat patch for year 2012 lat -27.71162548751369 and lon 32.658 is missing
-
-landsat patch for year 2012 lat -28.49104835091967 and lon 19.658 is missing
-
 landsat patch for year 2012 lat -28.75085597205501 and lon 18.658 is missing
-
-landsat patch for year 2012 lat -29.18386867394724 and lon 31.658000000000005 is missing
-
-landsat patch for year 2012 lat -25.71976705880947 and lon 24.458 is missing
-
-landsat patch for year 2012 lat -24.16092133199748 and lon 26.858 is missing
-
-landsat patch for year 2012 lat -32.214957587192764 and lon 29.058 is missing
-
-landsat patch for year 2012 lat -28.40444581054123 and lon 19.858 is missing
 
 landsat patch for year 2012 lat -30.829316941137662 and lon 17.458 is missing
 
 landsat patch for year 2012 lat -33.340790612112535 and lon 18.058 is missing
 
-landsat patch for year 2012 lat -23.46810100896993 and lon 31.658000000000005 is missing
-
-landsat patch for year 2012 lat -26.758997543350795 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -23.987716251240595 and lon 26.858 is missing
-
-landsat patch for year 2012 lat -33.600598233247865 and lon 27.058000000000003 is missing
-
-landsat patch for year 2012 lat -22.68867814556394 and lon 31.458 is missing
-
-landsat patch for year 2012 lat -25.200151816538813 and lon 32.058 is missing
-
 landsat patch for year 2012 lat -26.758997543350795 and lon 21.658 is missing
-
-terrain patch for year 2012 lat -30.829316941137662 and lon 19.058 is missing
 
 landsat patch for year 2012 lat -34.12021347551853 and lon 25.458 is missing
 
-landsat patch for year 2012 lat -31.608739804543657 and lon 18.058 is missing
-
-landsat patch for year 2012 lat -28.75085597205501 and lon 17.857999999999997 is missing
-
-landsat patch for year 2012 lat -28.837458512433454 and lon 28.858 is missing
-
 landsat patch for year 2012 lat -34.12021347551853 and lon 23.858 is missing
-
-landsat patch for year 2012 lat -24.507331493511256 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -28.837458512433454 and lon 18.858 is missing
-
-landsat patch for year 2012 lat -28.75085597205501 and lon 32.258 is missing
 
 landsat patch for year 2012 lat -27.451817866378352 and lon 32.858000000000004 is missing
 
-landsat patch for year 2012 lat -28.1446381894059 and lon 17.258 is missing
-
-landsat patch for year 2012 lat -30.136496618110108 and lon 27.458 is missing
-
-landsat patch for year 2012 lat -31.695342344922103 and lon 29.458 is missing
-
-landsat patch for year 2012 lat -25.979574679944808 and lon 22.658 is missing
-
-landsat patch for year 2012 lat -33.51399569286943 and lon 27.258000000000003 is missing
-
-landsat patch for year 2012 lat -31.955149966057427 and lon 29.258 is missing
-
-landsat patch for year 2012 lat -25.3733568972957 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -26.67239500297235 and lon 20.658 is missing
-
-landsat patch for year 2012 lat -26.758997543350795 and lon 30.858 is missing
-
-landsat patch for year 2012 lat -26.23938230108013 and lon 20.858 is missing
-
-landsat patch for year 2012 lat -32.734572829463424 and lon 17.857999999999997 is missing
-
-landsat patch for year 2012 lat -32.99438045059876 and lon 28.058 is missing
-
-landsat patch for year 2012 lat -26.152779760701694 and lon 31.058 is missing
-
-landsat patch for year 2012 lat -26.58579246259392 and lon 22.058 is missing
-
-landsat patch for year 2012 lat -33.860405854383195 and lon 18.458 is missing
-
 landsat patch for year 2012 lat -28.40444581054123 and lon 16.657999999999998 is missing
 
-landsat patch for year 2012 lat -34.12021347551853 and lon 18.658 is missing
-
-landsat patch for year 2012 lat -30.48290677962389 and lon 30.658 is missing
-
-landsat patch for year 2012 lat -24.85374165502504 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -24.680536574268142 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -25.63316451843103 and lon 24.258 is missing
-
 landsat patch for year 2012 lat -25.89297213956636 and lon 32.058 is missing
-
-landsat patch for year 2012 lat -23.035088307077714 and lon 27.858 is missing
