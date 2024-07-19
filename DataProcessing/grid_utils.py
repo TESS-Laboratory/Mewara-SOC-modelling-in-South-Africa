@@ -153,7 +153,7 @@ class grid_utils:
         hex_grid = grid_utils.get_geoframe(hex_grid_df, 'geometry')
 
         # Perform spatial join
-        joined = gpd.sjoin(soil_data, hex_grid[['Hex_ID', 'geometry', 'Hex_Center_Lat', 'Hex_Center_Lon']], how='left', predicate='within')
+        joined = gpd.sjoin(soil_data, hex_grid[['Hex_ID', 'geometry', 'Hex_Center_Lat', 'Hex_Center_Lon', 'Hex_Center_BD']], how='left', predicate=None)
         
         joined.drop(columns='index_right', inplace=True)
 

@@ -19,5 +19,5 @@ shap
 keras_tuner
 rtree
 h5py
-pickle
 spatial-kfold
+google-cloud-storage

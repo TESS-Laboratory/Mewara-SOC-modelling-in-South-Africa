@@ -25,12 +25,12 @@ class KerasTuner:
 
     @staticmethod
     def _build_model(hp):
-        input_shape_landsat = (256,256,8)
-        input_shape_climate = (7,7,3)
-        input_shape_terrain = (256,256,4)
+        input_shape_landsat = (8,8,7)
+        input_shape_climate = (4,4,1)
+        input_shape_terrain = (8,8,2)
         landsat_layer, landsat_branch = KerasTuner.create_branch(input_shape=input_shape_landsat, name='landsat', hp=hp)
         climate_layer, climate_branch = KerasTuner.create_branch(input_shape=input_shape_climate, name='climate', hp=hp)
-        terrain_layer, terrain_branch = KerasTuner.create_terrain_branch(input_shape=input_shape_terrain, hp=hp)
+        terrain_layer, terrain_branch = KerasTuner.create_branch(input_shape=input_shape_terrain, name='terrain', hp=hp)
 
         combined_branch = layers.concatenate([landsat_branch, climate_branch, terrain_branch])
 
@@ -51,13 +51,13 @@ class KerasTuner:
     def search(input_landsat_data, input_climate_data, input_terrain_data, targets, epochs):
         tuner_search = RandomSearch(KerasTuner._build_model,
                                     objective='val_mean_absolute_error',
-                                    max_trials=50,
+                                    max_trials=10,
                                     directory=r'Model/KerasTuner',
                                     project_name=f'kt_{random.randint(0, 100)}')
 
-        early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
-        tuner_search.search([input_landsat_data, input_climate_data, input_terrain_data], targets, epochs=epochs, validation_split=0.2, callbacks=[early_stopping])
+        tuner_search.search([input_landsat_data, input_climate_data, input_terrain_data], targets, epochs=epochs, validation_split=0.1, callbacks=[early_stopping])
 
         model = tuner_search.get_best_models(num_models=1)[0]
 

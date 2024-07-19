@@ -27,8 +27,7 @@ class RF:
         n_samples_train = landsat_train.shape[0]
         n_samples_val = landsat_val.shape[0]
         n_samples_test = landsat_test.shape[0]
-        n_covariates = landsat_train.shape[3] + climate_train.shape[3] + terrain_train.shape[3]
-    
+       
         # Flatten the image data so that each sample's image data is a single row vector.
         landsat_train_data = landsat_train.reshape(n_samples_train, -1)
         climate_train_data = climate_train.reshape(n_samples_train, -1)
@@ -41,15 +40,30 @@ class RF:
         landsat_test_data = landsat_test.reshape(n_samples_test, -1)
         climate_test_data = climate_test.reshape(n_samples_test, -1)
         terrain_test_data = terrain_test.reshape(n_samples_test, -1)
-
-        mtry = int(sqrt(n_covariates))
     
         X_train = np.concatenate((landsat_train_data, climate_train_data, terrain_train_data), axis=1)
         X_val = np.concatenate((landsat_val_data, climate_val_data, terrain_val_data), axis=1)
         X_test = np.concatenate((landsat_test_data, climate_test_data, terrain_test_data), axis=1)
     
         # Initialize Random Forest model -- Venter et al. ntree = 500, mtry = sqrt of number of covariates
-        self.model = RandomForestRegressor(n_estimators=500, max_features=mtry, random_state=42)
+        # Best parameters found using GridSearchCV:  {'max_depth': 20, 'max_features': 'log2', 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 200}
+        
+        best_params = {
+            'max_depth': 20,
+            'max_features': 'log2',
+            'min_samples_leaf': 4,
+            'min_samples_split': 2,
+            'n_estimators': 200
+        }
+        
+        self.model = RandomForestRegressor(
+            n_estimators=best_params['n_estimators'],
+            max_features=best_params['max_features'],
+            max_depth=best_params['max_depth'],
+            min_samples_split=best_params['min_samples_split'],
+            min_samples_leaf=best_params['min_samples_leaf'],
+            random_state=42
+        )
         
         # Train the model
         self.model = self.model.fit(X_train, targets_train)
@@ -136,6 +150,8 @@ class RF:
         plt.show()
 
     def save_model(self, model_output_path):
+        if not os.path.exists(model_output_path):
+            os.makedirs(os.path.dirname(model_output_path), exist_ok=True)
         joblib.dump(self.model, model_output_path)
         print(f"Model saved to {model_output_path}")
 

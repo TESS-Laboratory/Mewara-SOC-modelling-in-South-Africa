@@ -141,22 +141,21 @@ class CNN():
         
         # Model
         model = models.Model(inputs=inputs, outputs=output)
-        model.compile(optimizer=optimizers.Adam(learning_rate=1e-3), loss=losses.MeanSquaredError(), metrics=[metrics.R2Score(),
+        model.compile(optimizer=optimizers.Adam(learning_rate=1e-3), loss=losses.MeanAbsoluteError(), metrics=[metrics.R2Score(),
                                                                                                               metrics.MeanAbsoluteError(), 
                                                                                                               metrics.RootMeanSquaredError()])
 
-        model.summary()
         return model
         
     def train(self, landsat_train, climate_train, terrain_train, targets_train, landsat_val, climate_val, terrain_val, targets_val, landsat_test, climate_test, terrain_test, targets_test, model_output_path, epochs):
-        batch_size = 8
+        batch_size = 64
 
         # build model
         self.model = self._build_model(input_shape_landsat=landsat_train[0].shape, 
                                        input_shape_climate=climate_train[0].shape, 
                                        input_shape_terrain=terrain_train[0].shape)
         
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
 
         train_inputs, val_inputs, test_inputs = self.get_train_val_test_inputs(landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, terrain_train, terrain_val, terrain_test)
         
@@ -164,15 +163,19 @@ class CNN():
         history = self.model.fit(
             train_inputs, targets_train,
             epochs=epochs, batch_size=batch_size, callbacks = [early_stopping],
+            validation_batch_size=batch_size,
             validation_data=(val_inputs, targets_val))
         
-        base_data_utils.plot_trainin_validation_loss(train_loss=history.history['loss'], val_loss=history.history['val_loss'])
+        base_data_utils.plot_trainin_validation(train=history.history['loss'], val=history.history['val_loss'], metric_label='Loss')
+        base_data_utils.plot_trainin_validation(train=history.history['r2_score'], val=history.history['val_r2_score'], metric_label='R2 Score')
         
         # Evaluate the model on the validation set
         print(f'\nEvaluating Testing Data:\n')
         test_loss, test_r2, test_mae, test_rmse  = self.model.evaluate(test_inputs, targets_test, batch_size=batch_size)
+                                                    
         print(f"\nTestLoss: {test_loss}; TestAccuracy: {test_r2 * 100:.2f}%; TestMAE: {test_mae}; TestRMSE: {test_rmse}\n")
 
+        os.makedirs(os.path.dirname(model_output_path), exist_ok=True)
         self.model.save(model_output_path, overwrite=True)
         print(f"CNN model '{model_output_path}' saved succesfully.")
 
