@@ -5,6 +5,7 @@ from Model.training_data_utils import training_data_utils
 
 def calculate_soc(soc_data):
     soc_data['SOC'] = soc_data['C'] * soc_data['BulkDensity'] * 20
+    soc_data = soc_data[soc_data['SOC'].isnull() != True]
     return soc_data
 
 def save_hex_grid_with_bulk_density():
@@ -98,7 +99,7 @@ def preprocess_data():
     soc_data = pd.read_excel(r'Data/FieldSamples/SOC Data from Heidi 20230124 - cleaned_additional.xlsx')
 
     # Concatenate with conservation data for South Africa if available
-    soc_data = pd.concat([soc_data, get_conservation_SA_data(), get_iSDA_data()], ignore_index=True)
+    soc_data = pd.concat([soc_data, get_conservation_SA_data(), get_iSDA_data()], ignore_index=False)
 
     # Convert 'Date' column to datetime format and extract year and month
     soc_data['Date'] = pd.to_datetime(soc_data['Date'])
@@ -133,5 +134,4 @@ def save_soc_hex_grid(soil_data):
                             savePlot=True,
                             output_plot_path='Plots/C_HeatMap.png')
 
-#save_hex_grid_with_bulk_density()
-#preprocess_data()
+preprocess_data()

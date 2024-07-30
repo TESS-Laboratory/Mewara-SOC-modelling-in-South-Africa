@@ -9,6 +9,7 @@ from scipy.interpolate import griddata
 import geopandas as gpd
 import matplotlib.colors as mcolors
 import seaborn as sns
+from scipy.stats import gaussian_kde
 
 class plot_utils:
     def get_predictions_geoframe(predictions):
@@ -43,14 +44,14 @@ class plot_utils:
         scatter = ax.scatter(gdf['Lon'], gdf['Lat'], c=soc, cmap=carbon_cmap, norm=carbon_norm)
         ax.set_xlabel('Longitude', fontsize=16)
         ax.set_ylabel('Latitude', fontsize=16)
-        ax.set_title(f'{model_name} Predicted SOC (g/cm2) for South Africa in Year {year_str}', fontsize=16)
+        ax.set_title(f'{model_name} Predicted SOC Stock (g/cm2) for South Africa in Year {year_str}', fontsize=16)
 
         # Plot South Africa shape boundaries
         grid_utils.get_sa_shape().boundary.plot(ax=ax, linewidth=1, edgecolor='black')
         
         # Add a colorbar
         cbar = plt.colorbar(scatter, ax=ax)
-        cbar.set_label(r'Soil Organic Carbon (g/cm2)', fontsize=14)
+        cbar.set_label(r'Soil Organic Carbon Stock (g/cm2)', fontsize=14)
         cbar.ax.tick_params(labelsize=12)
         
         # Save the plot
@@ -92,3 +93,69 @@ class plot_utils:
         plt.savefig(output_path, bbox_inches='tight')
 
         #plt.show()
+
+    def plot_Biome_DensityPlot(biome_trends, biome_trends_col, map_output_path):
+        mean_soc = biome_trends['Mean_SOC']
+        biomes = biome_trends['Biome']
+        
+        unique_biomes = sorted(biomes.unique())
+        carbon_cmap = cm.viridis
+        carbon_norm = mcolors.Normalize(vmin=mean_soc.min(), vmax=mean_soc.max())
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        # Set y-ticks and labels for the biomes
+        ax.set_yticks(np.arange(len(unique_biomes)))
+        ax.set_yticklabels(unique_biomes, fontsize=16)
+        
+        density_scaling_factor = 15
+
+        for idx, biome in enumerate(unique_biomes):
+            subset = biome_trends[biome_trends['Biome'] == biome]
+            soc_values = subset['Mean_SOC'].dropna()
+            
+            if not soc_values.empty:
+                kde = gaussian_kde(soc_values, bw_method=0.5)
+                soc_range = np.linspace(soc_values.min(), soc_values.max(), 1000)
+                density = kde(soc_range) * density_scaling_factor
+                color = carbon_cmap(carbon_norm(soc_values.mean()))
+                # Shift the baseline up to the index value for each biome
+                ax.fill_between(soc_range, idx, idx + density, color=color)
+                ax.plot(soc_range, idx + density, color=color)
+
+        ax.set_xlabel('Soil Organic Carbon Stock (g/cm2)', fontsize=16)
+        ax.set_title(f'SOC Distribution by Biome', fontsize=16)
+
+        # Save the plot
+        os.makedirs(os.path.dirname(map_output_path), exist_ok=True)
+        plt.savefig(map_output_path, bbox_inches='tight')
+        plt.close()
+
+    def plot_Biome_Trends(biome_trends, biome_trends_col, map_output_path):
+        # Get predictions as a GeoDataFrame
+        mean_soc = biome_trends[biome_trends_col]
+        biomes = biome_trends['Biome']
+        
+        carbon_cmap = cm.viridis
+        carbon_norm = mcolors.Normalize(vmin=mean_soc.min(), vmax=mean_soc.max())
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        scatter = ax.scatter(biome_trends['Lon'], biome_trends['Lat'], c=mean_soc, cmap=carbon_cmap, norm=carbon_norm)
+        ax.set_xlabel('Longitude', fontsize=16)
+        ax.set_ylabel('Latitude', fontsize=16)
+        ax.set_title(f'Predicted SOC Stock (g/cm2) for South Africa', fontsize=16)
+
+        # Plot South Africa shape boundaries
+        grid_utils.get_sa_shape().boundary.plot(ax=ax, linewidth=1, edgecolor='black')
+        
+        # Add a colorbar
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label(r'Soil Organic Carbon Stock (g/cm2)', fontsize=14)
+        cbar.ax.tick_params(labelsize=12)
+        
+        # Save the plot
+        os.makedirs(os.path.dirname(map_output_path), exist_ok=True)
+        plt.savefig(map_output_path)
+
+plot_utils.plot_Biome_Trends(biome_trends=pd.read_csv('MapsTrends/RF_Model/Trends/Biome_Trends.csv'), biome_trends_col='Mean_SOC', map_output_path='MapsTrends/RF_Model/Trends/Biome_SOC.png')
+plot_utils.plot_Biome_DensityPlot(biome_trends=pd.read_csv('MapsTrends/RF_Model/Trends/Biome_Trends.csv'), biome_trends_col='Mean_SOC', map_output_path='MapsTrends/RF_Model/Trends/Biome_SOC_Density.png')
