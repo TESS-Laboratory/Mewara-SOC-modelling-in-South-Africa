@@ -118,10 +118,16 @@ class plot_utils:
                 kde = gaussian_kde(soc_values, bw_method=0.5)
                 soc_range = np.linspace(soc_values.min(), soc_values.max(), 1000)
                 density = kde(soc_range) * density_scaling_factor
-                color = carbon_cmap(carbon_norm(soc_values.mean()))
-                # Shift the baseline up to the index value for each biome
-                ax.fill_between(soc_range, idx, idx + density, color=color)
-                ax.plot(soc_range, idx + density, color=color)
+                for i in range(len(soc_range) - 1):
+                    x0, x1 = soc_range[i], soc_range[i + 1]
+                    y0, y1 = density[i], density[i + 1]
+                    
+                    # Calculate the color for this segment
+                    color = carbon_cmap(carbon_norm((x0 + x1) / 2))
+                    
+                    # Fill between the baseline (idx) and the density curve
+                    ax.fill_between([x0, x1], idx, [idx + y0, idx + y1], color=color)
+                    ax.plot([x0, x1], [idx + y0, idx + y1], color=color)
 
         ax.set_xlabel('Soil Organic Carbon Stock (g/cm2)', fontsize=16)
         ax.set_title(f'SOC Distribution by Biome', fontsize=16)
