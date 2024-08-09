@@ -68,6 +68,8 @@ class RF:
         # Train the model
         self.model = self.model.fit(X_train, targets_train)
 
+        #self.print_feature_importances(model=self.model)
+
         # Save the model
         self.save_model(model_output_path)
         print(f'RF model {model_output_path} saved successfully.')
@@ -129,17 +131,18 @@ class RF:
     
         return self.model.predict(X_test)[0]
     
-    def print_feature_importances(self, X_train):
-        feature_importances = self.model.feature_importances_
-        # Get feature names
-        n_landsat_features = X_train.shape[3] // 3  # Assuming landsat, climate, and terrain are equally sized
-        feature_names = (['landsat_' + str(i) for i in range(n_landsat_features)] +
-                         ['climate_' + str(i) for i in range(n_landsat_features)] +
-                         ['terrain_' + str(i) for i in range(n_landsat_features)])
+    def print_feature_importances(self, model):
+        # Get feature importances
+        importances = model.coef_
         
+        feature_names = []
+        feature_importances = []
         # Print feature importances
-        for name, importance in zip(feature_names, feature_importances):
-            print(f"{name}: {importance:.4f}")
+        print("Feature Importances:")
+        for i, importance in enumerate(importances):
+            print(f"Feature {i}: {importance:.4f}")
+            feature_names.append(i)
+            feature_importances.append(importance)
 
         # Plot feature importances
         plt.figure(figsize=(10, 6))

@@ -514,7 +514,10 @@ class training_data_utils:
                 if terrain_patch is not None and landsat_patch is not None and no_months > 0:
                     lat_lon_data.append((lat, lon))
                     landsat_data.append(landsat_patch)
-                    climate_data.append(yearly_climate_sum/no_months)
+                    try:
+                        climate_data.append(yearly_climate_sum/no_months)
+                    except Exception:
+                        print(f"yearly_climate_sum: {yearly_climate_sum}, no_months: {no_months}, exception: {Exception}")
                     terrain_data.append(terrain_patch)
                     targets.append(total_c/no_months)
 

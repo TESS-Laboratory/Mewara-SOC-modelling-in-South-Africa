@@ -1,0 +1,2 @@
+
+landsat patch for year 2009 lat -34.38002109665386 and lon 18.458 is missing

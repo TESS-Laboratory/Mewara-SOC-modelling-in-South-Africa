@@ -87,8 +87,14 @@ class test_metrics:
             if landsat_patch is None or yearly_climate_sum is None or terrain_patch is None:
                 continue
 
-            climate_avg_patch = yearly_climate_sum / no_months
-            
+            if no_months <= 0:
+                continue
+
+            try:
+                climate_avg_patch = yearly_climate_sum / no_months
+            except Exception:
+                print(f"yearly_climate_sum: {yearly_climate_sum}, no_months: {no_months}, exception: {Exception}")
+
             landsat_patch_bands = np.round(landsat_patch[:, :, landsat_bands], 2)
             climate_patch_bands = np.round(climate_avg_patch[:, :, climate_bands], 2)
             terrain_patch_bands = np.round(terrain_patch[:, :, terrain_bands], 2)
