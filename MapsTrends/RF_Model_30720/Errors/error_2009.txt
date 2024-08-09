@@ -1,0 +1,10 @@
+
+landsat patch for year 2009 lat -34.38002109665386 and lon 18.458 is missing
+
+landsat patch for year 2009 lat -34.12021347551853 and lon 18.258 is missing
+
+landsat patch for year 2009 lat -34.38002109665386 and lon 18.858 is missing
+
+landsat patch for year 2009 lat -34.20681601589696 and lon 18.458 is missing
+
+landsat patch for year 2009 lat -34.20681601589696 and lon 18.858 is missing

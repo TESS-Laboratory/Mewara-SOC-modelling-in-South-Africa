@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from DataProcessing import grid_utils
+from DataProcessing.grid_utils import grid_utils
 from MapsTrends import plot_utils, test_metrics, trends_analysis
 
 class map_utils:
@@ -9,11 +9,12 @@ class map_utils:
     def create_map(year, model, start_month, end_month, patch_size_meters_landsat, patch_size_meters_climate, patch_size_meters_terrain, landsat_bands, climate_bands, terrain_bands, skip_predictions=False):
         tm = test_metrics.test_metrics(model=model)
         model_name = model.get_model_name()
-        output_dir = f'MapsTrends/{model_name}'.replace('.keras', '')
+        output_dir = f'MapsTrends/{model_name}_{patch_size_meters_landsat}'.replace('.keras', '')
         error_output_path = f'{output_dir}/Errors/error_{year}.txt'
         predictions_folder = f'{output_dir}/Predictions'
         predictions_output_path = f'{predictions_folder}/predictions_{year}.csv'
         predicted_plot_output_path = f'{predictions_folder}/PredictedMaps/soc_{year}.png'
+        predicted_c_output_path = f'{predictions_folder}/PredictedCarbonMaps/c_{year}.png'
 
         soc_mean_targets = map_utils.get_hex_grid_mean_C_SOC(year)
         
@@ -31,14 +32,16 @@ class map_utils:
                     save=True,
                     output_path=predictions_output_path,
                     error_output_path=error_output_path)
-            
+         
         plot_utils.plot_utils.plot_SOC(model_name=model.__class__.__name__, 
                                        year_str=year,
                                        predictions=predictions,
                                        map_output_path=predicted_plot_output_path)
         
-        plot_utils.plot_utils.scatter_plot_predict_c_targetc(df=predictions, model_name=model.__class__.__name__, output_path=f'{predictions_folder}/scatter_plot_{year}.png')
-
+        map_utils.plot_predicted_points(year=year, 
+                                        predictions=predictions, 
+                                        predictions_plot_path=predicted_c_output_path)
+    
         map_utils.plot_combined_predictions_scatter_plot(model_name=model.__class__.__name__, predictions_folder=predictions_folder)
 
         trends_analysis.trends_analysis.save_biome_trends(predictions_folder=predictions_folder, output_folder=f'{output_dir}/Trends')
@@ -105,7 +108,7 @@ class map_utils:
             print(f'\nPredictions is missing for year {year}\n')
             return None
 
-        predictions = predictions[predictions['Year']== year]
+        predictions = predictions[predictions['Year']==year]
         hex_grid = pd.read_csv(r'DataProcessing/hex_grid.csv')
         pred_hex_df = grid_utils.grid_utils.get_soc_hex_grid(hex_grid_df=hex_grid,
                                              soil_data=predictions) 
@@ -134,4 +137,4 @@ class map_utils:
         combined_df.to_csv(os.path.join(predictions_folder, f'combined_predictions.csv'), columns=['Year', 'Lat', 'Lon', 'C', 'Target_C', 'Target_BD', 'SOC'], index=False, mode='w+')
         plot_utils.plot_utils.scatter_plot_predict_c_targetc(df=combined_df, model_name=model_name, output_path=f'{predictions_folder}/scatter_plot.png')
 
-#map_utils.plot_combined_predictions_scatter_plot('RF', 'MapsTrends\RF_Model\Predictions')
+map_utils.plot_combined_predictions_scatter_plot('CNN', 'MapsTrends/CNN_Model_30720/Predictions')

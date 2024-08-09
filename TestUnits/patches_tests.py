@@ -2,22 +2,22 @@ import pandas as pd
 from Model.training_data_utils import training_data_utils
 import rasterio
 
-patch_size_meters_landsat = 1920 # roughly 16*16 pixels
-patch_size_meters_climate = 20000 # roughly 4*4 pixels
-patch_size_meters_terrain = 1920 # roughly 16*16 pixels
+patch_size_meters_landsat = 15360 # roughly 16*16 pixels
+patch_size_meters_climate = 15360 # roughly 4*4 pixels
+patch_size_meters_terrain = 15360 # roughly 16*16 pixels
 save_patches = True
-year = 2022
+year = 2018
 
 def save_patches_year_months():
     soc_df = pd.read_csv('DataProcessing/soc_hex_grid.csv')
     soc_df = soc_df[soc_df['Year'] == year]
 
     for month in range(1,13):
-        output_dir_low_carbon = f'TestUnits/Patches_1920/{year}/Low_carbon/{month}'
-        output_dir_high_carbon = f'TestUnits/Patches_1920/{year}/High_carbon/{month}'
+        output_dir_low_carbon = f'TestUnits/Patches_{patch_size_meters_landsat}/{year}/Low_carbon/{month}'
+        output_dir_high_carbon = f'TestUnits/Patches_{patch_size_meters_landsat}/{year}/High_carbon/{month}'
         soc_monthly = soc_df[soc_df['Month'] == month]
         low_carbon = soc_monthly[soc_monthly['C'] < 0.5]
-        high_carbon = soc_monthly[soc_monthly['C'] > 10]
+        high_carbon = soc_monthly[soc_monthly['C'] > 5]
 
         low_carbon_lat_lons = list(set(zip(low_carbon['Lat'], low_carbon['Lon'])))
         high_carbon_lat_lons = list(set(zip(high_carbon['Lat'], high_carbon['Lon'])))

@@ -1,0 +1,10 @@
+
+landsat patch for year 2000 lat -25.113549276160366 and lon 20.258 is missing
+
+landsat patch for year 2000 lat -24.85374165502504 and lon 20.058000000000007 is missing
+
+landsat patch for year 2000 lat -24.94034419540348 and lon 20.258 is missing
+
+landsat patch for year 2000 lat -25.02694673578192 and lon 20.458 is missing
+
+landsat patch for year 2000 lat -25.02694673578192 and lon 20.058000000000007 is missing

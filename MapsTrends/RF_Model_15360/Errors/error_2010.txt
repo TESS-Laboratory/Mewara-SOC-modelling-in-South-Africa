@@ -1,0 +1,54 @@
+
+landsat patch for year 2010 lat -30.049894077731672 and lon 28.458 is missing
+
+landsat patch for year 2010 lat -29.18386867394724 and lon 29.258 is missing
+
+landsat patch for year 2010 lat -30.915919481516102 and lon 30.457999999999995 is missing
+
+landsat patch for year 2010 lat -25.806369599187917 and lon 22.658 is missing
+
+landsat patch for year 2010 lat -28.231240729784343 and lon 32.658 is missing
+
+landsat patch for year 2010 lat -26.758997543350795 and lon 32.458000000000006 is missing
+
+landsat patch for year 2010 lat -25.200151816538813 and lon 23.258 is missing
+
+landsat patch for year 2010 lat -26.758997543350795 and lon 32.858000000000004 is missing
+
+landsat patch for year 2010 lat -23.814511170483705 and lon 26.858 is missing
+
+landsat patch for year 2010 lat -33.860405854383195 and lon 26.458 is missing
+
+landsat patch for year 2010 lat -31.52213726416521 and lon 29.858 is missing
+
+landsat patch for year 2010 lat -28.058035649027453 and lon 32.658 is missing
+
+landsat patch for year 2010 lat -28.664253431676563 and lon 19.258000000000003 is missing
+
+landsat patch for year 2010 lat -25.546561978052583 and lon 24.058000000000003 is missing
+
+landsat patch for year 2010 lat -25.63316451843103 and lon 25.058000000000003 is missing
+
+landsat patch for year 2010 lat -23.12169084745616 and lon 27.658 is missing
+
+landsat patch for year 2010 lat -34.55322617741074 and lon 20.858 is missing
+
+landsat patch for year 2010 lat -26.758997543350795 and lon 21.258000000000003 is missing
+
+landsat patch for year 2010 lat -28.75085597205501 and lon 18.658 is missing
+
+landsat patch for year 2010 lat -30.829316941137662 and lon 17.458 is missing
+
+landsat patch for year 2010 lat -33.340790612112535 and lon 18.058 is missing
+
+landsat patch for year 2010 lat -26.758997543350795 and lon 21.658 is missing
+
+landsat patch for year 2010 lat -34.12021347551853 and lon 25.458 is missing
+
+landsat patch for year 2010 lat -34.12021347551853 and lon 23.858 is missing
+
+landsat patch for year 2010 lat -27.451817866378352 and lon 32.858000000000004 is missing
+
+landsat patch for year 2010 lat -28.40444581054123 and lon 16.657999999999998 is missing
+
+landsat patch for year 2010 lat -25.89297213956636 and lon 32.058 is missing

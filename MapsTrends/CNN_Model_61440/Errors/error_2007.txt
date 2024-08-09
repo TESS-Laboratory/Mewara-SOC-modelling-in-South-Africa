@@ -1,0 +1,26 @@
+
+landsat patch for year 2007 lat -27.10540770486457 and lon 32.858000000000004 is missing
+
+landsat patch for year 2007 lat -27.884830568270576 and lon 32.658 is missing
+
+landsat patch for year 2007 lat -27.5384204067568 and lon 32.658 is missing
+
+landsat patch for year 2007 lat -26.84560008372924 and lon 32.658 is missing
+
+landsat patch for year 2007 lat -27.27861278562146 and lon 32.858000000000004 is missing
+
+landsat patch for year 2007 lat -26.758997543350795 and lon 32.858000000000004 is missing
+
+landsat patch for year 2007 lat -28.058035649027453 and lon 32.658 is missing
+
+landsat patch for year 2007 lat -27.365215325999905 and lon 32.658 is missing
+
+landsat patch for year 2007 lat -27.01880516448613 and lon 32.658 is missing
+
+landsat patch for year 2007 lat -27.19201024524301 and lon 32.658 is missing
+
+landsat patch for year 2007 lat -27.71162548751369 and lon 32.658 is missing
+
+landsat patch for year 2007 lat -26.93220262410769 and lon 32.858000000000004 is missing
+
+landsat patch for year 2007 lat -27.451817866378352 and lon 32.858000000000004 is missing

@@ -15,11 +15,10 @@ import seaborn as sns
 # Set environment variables for XLA flags
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
-years = [1998, 1999, 2000, 2001, 2002, 2004, 2007, 2008, 2009, 2010, 2012, 2017, 2018, 2019, 2021, 2022]
-#years = [2022]
+years = [1998, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008, 2009, 2010, 2012, 2017, 2018, 2019, 2020, 2021, 2022, 2023]
 start_month = 1
 end_month = 12
-epochs = 100
+epochs = 30
 
 use_landsat = True
 use_climate = True
@@ -27,12 +26,12 @@ use_terrain = True
 use_cache = True
 update_cache = True
 
-patch_size_meters_landsat = 15360 # roughly 128*128 pixels
-patch_size_meters_climate = 20000 # roughly 4*4 pixels
-patch_size_meters_terrain = 15360 # roughly 128*128 pixels
+patch_size_meters_landsat = 61440 # roughly 128*128 pixels
+patch_size_meters_climate = 61440 # roughly 4*4 pixels
+patch_size_meters_terrain = 61440 # roughly 128*128 pixels
 
 training_soc_path = r'DataProcessing/soc_hex_grid.csv'
-landsat_bands = [0,1,2,4,5,6,7]
+landsat_bands = [4,5,6,7]
 climate_bands = [0]
 terrain_bands = [1,2]
 training_kfold = 1
@@ -104,7 +103,7 @@ def performance_metric(model, model_output_path, lat_lon_data, landsat_data, cli
 
 def keras_tuner(landsat_data, climate_data, terrain_data, targets, epochs):
     print('\n Tuning CNN Model: \n')
-    KerasTuner.search(input_landsat_data=landsat_data, input_climate_data=climate_data, input_terrain_data=terrain_data, targets=targets, epochs=epochs)
+    KerasTuner.search(input_landsat_data=landsat_data, input_climate_data=climate_data, input_terrain_data=terrain_data, targets=targets, epochs=50)
 
 def get_model(model_kind, model_path, cloud_storage):
     if model_kind == 'RF':
@@ -148,20 +147,16 @@ if __name__ == "__main__":
     '''GridSearch for RF'''
     #GridSearchTuner.GridSearchTuner.search(input_landsat_data=landsat_data, input_climate_data=climate_data, input_terrain_data=terrain_data, targets=targets)
 
-    '''CNN'''
-    #performance_metric(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    #train(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    #test(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    #plot_maps(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage)
-    
     '''RF'''
     #performance_metric(model=rf, model_output_path=model_output_rf, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
     train(model=rf, model_output_path=model_output_rf, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
     test(model_kind='RF', model_path=model_output_rf, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
     plot_maps(model_kind='RF', model_path=model_output_rf, cloud_storage=cloud_storage)
 
-    '''Maps'''
-   
-    #cnn_model = CNN(model_path=model_output_cnn)
+    '''CNN'''
+    #performance_metric(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    #train(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    #test(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    #plot_maps(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage)
+    
 
-    #save_training_patches_as_images()
