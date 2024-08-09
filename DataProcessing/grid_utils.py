@@ -151,10 +151,11 @@ class grid_utils:
         soil_data['geometry'] = [Point(xy) for xy in zip(soil_data['Lon'], soil_data['Lat'])]
         soil_data = gpd.GeoDataFrame(soil_data, geometry='geometry', crs='EPSG:4326')
         hex_grid = grid_utils.get_geoframe(hex_grid_df, 'geometry')
-
+       
         # Perform spatial join
         joined = gpd.sjoin(soil_data, hex_grid[['Hex_ID', 'geometry', 'Hex_Center_Lat', 'Hex_Center_Lon', 'Hex_Center_BD']], how='left', predicate=None)
-        
+        joined.drop_duplicates(['Date', 'Lat', 'Lon', 'C'], inplace = True)
+
         joined.drop(columns='index_right', inplace=True)
 
         joined.reset_index(drop=True, inplace=True)

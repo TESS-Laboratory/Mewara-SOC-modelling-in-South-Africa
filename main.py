@@ -11,6 +11,7 @@ from Model.base_model import base_model
 from Model.data_analysis import data_analysis
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.integrate import simpson
 
 # Set environment variables for XLA flags
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
@@ -33,7 +34,7 @@ patch_size_meters_terrain = 61440 # roughly 128*128 pixels
 training_soc_path = r'DataProcessing/soc_hex_grid.csv'
 landsat_bands = [4,5,6,7]
 climate_bands = [0]
-terrain_bands = [1,2]
+terrain_bands = [0,1,2]
 training_kfold = 1
 performance_metric_kfold = 10
 
@@ -41,10 +42,11 @@ def targets_density_plot(targets):
     # Create the density plot
     plt.figure(figsize=(10, 6))
     sns.kdeplot(targets, bw_adjust=0.5, fill=True)
-    plt.xlabel('Carbon (% by mass)')
-    plt.ylabel('Density')
-    plt.title('Density Plot of Carbon Values')
-    plt.xlim(0, 20)
+    plt.xlabel('Carbon (% by Mass)', fontsize=16)
+    plt.ylabel('Density', fontsize=16)
+    plt.title('Density Plot of Carbon Values', fontsize=18)
+    plt.xlim(0, 10)
+    plt.xticks(np.arange(0, 10.5, 0.5))
     plt.grid(True)
     plt.show()
 
@@ -135,11 +137,11 @@ if __name__ == "__main__":
 
     '''Pearsons Coefficient'''
     #lat_lon_data, landsat_data, climate_data, terrain_data, targets = get_training_dataset(landsat_bands=[0,1,2,3,4,5,6,7], climate_bands=[0,1,2], terrain_bands=[0,1,2,3])
-    #data_analysis.plot_pearson_coefficient(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    #data_analysis.plot_pearson_coefficient(lat_lon_data = lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
 
     '''Training Data'''
     lat_lon_data, landsat_data, climate_data, terrain_data, targets = get_training_dataset(landsat_bands=landsat_bands, climate_bands=climate_bands, terrain_bands=terrain_bands)
-    #targets_density_plot(targets=targets)
+    targets_density_plot(targets=targets)
 
     '''KerasTuner for CNN'''
     #keras_tuner(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets, epochs=epochs)
