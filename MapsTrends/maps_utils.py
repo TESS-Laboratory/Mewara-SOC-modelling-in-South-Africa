@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from DataProcessing.grid_utils import grid_utils
+from DataProcessing import grid_utils
 from MapsTrends import plot_utils, test_metrics, trends_analysis
 
 class map_utils:
@@ -42,7 +42,7 @@ class map_utils:
                                         predictions=predictions, 
                                         predictions_plot_path=predicted_c_output_path)
     
-        map_utils.plot_combined_predictions_scatter_plot(model_name=model.__class__.__name__, predictions_folder=predictions_folder)
+        map_utils.plot_combined_predictions_scatter_density_plots(model_name=model.__class__.__name__, predictions_folder=predictions_folder)
 
         trends_analysis.trends_analysis.save_biome_trends(predictions_folder=predictions_folder, output_folder=f'{output_dir}/Trends')
 
@@ -125,7 +125,7 @@ class map_utils:
                                             output_plot_path=predictions_plot_path)
         #input('press key to continue')
 
-    def plot_combined_predictions_scatter_plot(model_name, predictions_folder):
+    def plot_combined_predictions_scatter_density_plots(model_name, predictions_folder):
         combined_df = pd.DataFrame()
         for year in range(1986, 2023):
             predictions_path = f'{predictions_folder}/predictions_{year}.csv'
@@ -136,5 +136,14 @@ class map_utils:
 
         combined_df.to_csv(os.path.join(predictions_folder, f'combined_predictions.csv'), columns=['Year', 'Lat', 'Lon', 'C', 'Target_C', 'Target_BD', 'SOC'], index=False, mode='w+')
         plot_utils.plot_utils.scatter_plot_predict_c_targetc(df=combined_df, model_name=model_name, output_path=f'{predictions_folder}/scatter_plot.png')
+        plot_utils.plot_utils.density_plot_predict_c_targetc(df=combined_df, model_name=model_name, output_path=f'{predictions_folder}/density_plot.png')
 
-map_utils.plot_combined_predictions_scatter_plot('CNN', 'MapsTrends/CNN_Model_30720/Predictions')
+'''
+map_utils.plot_combined_predictions_scatter_density_plots('CNN', 'MapsTrends/CNN_Model_15360/Predictions')
+map_utils.plot_combined_predictions_scatter_density_plots('CNN', 'MapsTrends/CNN_Model_30720/Predictions')
+map_utils.plot_combined_predictions_scatter_density_plots('CNN', 'MapsTrends/CNN_Model_61440/Predictions')
+
+map_utils.plot_combined_predictions_scatter_density_plots('RF', 'MapsTrends/RF_Model_15360/Predictions')
+map_utils.plot_combined_predictions_scatter_density_plots('RF', 'MapsTrends/RF_Model_30720/Predictions')
+map_utils.plot_combined_predictions_scatter_density_plots('RF', 'MapsTrends/RF_Model_61440/Predictions')
+'''

@@ -1,6 +1,7 @@
 import os
 from matplotlib import cm, legend, pyplot as plt
 from matplotlib.patches import Patch
+from scipy.linalg import svd
 import numpy as np
 import pandas as pd
 from shapely.geometry import Point
@@ -57,19 +58,20 @@ class plot_utils:
         plt.savefig(map_output_path, bbox_inches='tight')
     
     def total_least_squares(X, Y):
-        # Combine X and Y into a single matrix
-        A = np.vstack([X, np.ones(len(X))]).T
-        B = np.vstack([Y, np.ones(len(Y))]).T
+        # Formulate matrix
+        X = X.reshape(-1, 1)
+        Y = Y.reshape(-1, 1)
+        A = np.hstack((X, Y))
         
-        # Compute the Singular Value Decomposition
-        U, S, Vt = np.linalg.svd(B - A @ np.linalg.lstsq(A, B, rcond=None)[0])
+        # Perform SVD
+        U, S, Vt = svd(A)
         
-        # Find the last singular vector
-        line = Vt[-1]
+        # TLS solution is the last column of V (V transposed is Vt, so last row of Vt)
+        v = Vt[-1, :]
         
-        # Compute the slope and intercept
-        slope = -line[0] / line[1]
-        intercept = -line[2] / line[1]
+        # Calculate slope and intercept
+        slope = -v[0] / v[1]
+        intercept = np.mean(Y) - slope * np.mean(X)
         
         return slope, intercept
 
@@ -86,20 +88,17 @@ class plot_utils:
         slope, intercept = plot_utils.total_least_squares(X, Y)
         
         # Plot the data
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(12, 12))
         plt.scatter(df['Target_C'], df['C'], color=sns.color_palette("viridis", as_cmap=True)(0.6), label='Data points')
         
         # Plot the TLS line
-        x_vals = np.linspace(df['Target_C'].min(), df['Target_C'].max(), 100)
+        x_vals = np.linspace(df['Target_C'].min(), df['Target_C'].max(), 20)
         y_vals = slope * x_vals + intercept
         plt.plot(x_vals, y_vals, color=sns.color_palette("viridis", as_cmap=True)(0.9), linestyle='-', label='TLS Fit')
 
-        # Plot the ideal line
-        plt.plot([df['Target_C'].min(), df['Target_C'].max()], [df['Target_C'].min(), df['Target_C'].max()], color=sns.color_palette("viridis", as_cmap=True)(0.7), linestyle='--', label='Ideal Fit')
-
         # Set equal scaling
-        max_val = max(df['Target_C'].max(), df['C'].max())
         min_val = min(df['Target_C'].min(), df['C'].min())
+        max_val = 10 # max(df['Target_C'].max(), df['C'].max())
         plt.xlim(min_val, max_val)
         plt.ylim(min_val, max_val)
 
@@ -109,12 +108,12 @@ class plot_utils:
         max_bin = np.ceil(max_val / bin_width) * bin_width
 
         # Set the ticks to match the bins
-        plt.xticks(np.arange(min_bin, max_bin + bin_width, bin_width))
-        plt.yticks(np.arange(min_bin, max_bin + bin_width, bin_width))
+        plt.xticks(np.arange(min_bin, max_bin + bin_width, bin_width), fontsize=12)
+        plt.yticks(np.arange(min_bin, max_bin + bin_width, bin_width), fontsize=12)
         
-        plt.xlabel('Target Carbon (% by Mass)')
-        plt.ylabel('Predicted Carbon (% by Mass)')
-        plt.title(f'{model_name} Predicted Carbon vs Target Carbon')
+        plt.xlabel('Target Carbon (% by Mass)', fontsize=16)
+        plt.ylabel('Predicted Carbon (% by Mass)', fontsize=16)
+        plt.title(f'{model_name} Predicted Carbon vs Target Carbon', fontsize=16)
         plt.legend()
         plt.grid(True)
 
@@ -122,6 +121,21 @@ class plot_utils:
         plt.savefig(output_path, bbox_inches='tight')
 
         #plt.show()
+
+    def density_plot_predict_c_targetc(df, model_name, output_path):
+        plt.figure(figsize=(10, 8))
+        
+        sns.kdeplot(df['Target_C'], bw_adjust=0.5, fill=True, label='Predicted SOC Density', color='blue')
+        sns.kdeplot(df['C'], bw_adjust=0.5, fill=True, label='Target SOC Density', color='orange')
+
+        plt.xlabel('Soil Organic Carbon (% by Mass)', fontsize=16)
+        plt.ylabel('Density', fontsize=16)
+        plt.title(f'{model_name} Soil Organic Carbon Density', fontsize=16)
+        plt.legend()
+        plt.grid(True)
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        plt.savefig(output_path, bbox_inches='tight')
 
     def plot_Biome_DensityPlot(biome_trends, biome_trends_col, map_output_path):
         soc = biome_trends[biome_trends_col]

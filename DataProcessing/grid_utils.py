@@ -154,7 +154,6 @@ class grid_utils:
        
         # Perform spatial join
         joined = gpd.sjoin(soil_data, hex_grid[['Hex_ID', 'geometry', 'Hex_Center_Lat', 'Hex_Center_Lon', 'Hex_Center_BD']], how='left', predicate=None)
-        joined.drop_duplicates(['Date', 'Lat', 'Lon', 'C'], inplace = True)
 
         joined.drop(columns='index_right', inplace=True)
 

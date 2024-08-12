@@ -16,7 +16,7 @@ from scipy.integrate import simpson
 # Set environment variables for XLA flags
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
-years = [1998, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008, 2009, 2010, 2012, 2017, 2018, 2019, 2020, 2021, 2022, 2023]
+years = [1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2012, 2017, 2018, 2019, 2020, 2021, 2022, 2023]
 start_month = 1
 end_month = 12
 epochs = 30
@@ -27,9 +27,9 @@ use_terrain = True
 use_cache = True
 update_cache = True
 
-patch_size_meters_landsat = 61440 # roughly 128*128 pixels
-patch_size_meters_climate = 61440 # roughly 4*4 pixels
-patch_size_meters_terrain = 61440 # roughly 128*128 pixels
+patch_size_meters_landsat = 30720 # roughly 128*128 pixels
+patch_size_meters_climate = 30720 # roughly 4*4 pixels
+patch_size_meters_terrain = 30720 # roughly 128*128 pixels
 
 training_soc_path = r'DataProcessing/soc_hex_grid.csv'
 landsat_bands = [4,5,6,7]
@@ -67,7 +67,7 @@ def get_training_dataset(landsat_bands, climate_bands, terrain_bands):
 def train(model, model_output_path, lat_lon_data, landsat_data, climate_data, terrain_data, targets):
     print(f'\n Training {model.__class__.__name__} model:\n')
     base_model.train_val_test_spatial_split(
-                model=model,
+                model_class=model,
                 lat_lon_data=lat_lon_data,
                 landsat_data=landsat_data,
                 climate_data=climate_data,
@@ -141,7 +141,7 @@ if __name__ == "__main__":
 
     '''Training Data'''
     lat_lon_data, landsat_data, climate_data, terrain_data, targets = get_training_dataset(landsat_bands=landsat_bands, climate_bands=climate_bands, terrain_bands=terrain_bands)
-    targets_density_plot(targets=targets)
+    #targets_density_plot(targets=targets)
 
     '''KerasTuner for CNN'''
     #keras_tuner(landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets, epochs=epochs)
@@ -151,14 +151,14 @@ if __name__ == "__main__":
 
     '''RF'''
     #performance_metric(model=rf, model_output_path=model_output_rf, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    train(model=rf, model_output_path=model_output_rf, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    test(model_kind='RF', model_path=model_output_rf, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    plot_maps(model_kind='RF', model_path=model_output_rf, cloud_storage=cloud_storage)
+    #train(model=rf, model_output_path=model_output_rf, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    #test(model_kind='RF', model_path=model_output_rf, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    #plot_maps(model_kind='RF', model_path=model_output_rf, cloud_storage=cloud_storage)
 
     '''CNN'''
     #performance_metric(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    #train(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    #test(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    #plot_maps(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage)
+    train(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    test(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    plot_maps(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage)
     
 

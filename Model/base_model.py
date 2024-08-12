@@ -1,3 +1,4 @@
+from math import inf
 import os
 import numpy as np
 import pandas as pd
@@ -53,8 +54,9 @@ class base_model:
                         model_output_path = model_output_path, 
                         epochs = epochs)
     
-    def train_val_test_spatial_split(model, model_output_path, lat_lon_data, landsat_data, climate_data, terrain_data, targets, epochs, k_fold):
+    def train_val_test_spatial_split(model_class, model_output_path, lat_lon_data, landsat_data, climate_data, terrain_data, targets, epochs, k_fold):
         result_test_r2 = []
+        best_test_r2 = -inf
         for fold in range(k_fold):
             train_data, val_data, test_data = base_data_utils.spatial_split(
                                                     lat_lon_data=lat_lon_data,
@@ -62,10 +64,13 @@ class base_model:
                                                     climate_data=climate_data,
                                                     terrain_data=terrain_data,
                                                     targets=targets)
-            test_r2 = base_model.train(model, model_output_path, epochs, fold, train_data, val_data, test_data) 
+            test_r2, model = base_model.train(model_class, model_output_path, epochs, fold, train_data, val_data, test_data) 
+            if (test_r2 > best_test_r2):
+                model_class.save_model(model, model_output_path)
+                best_test_r2 = test_r2
             result_test_r2.append(test_r2)
 
-        print(f"\nAverage Test Accuracy: {np.mean(result_test_r2)}")
+        print(f"\nAverage Training Test Accuracy: {np.mean(result_test_r2)}")
         
     def train_spatial_leave_cluster_out_split(model, model_output_path, lat_lon_data, landsat_data, climate_data, terrain_data, targets, epochs, k_fold):
         result_test_r2 = []
@@ -79,7 +84,7 @@ class base_model:
             test_r2 = base_model.train(model, model_output_path, epochs, fold, train_data, val_data, test_data) 
             result_test_r2.append(test_r2)
 
-        print(f"\nAverage Test Accuracy: {np.mean(result_test_r2)}")
+        print(f"\nAverage Performance Test Accuracy: {np.mean(result_test_r2)}")
         
        
 

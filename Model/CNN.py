@@ -204,7 +204,7 @@ class CNN():
         # Train the model
         history = self.model.fit(
             train_inputs, targets_train,
-            epochs=epochs, batch_size=batch_size, callbacks = [early_stopping],
+            epochs=epochs, batch_size=batch_size, callbacks = [early_stopping], validation_batch_size=64,
             validation_data=(val_inputs, targets_val), verbose=2)
         
         base_data_utils.plot_trainin_validation(train=history.history['loss'], val=history.history['val_loss'], metric_label='Loss')
@@ -216,11 +216,7 @@ class CNN():
                                                     
         print(f"\nTestLoss: {test_loss}; TestAccuracy: {test_r2 * 100:.2f}%; TestMAE: {test_mae}; TestRMSE: {test_rmse}\n")
 
-        os.makedirs(os.path.dirname(model_output_path), exist_ok=True)
-        self.model.save(model_output_path, overwrite=True)
-        print(f"CNN model '{model_output_path}' saved succesfully.")
-
-        return test_r2
+        return test_r2, self.model
 
     def get_train_val_test_inputs(self, landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, terrain_train, terrain_val, terrain_test):
         train_inputs = []
@@ -242,6 +238,11 @@ class CNN():
             val_inputs.append(terrain_val)
             test_inputs.append(terrain_test)
         return train_inputs,val_inputs,test_inputs
+    
+    def save_model(self, model, model_output_path):
+        os.makedirs(os.path.dirname(model_output_path), exist_ok=True)
+        model.save(model_output_path, overwrite=True)
+        print(f"CNN model '{model_output_path}' saved succesfully.")
 
     def predict(self, landsat_patch, climate_patch, terrain_patch):
          # Normalize data

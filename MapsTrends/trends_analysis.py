@@ -119,5 +119,12 @@ class trends_analysis:
         biome_trend = gpd.GeoDataFrame(biome_trend, geometry='geometry', crs='EPSG:4326')
         plot_utils.plot_Biome_Trends(biome_trends=biome_trend, biome_trends_col='Mean_SOC', map_output_path=f'{output_folder}/Biome_SOC.png')
         plot_utils.plot_Biome_DensityPlot(biome_trends=biome_trend, biome_trends_col='Mean_SOC', map_output_path=f'{output_folder}/Biome_SOC_Density.png')
+'''
+trends_analysis.save_biome_trends('MapsTrends/CNN_Model_15360/Predictions', 'MapsTrends/CNN_Model_15360/Trends')
+trends_analysis.save_biome_trends('MapsTrends/CNN_Model_30720/Predictions', 'MapsTrends/CNN_Model_30720/Trends')
+trends_analysis.save_biome_trends('MapsTrends/CNN_Model_61440/Predictions', 'MapsTrends/CNN_Model_61440/Trends')
 
-trends_analysis.save_biome_trends('MapsTrends/RF_Model/Predictions', 'MapsTrends/RF_Model/Trends')
+trends_analysis.save_biome_trends('MapsTrends/RF_Model_15360/Predictions', 'MapsTrends/RF_Model_15360/Trends')
+trends_analysis.save_biome_trends('MapsTrends/RF_Model_30720/Predictions', 'MapsTrends/RF_Model_30720/Trends')
+trends_analysis.save_biome_trends('MapsTrends/RF_Model_61440/Predictions', 'MapsTrends/RF_Model_61440/Trends')
+'''

@@ -70,10 +70,6 @@ class RF:
 
         #self.print_feature_importances(model=self.model)
 
-        # Save the model
-        self.save_model(model_output_path)
-        print(f'RF model {model_output_path} saved successfully.')
-        
         # Predict on training set
         y_pred_train = self.model.predict(X_train)
         
@@ -113,8 +109,8 @@ class RF:
         print(f"RMSE: {rmse_test}")
         print(f"R^2 Score: {r2_test*100:.2f}")
 
-        return r2_test
-
+        return r2_test, self.model
+    
     def predict(self, landsat_patch, climate_patch, terrain_patch):
         landsat_patch_arr = np.array([landsat_patch]) 
         climate_patch_arr = np.array([climate_patch])
@@ -152,10 +148,10 @@ class RF:
         plt.title('Feature Importances in Random Forest Model')
         plt.show()
 
-    def save_model(self, model_output_path):
+    def save_model(self, model, model_output_path):
         if not os.path.exists(model_output_path):
             os.makedirs(os.path.dirname(model_output_path), exist_ok=True)
-        joblib.dump(self.model, model_output_path)
+        joblib.dump(model, model_output_path)
         print(f"Model saved to {model_output_path}")
 
     def load_model_local(self, model_path):
