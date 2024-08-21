@@ -132,6 +132,7 @@ class map_utils:
     
             if os.path.exists(predictions_path):
                pred = pd.read_csv(predictions_path)
+               pred = pred[pred['C'] > 0]
                combined_df = pd.concat([combined_df, pred], ignore_index=True)
 
         combined_df.to_csv(os.path.join(predictions_folder, f'combined_predictions.csv'), columns=['Year', 'Lat', 'Lon', 'C', 'Target_C', 'Target_BD', 'SOC'], index=False, mode='w+')
@@ -146,4 +147,31 @@ map_utils.plot_combined_predictions_scatter_density_plots('CNN', 'MapsTrends/CNN
 map_utils.plot_combined_predictions_scatter_density_plots('RF', 'MapsTrends/RF_Model_15360/Predictions')
 map_utils.plot_combined_predictions_scatter_density_plots('RF', 'MapsTrends/RF_Model_30720/Predictions')
 map_utils.plot_combined_predictions_scatter_density_plots('RF', 'MapsTrends/RF_Model_61440/Predictions')
+
+trends_analysis.trends_analysis.save_biome_trends('MapsTrends/CNN_Model_15360/Predictions', 'MapsTrends/CNN_Model_15360/Trends')
+trends_analysis.trends_analysis.save_biome_trends('MapsTrends/CNN_Model_30720/Predictions', 'MapsTrends/CNN_Model_30720/Trends')
+trends_analysis.trends_analysis.save_biome_trends('MapsTrends/CNN_Model_61440/Predictions', 'MapsTrends/CNN_Model_61440/Trends')
+
+trends_analysis.trends_analysis.save_biome_trends('MapsTrends/RF_Model_15360/Predictions', 'MapsTrends/RF_Model_15360/Trends')
+trends_analysis.trends_analysis.save_biome_trends('MapsTrends/RF_Model_30720/Predictions', 'MapsTrends/RF_Model_30720/Trends')
+trends_analysis.trends_analysis.save_biome_trends('MapsTrends/RF_Model_61440/Predictions', 'MapsTrends/RF_Model_61440/Trends')
+
 '''
+map_utils.plot_predicted_points(year=2023, 
+                                predictions=pd.read_csv('MapsTrends\CNN_Model_30720\Predictions\combined_predictions.csv'), 
+                                predictions_plot_path='MapsTrends\CNN_Model_30720\Predictions\PredictedCarbonMaps\soc_combined_predictions.png')
+
+plot_utils.plot_utils.plot_SOC(model_name='CNN', 
+                                year_str=2023,
+                                predictions=pd.read_csv('MapsTrends\CNN_Model_30720\Predictions\combined_predictions.csv'),
+                                map_output_path='MapsTrends\CNN_Model_30720\Predictions\PredictedMaps\soc_combined_predictions.png')
+
+map_utils.plot_predicted_points(year=2023, 
+                                predictions=pd.read_csv('MapsTrends\RF_Model_30720\Predictions\combined_predictions.csv'), 
+                                predictions_plot_path='MapsTrends\RF_Model_30720\Predictions\PredictedCarbonMaps\soc_combined_predictions.png')
+
+plot_utils.plot_utils.plot_SOC(model_name='RF', 
+                                year_str=2023,
+                                predictions=pd.read_csv('MapsTrends\RF_Model_30720\Predictions\combined_predictions.csv'),
+                                map_output_path='MapsTrends\RF_Model_30720\Predictions\PredictedMaps\soc_combined_predictions.png')
+

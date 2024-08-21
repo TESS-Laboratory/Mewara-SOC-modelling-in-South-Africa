@@ -2,15 +2,13 @@ import os
 import numpy as np
 import tensorflow as tf
 from keras import layers, models, metrics, losses, optimizers
-from Model.base_data_utils import base_data_utils
 from keras.callbacks import EarlyStopping
 from GoogleStorage import google_storage_service
+from tensorflow.keras import backend as K
 
-physical_devices = tf.config.list_physical_devices('GPU')
-for device in physical_devices:
-    tf.config.experimental.set_memory_growth(device, True)
-
-#tf.compat.v1.disable_eager_execution()
+gpus = tf.config.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 class CNN():
     def __init__(self,  use_landsat, use_climate, use_terrain, cloud_storage, model_path = None):
@@ -149,70 +147,44 @@ class CNN():
         model = models.Model(inputs=inputs, outputs=output)
         model.compile(optimizer=optimizers.Adam(learning_rate=1e-3), loss=losses.MeanSquaredError(), metrics=[metrics.R2Score(),
                                                                                                               metrics.MeanAbsoluteError(), 
-                                                                                                              metrics.RootMeanSquaredError()])
+                                                                                                              metrics.RootMeanSquaredError()
+                                                                                                             ])
 
-        model.summary()
-        return model
-    
-    def _build_model(self, input_shape_landsat, input_shape_climate, input_shape_terrain):
-        inputs = []
-        branches = []
-
-        if self.use_landsat:
-            # Landsat CNN branch
-            landsat_input, landsat_branch = self.create_landsat_terrain_branch(input_shape=input_shape_landsat)
-            inputs.append(landsat_input)
-            branches.append(landsat_branch)
-
-        if self.use_climate:
-            # Climate CNN branch
-            climate_input, climate_branch = self.create_climate_branch(input_shape=input_shape_climate)
-            inputs.append(climate_input)
-            branches.append(climate_branch)
-
-        if self.use_terrain:
-            # Terrain CNN branch
-            terrain_input, terrain_branch = self.create_cnn_branch(input_shape=input_shape_terrain)
-            inputs.append(terrain_input)
-            branches.append(terrain_branch)
-
-        # Combine branches
-        concatenated = layers.concatenate(branches)
-        x = layers.Dense(168, activation='relu')(concatenated)
-        output = layers.Dense(1)(x)  # Regression output
-        
-        # Model
-        model = models.Model(inputs=inputs, outputs=output)
-        model.compile(optimizer=optimizers.Adam(learning_rate=1e-3), loss=losses.MeanSquaredError(), metrics=[metrics.R2Score(),
-                                                                                                              metrics.MeanAbsoluteError(), 
-                                                                                                              metrics.RootMeanSquaredError()])
-
+        #model.summary()
         return model
         
     def train(self, landsat_train, climate_train, terrain_train, targets_train, landsat_val, climate_val, terrain_val, targets_val, landsat_test, climate_test, terrain_test, targets_test, model_output_path, epochs):
         batch_size = 8
-
+        validation_test_batch_size = 8
+        
         # build model
         self.model = self._build_model(input_shape_landsat=landsat_train[0].shape, 
                                        input_shape_climate=climate_train[0].shape, 
                                        input_shape_terrain=terrain_train[0].shape)
         
-        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+        # Clear previous sessions
+        K.clear_session()
+        
+        gpus = tf.config.list_physical_devices('GPU')
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+       
+        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
         train_inputs, val_inputs, test_inputs = self.get_train_val_test_inputs(landsat_train, landsat_val, landsat_test, climate_train, climate_val, climate_test, terrain_train, terrain_val, terrain_test)
         
         # Train the model
         history = self.model.fit(
             train_inputs, targets_train,
-            epochs=epochs, batch_size=batch_size, callbacks = [early_stopping], validation_batch_size=64,
-            validation_data=(val_inputs, targets_val), verbose=2)
+            epochs=epochs, batch_size=batch_size, callbacks = [early_stopping], 
+            validation_batch_size=validation_test_batch_size, validation_data=(val_inputs, targets_val), verbose=2)
         
-        base_data_utils.plot_trainin_validation(train=history.history['loss'], val=history.history['val_loss'], metric_label='Loss')
-        base_data_utils.plot_trainin_validation(train=history.history['r2_score'], val=history.history['val_r2_score'], metric_label='R2 Score')
+        #base_data_utils.plot_trainin_validation(train=history.history['loss'], val=history.history['val_loss'], metric_label='Loss')
+        #base_data_utils.plot_trainin_validation(train=history.history['r2_score'], val=history.history['val_r2_score'], metric_label='R2 Score')
         
         # Evaluate the model on the validation set
         print(f'\nEvaluating Testing Data:\n')
-        test_loss, test_r2, test_mae, test_rmse  = self.model.evaluate(test_inputs, targets_test, batch_size=batch_size)
+        test_loss, test_r2, test_mae, test_rmse  = self.model.evaluate(test_inputs, targets_test, batch_size=validation_test_batch_size)
                                                     
         print(f"\nTestLoss: {test_loss}; TestAccuracy: {test_r2 * 100:.2f}%; TestMAE: {test_mae}; TestRMSE: {test_rmse}\n")
 
@@ -250,10 +222,6 @@ class CNN():
         climate_patch = np.array([climate_patch]) 
         terrain_patch = np.array([terrain_patch]) 
         
-        landsat_patch = np.round(landsat_patch, 3)
-        climate_patch = np.round(climate_patch, 3)
-        terrain_patch = np.round(terrain_patch, 3)
-
         inputs = []
         if self.use_landsat:
             inputs.append(landsat_patch)

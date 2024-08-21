@@ -52,13 +52,15 @@ keyword_soc_sa = f'({keyword_soc}) AND ({keyword_sa})'
 
 keyword_soc_sa_remote_sensing = f'{keyword_soc_sa} AND ({keyword_remote_sensing})'
 
-keyword_soc_sa_ML = f'{keyword_soc_sa} AND ({keyword_traditional_machine_learning})'
+keyword_soc_sa_traditional_ML = f'{keyword_soc_sa} AND ({keyword_traditional_machine_learning})'
 
 keyword_soc_sa_DL = f'{keyword_soc_sa} AND ({keyword_deep_learning})'
 
+keyword_soc_ML = f'{keyword_soc} AND ({keyword_traditional_machine_learning} OR {keyword_deep_learning})'
+
 keyword_soc_sa_remote_sensing_DL = f'{keyword_soc_sa_remote_sensing} AND ({keyword_deep_learning})'
 
-keyword = keyword_soc_sa_DL
+keyword = keyword_soc_ML
 
 # Step 3 - Fetch metrics ------------------------------------------------
 # Use the europe_pmc package to query the Europe PubMed Central RESTful Web Service to 

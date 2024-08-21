@@ -37,13 +37,13 @@ class plot_utils:
         soc = gdf['SOC'] * 10
         
         carbon_cmap = cm.viridis
-        carbon_norm = mcolors.Normalize(vmin=soc.min(), vmax=soc.max())
+        carbon_norm = mcolors.Normalize(0, vmax=20)
         
         fig, ax = plt.subplots(figsize=(10, 8))
         scatter = ax.scatter(gdf['Lon'], gdf['Lat'], c=soc, cmap=carbon_cmap, norm=carbon_norm)
         ax.set_xlabel('Longitude', fontsize=16)
         ax.set_ylabel('Latitude', fontsize=16)
-        ax.set_title(f'{model_name} Predicted SOC Stock (kg/m2) for South Africa in Year {year_str}', fontsize=16)
+        #ax.set_title(f'{model_name} Predicted SOC Stock (kg/m2) for South Africa in Year {year_str}', fontsize=16)
 
         # Plot South Africa shape boundaries
         grid_utils.get_sa_shape().boundary.plot(ax=ax, linewidth=1, edgecolor='black')
@@ -57,6 +57,26 @@ class plot_utils:
         os.makedirs(os.path.dirname(map_output_path), exist_ok=True)
         plt.savefig(map_output_path, bbox_inches='tight')
     
+    def plot_SOC2(model_name, year_str, predictions, map_output_path):
+        # Get predictions as a GeoDataFrame
+        gdf = plot_utils.get_predictions_geoframe(predictions)
+        soc = gdf['SOC'] * 10
+        
+        carbon_cmap = cm.viridis
+        carbon_norm = mcolors.Normalize(vmin=soc.min(), vmax=soc.max())
+        
+        fig, ax = plt.subplots(figsize=(2, 2))
+        scatter = ax.scatter(gdf['Lon'], gdf['Lat'], c=soc, cmap=carbon_cmap, norm=carbon_norm)
+       
+        # Add a colorbar
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label(r'Soil Organic Carbon Stock (kg/m2)', fontsize=14)
+        cbar.ax.tick_params(labelsize=12)
+        
+        # Save the plot
+        os.makedirs(os.path.dirname(map_output_path), exist_ok=True)
+        plt.savefig(map_output_path, bbox_inches='tight')
+
     def total_least_squares(X, Y):
         # Formulate matrix
         X = X.reshape(-1, 1)
@@ -80,10 +100,8 @@ class plot_utils:
         if df.empty:
             return
 
-        # Extract target and predicted values
-        X = df['C'].values
-        Y = df['Target_C'].values
-        
+        X = df['Target_C'].values
+        Y = df['C'].values
         # Fit a total least squares line
         slope, intercept = plot_utils.total_least_squares(X, Y)
         
@@ -100,7 +118,7 @@ class plot_utils:
         min_val = min(df['Target_C'].min(), df['C'].min())
         max_val = 10 # max(df['Target_C'].max(), df['C'].max())
         plt.xlim(min_val, max_val)
-        plt.ylim(min_val, max_val)
+        plt.ylim(min_val, 7)
 
         # Create bins of 0.5
         bin_width = 0.5
@@ -108,14 +126,14 @@ class plot_utils:
         max_bin = np.ceil(max_val / bin_width) * bin_width
 
         # Set the ticks to match the bins
-        plt.xticks(np.arange(min_bin, max_bin + bin_width, bin_width), fontsize=12)
-        plt.yticks(np.arange(min_bin, max_bin + bin_width, bin_width), fontsize=12)
+        plt.xticks(np.arange(min_bin, max_bin + bin_width, bin_width), fontsize=14)
+        plt.yticks(np.arange(min_bin, 7 + bin_width, bin_width), fontsize=14)
         
         plt.xlabel('Target Carbon (% by Mass)', fontsize=16)
         plt.ylabel('Predicted Carbon (% by Mass)', fontsize=16)
-        plt.title(f'{model_name} Predicted Carbon vs Target Carbon', fontsize=16)
+        #plt.title(f'{model_name} Predicted Carbon vs Target Carbon', fontsize=16)
         plt.legend()
-        plt.grid(True)
+        plt.grid(False)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         plt.savefig(output_path, bbox_inches='tight')
@@ -125,14 +143,15 @@ class plot_utils:
     def density_plot_predict_c_targetc(df, model_name, output_path):
         plt.figure(figsize=(10, 8))
         
-        sns.kdeplot(df['Target_C'], bw_adjust=0.5, fill=True, label='Predicted SOC Density', color='blue')
-        sns.kdeplot(df['C'], bw_adjust=0.5, fill=True, label='Target SOC Density', color='orange')
+        sns.kdeplot(df['Target_C'], bw_adjust=0.5, fill=True, label='Target SOC Density', color='blue')
+        sns.kdeplot(df['C'], bw_adjust=0.5, fill=True, label='Predicted SOC Density', color='orange')
 
         plt.xlabel('Soil Organic Carbon (% by Mass)', fontsize=16)
-        plt.ylabel('Density', fontsize=16)
+        plt.ylabel('Density', fontsize=18)
         plt.title(f'{model_name} Soil Organic Carbon Density', fontsize=16)
+        plt.xticks(fontsize=14)
         plt.legend()
-        plt.grid(True)
+        plt.grid(False)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         plt.savefig(output_path, bbox_inches='tight')
@@ -149,7 +168,7 @@ class plot_utils:
 
         # Set y-ticks and labels for the biomes
         ax.set_yticks(np.arange(len(unique_biomes)))
-        ax.set_yticklabels(unique_biomes, fontsize=16)
+        ax.set_yticklabels(unique_biomes, fontsize=20)
         
         density_scaling_factor = 1.5
 
@@ -173,6 +192,7 @@ class plot_utils:
                     ax.plot([x0, x1], [idx + y0, idx + y1], color=color)
 
         ax.set_xlabel('Soil Organic Carbon Stock (kg/m2)', fontsize=16)
+        ax.set_yticklabels(unique_biomes, fontsize=16)
         #ax.set_title(f'SOC Distribution by Biome', fontsize=16)
 
         # Save the plot
@@ -199,11 +219,55 @@ class plot_utils:
         # Add a colorbar
         cbar = plt.colorbar(scatter, ax=ax)
         cbar.set_label(r'Soil Organic Carbon Stock (kg/m2)', fontsize=14)
-        cbar.ax.tick_params(labelsize=12)
+        cbar.ax.tick_params(labelsize=14)
         
         # Save the plot
         os.makedirs(os.path.dirname(map_output_path), exist_ok=True)
         plt.savefig(map_output_path)
 
+    def plot_Biome_Change_DensityPlot(biome_trends, biome_trends_col, map_output_path):
+        soc = biome_trends[biome_trends_col]
+        biomes = biome_trends['Biome']
+        
+        unique_biomes = sorted(biomes.unique())
+        carbon_cmap = cm.viridis
+        carbon_norm = mcolors.Normalize(vmin=soc.min(), vmax=soc.max())
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        # Set y-ticks and labels for the biomes
+        ax.set_yticks(np.arange(len(unique_biomes)))
+        ax.set_yticklabels(unique_biomes, fontsize=20)
+        
+        density_scaling_factor = 0.05
+
+        for idx, biome in enumerate(unique_biomes):
+            subset = biome_trends[biome_trends['Biome'] == biome]
+            soc_values = subset[biome_trends_col].dropna()
+            
+            if not soc_values.empty:
+                kde = gaussian_kde(soc_values, bw_method=0.5)
+                soc_range = np.linspace(soc_values.min(), soc_values.max(), 1000)
+                density = kde(soc_range) * density_scaling_factor
+                for i in range(len(soc_range) - 1):
+                    x0, x1 = soc_range[i], soc_range[i + 1]
+                    y0, y1 = density[i], density[i + 1]
+                    
+                    # Calculate the color for this segment
+                    color = carbon_cmap(carbon_norm((x0 + x1) / 2))
+                    
+                    # Fill between the baseline (idx) and the density curve
+                    ax.fill_between([x0, x1], idx, [idx + y0, idx + y1], color=color)
+                    ax.plot([x0, x1], [idx + y0, idx + y1], color=color)
+
+        ax.set_xlabel('Soil Organic Carbon Stock (kg/m2)', fontsize=16)
+        ax.set_yticklabels(unique_biomes, fontsize=16)
+        #ax.set_title(f'SOC Distribution by Biome', fontsize=16)
+
+        # Save the plot
+        os.makedirs(os.path.dirname(map_output_path), exist_ok=True)
+        plt.savefig(map_output_path, bbox_inches='tight')
+        plt.close()
+
 #plot_utils.plot_Biome_Trends(biome_trends=pd.read_csv('MapsTrends/RF_Model/Trends/Biome_Trends.csv'), biome_trends_col='Mean_SOC', map_output_path='MapsTrends/RF_Model/Trends/Biome_SOC.png')
-#plot_utils.plot_Biome_DensityPlot(biome_trends=pd.read_csv('MapsTrends/RF_Model/Trends/Biome_Trends.csv'), biome_trends_col='Mean_SOC', map_output_path='MapsTrends/RF_Model/Trends/Biome_SOC_Density.png')
+#plot_utils.plot_Biome_Change_DensityPlot(biome_trends=pd.read_csv('MapsTrends/RF_Model_30720/Trends/Biome_Trends.csv'), biome_trends_col='Annual_SOC_Change', map_output_path='MapsTrends/RF_Model_30720/Trends/Biome_SOC_Change_Density.png')

@@ -25,20 +25,20 @@ class KerasTuner:
 
     @staticmethod
     def _build_model(hp):
-        input_shape_landsat = (128,128,7)
-        input_shape_climate = (4,4,1)
-        input_shape_terrain = (128,128,2)
+        input_shape_landsat = (256,256,4)
+        #input_shape_climate = (4,4,1)
+        #input_shape_terrain = (128,128,2)
         landsat_layer, landsat_branch = KerasTuner.create_branch(input_shape=input_shape_landsat, name='landsat', hp=hp)
-        climate_layer, climate_branch = KerasTuner.create_branch(input_shape=input_shape_climate, name='climate', hp=hp)
-        terrain_layer, terrain_branch = KerasTuner.create_branch(input_shape=input_shape_terrain, name='terrain', hp=hp)
+        #climate_layer, climate_branch = KerasTuner.create_branch(input_shape=input_shape_climate, name='climate', hp=hp)
+        #terrain_layer, terrain_branch = KerasTuner.create_branch(input_shape=input_shape_terrain, name='terrain', hp=hp)
 
-        combined_branch = layers.concatenate([landsat_branch, climate_branch, terrain_branch])
+        combined_branch = layers.concatenate([landsat_branch])
 
         combined = layers.Dense(units=hp.Int('dense_final_units', min_value=64, max_value=512, step=8),
                                 activation='relu')(combined_branch)
         output = layers.Dense(1)(combined)  # Regression output
 
-        model = models.Model(inputs=[landsat_layer, climate_layer, terrain_layer], outputs=output)
+        model = models.Model(inputs=[landsat_layer], outputs=output)
         model.compile(optimizer=optimizers.Adam(learning_rate=1e-3),
                       loss=losses.MeanSquaredError(),
                       metrics=[metrics.R2Score(),

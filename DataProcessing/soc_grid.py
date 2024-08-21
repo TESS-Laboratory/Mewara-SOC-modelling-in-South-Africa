@@ -119,6 +119,8 @@ def save_soc_hex_grid(soil_data):
     hex_grid = pd.read_csv(r'DataProcessing/hex_grid.csv')
     soc_hex_grid = grid_utils.grid_utils.get_soc_hex_grid(hex_grid_df=hex_grid,
                                             soil_data=soil_data) 
+    soc_hex_grid.drop_duplicates(['Date', 'Lat', 'Lon', 'C'], inplace = True)
+
     soc_hex_grid.to_csv(r'DataProcessing/soc_hex_grid.csv', index=False)
     
     soc_hex_avg_c = grid_utils.grid_utils.get_avg_c_each_grid(df=soc_hex_grid,
@@ -134,4 +136,4 @@ def save_soc_hex_grid(soil_data):
                             savePlot=True,
                             output_plot_path='Plots/C_HeatMap.png')
 
-preprocess_data()
+#preprocess_data()

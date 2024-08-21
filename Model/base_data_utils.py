@@ -96,11 +96,11 @@ class base_data_utils:
 
             if len(cluster_indices) > 1:
                 # Split 99% for training and 2% for validation and test
-                train_idx, val_test_idx = train_test_split(cluster_indices, test_size=0.05, shuffle=True, random_state=42)
+                train_idx, val_test_idx = train_test_split(cluster_indices, test_size=0.05, shuffle=True, random_state=100)
 
                 # Further split 20% into 10% validation and 10% test
                 if len(val_test_idx) > 1:
-                    val_idx, test_idx = train_test_split(val_test_idx, test_size=0.5, shuffle=True, random_state=42)
+                    val_idx, test_idx = train_test_split(val_test_idx, test_size=0.5, shuffle=True, random_state=100)
                 else:
                     val_idx = val_test_idx
                     test_idx = val_test_idx

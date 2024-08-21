@@ -16,10 +16,11 @@ from scipy.integrate import simpson
 # Set environment variables for XLA flags
 os.environ['XLA_FLAGS'] = '--xla_gpu_strict_conv_algorithm_picker=false'
 
-years = [1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2012, 2017, 2018, 2019, 2020, 2021, 2022, 2023]
+years = [1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014, 2015, 2017, 2018, 2019, 2020, 2021, 2022, 2023]
+#years = [2013, 2016]
 start_month = 1
 end_month = 12
-epochs = 30
+epochs = 50
 
 use_landsat = True
 use_climate = True
@@ -35,8 +36,8 @@ training_soc_path = r'DataProcessing/soc_hex_grid.csv'
 landsat_bands = [4,5,6,7]
 climate_bands = [0]
 terrain_bands = [0,1,2]
-training_kfold = 1
-performance_metric_kfold = 10
+training_kfold = 3
+performance_metric_kfold = 5
 
 def targets_density_plot(targets):
     # Create the density plot
@@ -158,7 +159,7 @@ if __name__ == "__main__":
     '''CNN'''
     #performance_metric(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
     train(model=cnn, model_output_path=model_output_cnn, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
-    test(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
+    #test(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage, lat_lon_data=lat_lon_data, landsat_data=landsat_data, climate_data=climate_data, terrain_data=terrain_data, targets=targets)
     plot_maps(model_kind='CNN', model_path=model_output_cnn, cloud_storage=cloud_storage)
     
 

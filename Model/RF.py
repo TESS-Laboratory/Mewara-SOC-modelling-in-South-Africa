@@ -81,6 +81,7 @@ class RF:
         print("\nRF Training Metrics:")
         print(f"MAE: {mae_train}")
         print(f"RMSE: {rmse_train}")
+        print(f'Bias: {self.bias_metric(y_pred_train, targets_train)}')
         print(f"R^2 Score: {r2_train*100:.2f}")
 
         # Predict on validation set
@@ -94,6 +95,7 @@ class RF:
         print("\nRF Validation Metrics:")
         print(f"MAE: {mae_val}")
         print(f"RMSE: {rmse_val}")
+        print(f'Bias: {self.bias_metric(y_pred_val, targets_val)}')
         print(f"R^2 Score: {r2_val*100:.2f}")
 
         # Predict on test set
@@ -107,9 +109,16 @@ class RF:
         print("\nRF Test Metrics:")
         print(f"MAE: {mae_test}")
         print(f"RMSE: {rmse_test}")
+        print(f'Bias: {self.bias_metric(y_pred_test, targets_test)}')
         print(f"R^2 Score: {r2_test*100:.2f}")
 
         return r2_test, self.model
+    
+    def bias_metric(self, y_pred, targets):
+        average_prediction = np.mean(y_pred)
+        average_actual = np.mean(targets)
+        bias = average_prediction - average_actual
+        return bias
     
     def predict(self, landsat_patch, climate_patch, terrain_patch):
         landsat_patch_arr = np.array([landsat_patch]) 
