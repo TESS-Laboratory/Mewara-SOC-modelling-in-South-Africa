@@ -1,4 +1,5 @@
 # Mewara-SOC-Modelling-in-South-Africa
+This code was developed by Swati Mewara while undertaking her dissertation project titled 'Mapping Soil Organic Carbon (SOC) Stocks of South Africa using Convolutional Neural Network and Analyzing Trends in SOC Changes'.
 
 The purpose of this repo is to create robust and accurate Soil Organic Carbon (SOC) stock maps for South Africa (SA) from 2000 to 2023 using Convolutional Neural Networks (CNNs) and compare their performance against Random Forest (RF) model. After generating the maps, the trends in SOC stock changes across different biomes in South Africa are generated.
 
@@ -36,12 +37,12 @@ This folder contains the CNN and RF models and utility tools to prepare training
 
 ### MapsTrends
 
-This folder contains scripts for generating maps from test data. The data consists of covariates from hexagonal grids, with a total of 3,500 centroid points across South Africa. It calls the respective model (RF or CNN) predict method to predict the carbon percentage for each latitude and longitude pair.
+This folder contains scripts for generating SOC stocks map for a given year. It consists of code that fetches covariates from hexagonal grids, with a total of 3,500 centroid points across South Africa. It calls the respective model (RF or CNN) predict method to predict the carbon percentage for each latitude and longitude pair of the centroid of the hexagonal grids.
 
-- `map_utils`: Predicts carbon for a given year and generates corresponding SOC stock map, saving them as PNG file. It also creates scatter plots between predicted and target carbon for the grid points with known target carbon to facilitate analysis of model performance on test data.
-- `test_metrics`: Fetches the test covariates for prediction, predicts the percentage carbon, calculates the SOC stock based on predicted carbon percent and saves the predictions in CSV format. 
+- `map_utils`: Predicts SOC percentage for a given year and generates corresponding SOC stock map, saving them as PNG file. It also creates scatter plots between predicted and target carbon for the grid points with known target carbon to facilitate analysis of model performance on prediction data.
+- `test_metrics`: Fetches the covariates for prediction for the given year, predicts the percentage carbon, calculates the SOC stock based on predicted carbon percent and saves the predictions in CSV format. 
 - `plot_utils`: Generates plots for all the predicted SOC stocks.
-- `trends_analysis`: Divides the predictions by biomes, calculates the Sen slope for the period from 2000 to 2023 for each prediction point and its long-term mean SOC, and sums them up for each biome to understand the trends in SOC stock change, both in percentage and net SOC stock.
+- `trends_analysis`: Divides the predictions by biomes and calculating the Sen slope for each prediction point over the period from 2000 to 2023. It also calculates the absolute annual SOC stock change (kg C/m²) and the relative SOC stock change (%) compared to the long-term mean SOC. Finally, the 5th, 50th, and 95th percentiles are computed for SOC stock changes, both in relative and absolute terms, to evaluate the trends in SOC stock change within each biome.
 
 ### References
 1. Miller, M., 2023. African open soil data. OSF, [online] 16 March. Available at: https://doi.org/10.17605/OSF.IO/A69R5 [Accessed 18 June 2024]. 
